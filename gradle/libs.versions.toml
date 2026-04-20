@@ -2,7 +2,7 @@
 agp = "9.1.1"
 kotlin = "2.3.20"
 kotlinxCoroutines = "1.10.2"
-kotlinxSerialization = "1.10.0"
+kotlinxSerialization = "1.11.0"
 libxposedApi = "101.0.0"
 dexkit = "2.0.7"
 androidxCore = "1.18.0"
