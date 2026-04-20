@@ -14,6 +14,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
@@ -42,17 +43,32 @@ import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.ProgressStroke
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 
+private const val DISABLED_BUTTON_ALPHA = 0.72f
+private const val PROGRESS_TRACK_ALPHA = 0.24f
+
 @Composable
 private fun VerifyButton(
     running: Boolean,
     hasResult: Boolean,
+    colors: StatusVisual,
     onVerify: () -> Unit,
 ) {
-    FilledTonalButton(onClick = onVerify, enabled = !running) {
+    FilledTonalButton(
+        onClick = onVerify,
+        enabled = !running,
+        colors =
+            ButtonDefaults.filledTonalButtonColors(
+                containerColor = colors.buttonContainerColor,
+                contentColor = colors.buttonContentColor,
+                disabledContainerColor = colors.buttonContainerColor.copy(alpha = DISABLED_BUTTON_ALPHA),
+                disabledContentColor = colors.buttonContentColor.copy(alpha = DISABLED_BUTTON_ALPHA),
+            ),
+    ) {
         if (running) {
             CircularProgressIndicator(
                 modifier = Modifier.size(IconSize.sm),
                 strokeWidth = ProgressStroke.sm,
+                color = colors.buttonContentColor,
             )
             Spacer(Modifier.size(Spacing.sm))
             Text(stringResource(R.string.button_scanning))
@@ -93,7 +109,11 @@ fun VerifyCard(
     ) {
         Column {
             if (running) {
-                LinearWavyProgressIndicator(modifier = Modifier.fillMaxWidth())
+                LinearWavyProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = visual.progressColor,
+                    trackColor = visual.progressTrackColor,
+                )
             }
 
             Row(
@@ -132,6 +152,7 @@ fun VerifyCard(
                 VerifyButton(
                     running = running,
                     hasResult = state.lastResult != null,
+                    colors = visual,
                     onVerify = onVerify,
                 )
             }
@@ -216,6 +237,10 @@ private data class StatusVisual(
     val icon: ImageVector,
     val containerColor: Color,
     val contentColor: Color,
+    val progressColor: Color,
+    val progressTrackColor: Color,
+    val buttonContainerColor: Color,
+    val buttonContentColor: Color,
 )
 
 @Composable
@@ -225,24 +250,36 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         HookCoverage.Full -> {
             StatusVisual(
                 icon = Icons.Outlined.CheckCircle,
-                containerColor = scheme.primary,
-                contentColor = scheme.onPrimary,
+                containerColor = scheme.primaryContainer,
+                contentColor = scheme.onPrimaryContainer,
+                progressColor = scheme.primary,
+                progressTrackColor = scheme.primary.copy(alpha = PROGRESS_TRACK_ALPHA),
+                buttonContainerColor = scheme.surfaceBright,
+                buttonContentColor = scheme.onSurface,
             )
         }
 
         HookCoverage.FallbackOnly -> {
             StatusVisual(
                 icon = Icons.Outlined.Warning,
-                containerColor = scheme.tertiary,
-                contentColor = scheme.onTertiary,
+                containerColor = scheme.tertiaryContainer,
+                contentColor = scheme.onTertiaryContainer,
+                progressColor = scheme.tertiary,
+                progressTrackColor = scheme.tertiary.copy(alpha = PROGRESS_TRACK_ALPHA),
+                buttonContainerColor = scheme.surfaceBright,
+                buttonContentColor = scheme.onSurface,
             )
         }
 
         HookCoverage.None -> {
             StatusVisual(
                 icon = Icons.Outlined.Block,
-                containerColor = scheme.error,
-                contentColor = scheme.onError,
+                containerColor = scheme.errorContainer,
+                contentColor = scheme.onErrorContainer,
+                progressColor = scheme.error,
+                progressTrackColor = scheme.error.copy(alpha = PROGRESS_TRACK_ALPHA),
+                buttonContainerColor = scheme.surfaceBright,
+                buttonContentColor = scheme.onSurface,
             )
         }
 
@@ -251,14 +288,22 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
                 icon = Icons.AutoMirrored.Outlined.HelpOutline,
                 containerColor = scheme.surfaceContainerHighest,
                 contentColor = scheme.onSurfaceVariant,
+                progressColor = scheme.primary,
+                progressTrackColor = scheme.primary.copy(alpha = PROGRESS_TRACK_ALPHA),
+                buttonContainerColor = scheme.surfaceContainerHigh,
+                buttonContentColor = scheme.onSurface,
             )
         }
 
         HookCoverage.ScanFailed -> {
             StatusVisual(
                 icon = Icons.Outlined.ErrorOutline,
-                containerColor = scheme.error,
-                contentColor = scheme.onError,
+                containerColor = scheme.errorContainer,
+                contentColor = scheme.onErrorContainer,
+                progressColor = scheme.error,
+                progressTrackColor = scheme.error.copy(alpha = PROGRESS_TRACK_ALPHA),
+                buttonContainerColor = scheme.surfaceBright,
+                buttonContentColor = scheme.onSurface,
             )
         }
     }
