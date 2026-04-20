@@ -1,6 +1,8 @@
 package eu.hxreborn.discoveradsfilter.ui.state
 
 import androidx.compose.runtime.Immutable
+import eu.hxreborn.discoveradsfilter.discovery.KnownGoodEntry
+import eu.hxreborn.discoveradsfilter.discovery.RegistryStatus
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 
 sealed interface HomeUiState {
@@ -10,13 +12,25 @@ sealed interface HomeUiState {
     data class Ready(
         val verbose: Boolean = false,
         val verify: VerifyUiState = VerifyUiState(),
+        val knownGood: KnownGoodUiState = KnownGoodUiState(),
     ) : HomeUiState
+}
+
+@Immutable
+data class KnownGoodUiState(
+    val bundled: List<KnownGoodEntry> = emptyList(),
+    val local: List<KnownGoodEntry> = emptyList(),
+) {
+    val total: Int get() = bundled.size + local.size
 }
 
 @Immutable
 data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
+    val onFilterEnabledChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
+    val onForgetKnownGood: (KnownGoodEntry) -> Unit,
+    val onOpenSource: () -> Unit,
 )
 
 @Immutable
@@ -24,12 +38,50 @@ data class VerifyUiState(
     val phase: VerifyPhase = VerifyPhase.Idle,
     val lastResult: VerifyResult? = null,
     val installedAgsaVersion: Long? = null,
+    val installedAgsaVersionName: String? = null,
+    val installedAgsaLastUpdateTime: Long = 0,
     val xposedServiceBound: Boolean = false,
     val scanModuleVersion: Int = 0,
     val hookInstallStatus: String? = null,
     val hookProcess: String? = null,
     val adsHidden: Long = 0,
-)
+    val registryStatus: RegistryStatus = RegistryStatus.Unknown,
+    val filterEnabled: Boolean = true,
+) {
+    val hookInstalled: Int get() = parseSlash(hookInstallStatus).first
+    val hookTotal: Int get() = parseSlash(hookInstallStatus).second
+
+    val resolvedTargetCount: Int
+        get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedFieldCount() ?: 0
+
+    val totalTargetCount: Int get() = TOTAL_TARGETS
+
+    companion object {
+        const val TOTAL_TARGETS = 7
+
+        private fun parseSlash(status: String?): Pair<Int, Int> {
+            val raw = status ?: return 0 to 0
+            val head = raw.substringBefore(' ')
+            val parts = head.split('/')
+            if (parts.size != 2) return 0 to 0
+            val a = parts[0].toIntOrNull() ?: return 0 to 0
+            val b = parts[1].toIntOrNull() ?: return 0 to 0
+            return a to b
+        }
+    }
+}
+
+private fun ResolvedTargets.Resolved.resolvedFieldCount(): Int {
+    var n = 0
+    if (!adMetadataClass.isNullOrBlank()) n++
+    if (!feedCardClass.isNullOrBlank()) n++
+    if (!adFlagFieldName.isNullOrBlank()) n++
+    if (!adLabelFieldName.isNullOrBlank()) n++
+    if (!adMetadataFieldName.isNullOrBlank()) n++
+    if (cardProcessorMethods.isNotEmpty()) n++
+    if (streamRenderableListMethod != null) n++
+    return n
+}
 
 enum class VerifyPhase { Idle, Running }
 

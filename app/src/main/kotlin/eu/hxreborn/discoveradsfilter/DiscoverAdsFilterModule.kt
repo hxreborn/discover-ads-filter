@@ -54,18 +54,7 @@ class DiscoverAdsFilterModule : XposedModule() {
             )
         }
 
-        HookMetrics.init(prefs)
-        runCatching {
-            val app =
-                Class
-                    .forName("android.app.ActivityThread")
-                    .getMethod("currentApplication")
-                    .invoke(null) as? Application
-            if (app != null) {
-                HookMetrics.setMetricsDir(app.cacheDir)
-                log(Log.INFO, TAG, "metrics dir: ${app.cacheDir}")
-            }
-        }
+        HookMetrics.init()
 
         val ok =
             runCatching {

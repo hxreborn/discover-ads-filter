@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.FingerprintCache
+import eu.hxreborn.discoveradsfilter.discovery.KnownGoodEntry
+import eu.hxreborn.discoveradsfilter.discovery.KnownGoodRegistry
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import java.io.File
 
@@ -18,9 +20,13 @@ class SettingsRepository(
     fun snapshot(): PersistedSettings =
         PersistedSettings(
             verbose = SettingsPrefs.verbose.read(localPrefs),
+            filterEnabled = SettingsPrefs.filterEnabled.read(localPrefs),
         )
 
     fun setVerbose(value: Boolean) = dualEdit { SettingsPrefs.verbose.write(this, value) }
+
+    fun setFilterEnabled(value: Boolean) =
+        dualEdit { SettingsPrefs.filterEnabled.write(this, value) }
 
     fun writeResolvedTargets(
         agsaVersionCode: Long,
@@ -106,6 +112,41 @@ class SettingsRepository(
         return ads
     }
 
+    fun readKnownGood(): KnownGoodLists {
+        val bundled = KnownGoodRegistry.bundled(context)
+        val local = KnownGoodRegistry.decode(SettingsPrefs.knownGoodLocal.read(localPrefs))
+        return KnownGoodLists(bundled = bundled, local = local)
+    }
+
+    fun addKnownGood(entry: KnownGoodEntry): KnownGoodLists {
+        val current = KnownGoodRegistry.decode(SettingsPrefs.knownGoodLocal.read(localPrefs))
+        val deduped =
+            current.filterNot {
+                it.agsaVersionCode == entry.agsaVersionCode &&
+                    it.moduleVersionCode == entry.moduleVersionCode &&
+                    it.targetsHash == entry.targetsHash
+            }
+        val next = deduped + entry.copy(source = KnownGoodEntry.Source.Local)
+        dualEdit { SettingsPrefs.knownGoodLocal.write(this, KnownGoodRegistry.encode(next)) }
+        return KnownGoodLists(bundled = KnownGoodRegistry.bundled(context), local = next)
+    }
+
+    fun removeKnownGood(
+        agsaVersionCode: Long,
+        moduleVersionCode: Int,
+        targetsHash: String,
+    ): KnownGoodLists {
+        val current = KnownGoodRegistry.decode(SettingsPrefs.knownGoodLocal.read(localPrefs))
+        val next =
+            current.filterNot {
+                it.agsaVersionCode == agsaVersionCode &&
+                    it.moduleVersionCode == moduleVersionCode &&
+                    it.targetsHash == targetsHash
+            }
+        dualEdit { SettingsPrefs.knownGoodLocal.write(this, KnownGoodRegistry.encode(next)) }
+        return KnownGoodLists(bundled = KnownGoodRegistry.bundled(context), local = next)
+    }
+
     fun syncLocalToRemote() {
         val remote = remotePrefsProvider() ?: return
         remote.edit(commit = true) {
@@ -142,7 +183,15 @@ class SettingsRepository(
 
 data class PersistedSettings(
     val verbose: Boolean,
+    val filterEnabled: Boolean = true,
 )
+
+data class KnownGoodLists(
+    val bundled: List<KnownGoodEntry>,
+    val local: List<KnownGoodEntry>,
+) {
+    fun all(): List<KnownGoodEntry> = bundled + local
+}
 
 data class CachedScan(
     val versionCode: Long,

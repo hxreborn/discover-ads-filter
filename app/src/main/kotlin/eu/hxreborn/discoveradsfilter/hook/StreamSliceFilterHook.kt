@@ -7,6 +7,7 @@ import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
 import eu.hxreborn.discoveradsfilter.discovery.MethodRef
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.module
+import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.util.Logger
 import eu.hxreborn.discoveradsfilter.util.Safe
 import io.github.libxposed.api.XposedInterface
@@ -22,7 +23,9 @@ object StreamSliceFilterHook {
     private const val TARGET_PACKAGE = "com.google.android.googlequicksearchbox"
     private const val NULL_KEY_PREFIX = "__null__#"
 
-    private val adClusterTokens = setOf("feedads")
+    // DEBUG: "homestack" temporarily included so testing isn't gated on a real ad appearing.
+    // Revert to setOf("feedads") before shipping.
+    private val adClusterTokens = setOf("feedads", "homestack")
 
     private val decisionCache = ConcurrentHashMap<String, Boolean>()
     private val blockedKeys = ConcurrentHashMap.newKeySet<String>()
@@ -45,12 +48,16 @@ object StreamSliceFilterHook {
     @Volatile
     private var lastFilteredSnapshot: List<Any?>? = null
 
+    @Volatile
+    private var hookPrefs: SharedPreferences? = null
+
     fun install(
         loader: ClassLoader,
         prefs: SharedPreferences,
         targets: ResolvedTargets,
         processName: String,
     ) = Safe.run(TAG, "install") {
+        hookPrefs = prefs
         val streamRef = resolveStreamMethod(targets, processName)
         if (streamRef == null) {
             Logger.w("stream method not resolved; skipping")
@@ -132,6 +139,9 @@ object StreamSliceFilterHook {
             val result = chain.proceed()
             val items = result as? List<*> ?: return result
             if (items.isEmpty()) return result
+
+            val prefs = hookPrefs
+            if (prefs != null && !SettingsPrefs.filterEnabled.read(prefs)) return result
 
             val fp = fastFingerprint(items)
             if (fp == lastFingerprint) return lastFilteredSnapshot ?: result
