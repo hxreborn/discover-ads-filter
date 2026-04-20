@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Discover Ads Filter</string>
+    <string name="app_description">Removes sponsored cards from the Google Discover feed using structural DexKit fingerprinting. Targets Google App (AGSA).</string>
 
     <string name="button_reverify">Re-scan</string>
 
