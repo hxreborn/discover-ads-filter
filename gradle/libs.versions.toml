@@ -1,0 +1,42 @@
+[versions]
+agp = "9.1.1"
+kotlin = "2.3.20"
+kotlinxCoroutines = "1.10.2"
+kotlinxSerialization = "1.10.0"
+libxposedApi = "101.0.0"
+dexkit = "2.0.7"
+androidxCore = "1.18.0"
+activityCompose = "1.13.0"
+lifecycle = "2.10.0"
+composeBom = "2026.03.01"
+material3 = "1.5.0-alpha17"
+splashscreen = "1.2.0"
+composePreferences = "2.2.0"
+ktlint = "1.8.0"
+
+[libraries]
+libxposed-api                 = { module = "io.github.libxposed:api",                                version.ref = "libxposedApi" }
+libxposed-service             = { module = "io.github.libxposed:service",                            version.ref = "libxposedApi" }
+dexkit                        = { module = "org.luckypray:dexkit",                                   version.ref = "dexkit" }
+androidx-core                 = { module = "androidx.core:core-ktx",                                 version.ref = "androidxCore" }
+androidx-activity-compose     = { module = "androidx.activity:activity-compose",                    version.ref = "activityCompose" }
+androidx-core-splashscreen    = { module = "androidx.core:core-splashscreen",                       version.ref = "splashscreen" }
+androidx-lifecycle-runtime    = { module = "androidx.lifecycle:lifecycle-runtime-ktx",              version.ref = "lifecycle" }
+androidx-lifecycle-runtime-compose   = { module = "androidx.lifecycle:lifecycle-runtime-compose",   version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+compose-bom                   = { module = "androidx.compose:compose-bom",                          version.ref = "composeBom" }
+compose-ui                    = { module = "androidx.compose.ui:ui" }
+compose-ui-graphics           = { module = "androidx.compose.ui:ui-graphics" }
+compose-ui-tooling            = { module = "androidx.compose.ui:ui-tooling" }
+compose-ui-tooling-preview    = { module = "androidx.compose.ui:ui-tooling-preview" }
+compose-material3             = { module = "androidx.compose.material3:material3",              version.ref = "material3" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+compose-preferences            = { module = "me.zhanghai.compose.preference:preference",            version.ref = "composePreferences" }
+kotlinx-coroutines-android    = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android",      version.ref = "kotlinxCoroutines" }
+kotlinx-serialization-json    = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json",      version.ref = "kotlinxSerialization" }
+ktlint-cli                    = { module = "com.pinterest.ktlint:ktlint-cli",                         version.ref = "ktlint" }
+
+[plugins]
+android-application   = { id = "com.android.application",                    version.ref = "agp" }
+kotlin-compose        = { id = "org.jetbrains.kotlin.plugin.compose",        version.ref = "kotlin" }
+kotlin-serialization  = { id = "org.jetbrains.kotlin.plugin.serialization",  version.ref = "kotlin" }

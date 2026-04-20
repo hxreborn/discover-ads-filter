@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Discover Ads Filter</string>
+
+    <string name="section_debug">Debug</string>
+
+    <string name="toggle_verbose">Debug logging</string>
+    <string name="toggle_verbose_summary">Verbose logging for troubleshooting</string>
+
+    <string name="hook_agsa_updated">Stale: AGSA updated since last scan</string>
+    <string name="hook_module_updated">Stale: module rebuilt since last scan</string>
+    <string name="hook_not_scanned_title">Not configured</string>
+    <string name="hook_not_scanned_message">Scan to resolve hook targets</string>
+
+    <string name="coverage_full">Ready</string>
+    <string name="coverage_full_detail">All hook targets resolved</string>
+    <string name="coverage_fallback">Fallback only</string>
+    <string name="coverage_fallback_detail">Feed filter unavailable, fallback hooks only</string>
+    <string name="coverage_none">No targets resolved</string>
+    <string name="coverage_none_detail">No targets found, update signatures and re-scan</string>
+    <string name="coverage_scan_failed">Scan failed</string>
+
+    <string name="button_verify">Scan targets</string>
+    <string name="button_reverify">Re-scan</string>
+    <string name="button_scanning">Scanning\u2026</string>
+</resources>

@@ -1,0 +1,42 @@
+# Gradle
+.gradle/
+.kotlin/
+build/
+**/build/
+
+# Android SDK
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+out/
+
+# Native builds
+.externalNativeBuild/
+.cxx/
+
+# Artifacts
+*.apk
+*.aab
+*.apks
+*.xapk
+captures/
+
+# Signing / secrets
+*.keystore
+*.jks
+keystore.properties
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.tmp
+*.log
+hs_err_pid*.log
+
+# Local research artifacts
+docs/
+research/

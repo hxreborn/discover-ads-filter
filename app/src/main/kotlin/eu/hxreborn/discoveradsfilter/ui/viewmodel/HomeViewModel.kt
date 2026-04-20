@@ -1,0 +1,190 @@
+package eu.hxreborn.discoveradsfilter.ui.viewmodel
+
+import android.app.Application
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import eu.hxreborn.discoveradsfilter.App
+import eu.hxreborn.discoveradsfilter.BuildConfig
+import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
+import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
+import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import eu.hxreborn.discoveradsfilter.prefs.SettingsRepository
+import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
+import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
+import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
+import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlin.system.measureTimeMillis
+
+class HomeViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
+    private val repo =
+        SettingsRepository(
+            context = application,
+            remotePrefsProvider = { App.remotePrefs },
+        )
+
+    private val verboseFlow = MutableStateFlow(false)
+    private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
+
+    val uiState: StateFlow<HomeUiState> =
+        combine(verboseFlow, verifyFlow) { verbose, verify ->
+            if (verify == null) {
+                HomeUiState.Loading
+            } else {
+                HomeUiState.Ready(verbose = verbose, verify = verify)
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
+
+    val actions: HomeActions =
+        HomeActions(
+            onVerboseChange = { value ->
+                repo.setVerbose(value)
+                verboseFlow.value = value
+            },
+            onVerify = ::verify,
+        )
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            verboseFlow.value = repo.snapshot().verbose
+            val lastScan = repo.readLastScan()
+            val installed = currentAgsaVersion()
+            val hookStatus = repo.readHookStatus()
+            val hookProcess = repo.readHookProcess()
+            val adsHidden = repo.readAdsHidden()
+            verifyFlow.value =
+                VerifyUiState(
+                    lastResult = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) },
+                    installedAgsaVersion = installed,
+                    scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
+                    hookInstallStatus = hookStatus,
+                    hookProcess = hookProcess,
+                    adsHidden = adsHidden,
+                )
+        }
+    }
+
+    fun onServiceBound() {
+        verifyFlow.update { it?.copy(xposedServiceBound = true) }
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.syncLocalToRemote()
+            val hookStatus = repo.readHookStatus()
+            val hookProcess = repo.readHookProcess()
+            val adsHidden = repo.readAdsHidden()
+            verifyFlow.update { current ->
+                current?.copy(
+                    hookInstallStatus = hookStatus ?: current.hookInstallStatus,
+                    hookProcess = hookProcess ?: current.hookProcess,
+                    adsHidden = maxOf(adsHidden, current.adsHidden),
+                )
+            }
+        }
+    }
+
+    fun onServiceDied() {
+        verifyFlow.update { it?.copy(xposedServiceBound = false) }
+    }
+
+    private fun verify() {
+        val current = verifyFlow.value ?: return
+        if (current.phase == VerifyPhase.Running) return
+        verifyFlow.update { it?.copy(phase = VerifyPhase.Running) }
+        viewModelScope.launch {
+            if (verboseFlow.value) {
+                Log.d(TAG, "scan started")
+            }
+            val result =
+                runCatching { scan() }.getOrElse { t ->
+                    Log.e(TAG, "scan threw", t)
+                    VerifyResult.Failure("Unexpected exception", t.message)
+                }
+            val installed = withContext(Dispatchers.IO) { currentAgsaVersion() }
+            verifyFlow.update { current ->
+                val preserved =
+                    when (result) {
+                        is VerifyResult.Success -> result
+                        is VerifyResult.Failure -> current?.lastResult ?: result
+                    }
+                current?.copy(
+                    phase = VerifyPhase.Idle,
+                    lastResult = preserved,
+                    installedAgsaVersion = installed,
+                    scanModuleVersion =
+                        if (result is VerifyResult.Success) {
+                            BuildConfig.VERSION_CODE
+                        } else {
+                            current.scanModuleVersion
+                        },
+                )
+            }
+        }
+    }
+
+    private suspend fun scan(): VerifyResult =
+        withContext(Dispatchers.IO) {
+            val app = getApplication<Application>()
+            val agsaInfo =
+                runCatching {
+                    app.packageManager.getApplicationInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
+                }.getOrElse { t ->
+                    if (verboseFlow.value) {
+                        Log.d(TAG, "AGSA ApplicationInfo lookup failed: ${t.javaClass.simpleName}: ${t.message}")
+                    }
+                    return@withContext VerifyResult.Failure(
+                        reason = "AGSA not installed on this device",
+                        detail = t.message,
+                    )
+                }
+            val apkPath = agsaInfo.sourceDir ?: return@withContext VerifyResult.Failure("AGSA ApplicationInfo.sourceDir was null")
+
+            val versionCode =
+                runCatching {
+                    app.packageManager.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0).longVersionCode
+                }.getOrNull() ?: 0L
+
+            if (verboseFlow.value) {
+                Log.d(TAG, "DexKit scan: agsaV=$versionCode apk=$apkPath")
+            }
+
+            var resolvedTargets: ResolvedTargets? = null
+            val elapsedMs =
+                measureTimeMillis {
+                    resolvedTargets = DexKitResolver.resolveAll(apkPath)
+                }
+            if (verboseFlow.value && resolvedTargets != null) {
+                Log.d(TAG, "DexKit finished in ${elapsedMs}ms: ${resolvedTargets!!.summary()}")
+            }
+
+            when (val resolved = resolvedTargets!!) {
+                is ResolvedTargets.Resolved -> {
+                    repo.writeResolvedTargets(versionCode, resolved)
+                    VerifyResult.Success(versionCode, resolved)
+                }
+
+                is ResolvedTargets.Missing -> {
+                    VerifyResult.Failure(reason = "Signatures not resolved", detail = resolved.reason)
+                }
+            }
+        }
+
+    private fun currentAgsaVersion(): Long? {
+        val pm = getApplication<Application>().packageManager
+        return runCatching { pm.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0).longVersionCode }.getOrNull()
+    }
+
+    private companion object {
+        private const val TAG = "DiscoverAdsFilter"
+    }
+}
