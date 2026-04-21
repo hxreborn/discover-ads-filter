@@ -2,69 +2,36 @@ package eu.hxreborn.discoveradsfilter.prefs
 
 import android.content.SharedPreferences
 
-sealed class PrefSpec<T>(
+class PrefSpec<T>(
     val key: String,
     val default: T,
+    private val get: SharedPreferences.(String, T) -> T,
+    private val put: SharedPreferences.Editor.(String, T) -> Unit,
 ) {
-    abstract fun read(prefs: SharedPreferences): T
+    fun read(prefs: SharedPreferences): T = prefs.get(key, default)
 
-    abstract fun write(
+    fun write(
         editor: SharedPreferences.Editor,
         value: T,
-    )
+    ) {
+        editor.put(key, value)
+    }
 }
 
-class BoolPref(
+fun boolPref(
     key: String,
     default: Boolean,
-) : PrefSpec<Boolean>(key, default) {
-    override fun read(prefs: SharedPreferences): Boolean = prefs.getBoolean(key, default)
+) = PrefSpec(key, default, SharedPreferences::getBoolean) { k, v -> putBoolean(k, v) }
 
-    override fun write(
-        editor: SharedPreferences.Editor,
-        value: Boolean,
-    ) {
-        editor.putBoolean(key, value)
-    }
-}
-
-class IntPref(
+fun intPref(
     key: String,
     default: Int,
-) : PrefSpec<Int>(key, default) {
-    override fun read(prefs: SharedPreferences): Int = prefs.getInt(key, default)
+) = PrefSpec(key, default, SharedPreferences::getInt) { k, v -> putInt(k, v) }
 
-    override fun write(
-        editor: SharedPreferences.Editor,
-        value: Int,
-    ) {
-        editor.putInt(key, value)
-    }
-}
-
-class LongPref(
+fun longPref(
     key: String,
     default: Long,
-) : PrefSpec<Long>(key, default) {
-    override fun read(prefs: SharedPreferences): Long = prefs.getLong(key, default)
+) = PrefSpec(key, default, SharedPreferences::getLong) { k, v -> putLong(k, v) }
 
-    override fun write(
-        editor: SharedPreferences.Editor,
-        value: Long,
-    ) {
-        editor.putLong(key, value)
-    }
-}
-
-class NullableStringPref(
-    key: String,
-) : PrefSpec<String?>(key, null) {
-    override fun read(prefs: SharedPreferences): String? = prefs.getString(key, null)
-
-    override fun write(
-        editor: SharedPreferences.Editor,
-        value: String?,
-    ) {
-        editor.putString(key, value)
-    }
-}
+fun nullableStringPref(key: String) =
+    PrefSpec<String?>(key, null, { k, _ -> getString(k, null) }) { k, v -> putString(k, v) }
