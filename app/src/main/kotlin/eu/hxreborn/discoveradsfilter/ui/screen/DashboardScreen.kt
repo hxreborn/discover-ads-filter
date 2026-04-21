@@ -296,75 +296,26 @@ internal fun DashboardScreenContent(
     }
 
     val verify = ready?.verify
-    when {
+    val showStartupOverlay =
         verify?.scanOrigin == ScanOrigin.Startup &&
-            verify.phase == VerifyPhase.Running -> {
-            Surface(Modifier.fillMaxSize()) {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    ScanProgressCard(
-                        progress = verify.scanProgress,
-                        phase = verify.phase,
-                        maxVisibleCompleted = 3,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                    )
-                }
-            }
-        }
-
-        verify?.scanOrigin == ScanOrigin.Startup &&
-            verify.phase == VerifyPhase.Idle &&
-            !verify.startupScanDismissed -> {
-            val isFailure = verify.lastResult is VerifyResult.Failure
-            AlertDialog(
-                onDismissRequest = actions.onDismissStartupScan,
-                title = {
-                    Text(
-                        if (isFailure) {
-                            stringResource(R.string.scan_failed_title)
-                        } else {
-                            stringResource(R.string.scan_complete)
-                        },
-                    )
-                },
-                text = {
-                    val failure = verify.lastResult as? VerifyResult.Failure
-                    Text(
-                        if (failure != null) {
-                            stringResource(R.string.scan_failed_body)
-                        } else {
-                            stringResource(
-                                R.string.diag_summary_resolved,
-                                verify.resolvedTargetCount,
-                                verify.totalTargetCount,
-                            )
-                        },
-                    )
-                },
-                confirmButton = {
-                    if (isFailure) {
-                        TextButton(onClick = actions.onVerify) {
-                            Text(stringResource(R.string.scan_retry))
-                        }
-                    } else {
-                        TextButton(onClick = actions.onDismissStartupScan) {
-                            Text(stringResource(R.string.button_ok))
-                        }
-                    }
-                },
-                dismissButton =
-                    if (isFailure) {
-                        {
-                            TextButton(onClick = actions.onDismissStartupScan) {
-                                Text(stringResource(R.string.button_ok))
-                            }
-                        }
-                    } else {
-                        null
-                    },
+            (
+                verify.phase == VerifyPhase.Running ||
+                    (verify.phase == VerifyPhase.Idle && !verify.startupScanDismissed && verify.scanProgress.isNotEmpty())
             )
+    if (showStartupOverlay && verify != null) {
+        Surface(Modifier.fillMaxSize()) {
+            Box(
+                Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                ScanProgressCard(
+                    progress = verify.scanProgress,
+                    phase = verify.phase,
+                    maxVisibleCompleted = 3,
+                    onDismiss = if (verify.phase == VerifyPhase.Idle) actions.onDismissStartupScan else null,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                )
+            }
         }
     }
 

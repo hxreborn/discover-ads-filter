@@ -26,6 +26,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -61,6 +62,7 @@ internal fun ScanProgressCard(
     durationMs: Long = 0,
     showRawValues: Boolean = false,
     maxVisibleCompleted: Int = Int.MAX_VALUE,
+    onDismiss: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val running = phase == VerifyPhase.Running
@@ -130,6 +132,15 @@ internal fun ScanProgressCard(
                             paddingValues = PaddingValues(vertical = 12.dp),
                         )
                     }
+                }
+            }
+
+            if (done && onDismiss != null) {
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(stringResource(R.string.button_ok))
                 }
             }
         }
