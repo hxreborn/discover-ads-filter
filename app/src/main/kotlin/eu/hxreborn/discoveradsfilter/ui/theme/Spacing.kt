@@ -14,8 +14,3 @@ object IconSize {
     val md = 24.dp
     val lg = 32.dp
 }
-
-object ProgressStroke {
-    val sm = 2.dp
-    val md = 4.dp
-}
