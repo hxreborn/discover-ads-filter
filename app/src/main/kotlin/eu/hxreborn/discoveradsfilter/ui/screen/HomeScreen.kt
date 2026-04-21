@@ -59,6 +59,7 @@ import eu.hxreborn.discoveradsfilter.ui.components.DexKitDialog
 import eu.hxreborn.discoveradsfilter.ui.components.HeroStatusCard
 import eu.hxreborn.discoveradsfilter.ui.components.WavyHeaderBackground
 import eu.hxreborn.discoveradsfilter.ui.components.diagnosticsItems
+import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
@@ -78,7 +79,20 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val actions = viewModel.actions
+    HomeScreenContent(
+        modifier = modifier,
+        state = state,
+        actions = viewModel.actions,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun HomeScreenContent(
+    state: HomeUiState,
+    actions: HomeActions,
+    modifier: Modifier = Modifier,
+) {
     val ready = state as? HomeUiState.Ready
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()

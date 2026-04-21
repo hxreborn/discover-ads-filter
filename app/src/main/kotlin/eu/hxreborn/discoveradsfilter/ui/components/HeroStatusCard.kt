@@ -12,8 +12,6 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
-import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -30,7 +28,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
-import eu.hxreborn.discoveradsfilter.discovery.RegistryStatus
 import eu.hxreborn.discoveradsfilter.ui.state.HookCoverage
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
@@ -40,7 +37,6 @@ import eu.hxreborn.discoveradsfilter.ui.state.hookCoverage
 import eu.hxreborn.discoveradsfilter.ui.state.moduleUpdatedSinceScan
 import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
-import java.text.NumberFormat
 
 private const val PROGRESS_TRACK_ALPHA = 0.24f
 
@@ -111,12 +107,6 @@ private fun targetLine(state: VerifyUiState): String {
     }
 }
 
-@Composable
-private fun blockedLine(state: VerifyUiState): String {
-    val formatted = NumberFormat.getInstance().format(state.adsHidden)
-    return stringResource(R.string.hero_blocked_since_install, formatted)
-}
-
 private data class HeroVisual(
     val icon: ImageVector,
     val titleRes: Int,
@@ -144,12 +134,10 @@ private fun heroVisual(state: VerifyUiState): HeroVisual {
 
     return when (state.hookCoverage()) {
         HookCoverage.Full -> {
-            val verified =
-                state.registryStatus == RegistryStatus.Verified ||
-                    (state.hookInstalled > 0 && state.adsHidden > 0)
-            if (verified) {
+            val filtering = state.hookInstalled > 0 && state.adsHidden > 0
+            if (filtering) {
                 HeroVisual(
-                    icon = Icons.Outlined.Verified,
+                    icon = Icons.Outlined.CheckCircle,
                     titleRes = R.string.hero_hooks_active_verified,
                     container = scheme.primaryContainer,
                     content = scheme.onPrimaryContainer,
