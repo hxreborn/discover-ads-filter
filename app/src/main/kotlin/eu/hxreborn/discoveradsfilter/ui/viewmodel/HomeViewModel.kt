@@ -173,16 +173,16 @@ class HomeViewModel(
                 Log.d(TAG, "DexKit scan: agsaV=$versionCode apk=$apkPath")
             }
 
-            var resolvedTargets: ResolvedTargets? = null
+            var resolved: ResolvedTargets
             val elapsedMs =
                 measureTimeMillis {
-                    resolvedTargets = DexKitResolver.resolveAll(apkPath)
+                    resolved = DexKitResolver.resolveAll(apkPath)
                 }
-            if (verboseFlow.value && resolvedTargets != null) {
-                Log.d(TAG, "DexKit finished in ${elapsedMs}ms: ${resolvedTargets!!.summary()}")
+            if (verboseFlow.value) {
+                Log.d(TAG, "DexKit finished in ${elapsedMs}ms: ${resolved.summary()}")
             }
 
-            when (val resolved = resolvedTargets!!) {
+            when (resolved) {
                 is ResolvedTargets.Resolved -> {
                     repo.writeResolvedTargets(versionCode, resolved)
                     VerifyResult.Success(versionCode, resolved)
