@@ -3,7 +3,6 @@ package eu.hxreborn.discoveradsfilter
 import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
-import androidx.core.content.edit
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.hook.HookMetrics
@@ -62,7 +61,6 @@ class DiscoverAdsFilterModule : XposedModule() {
                     param.classLoader,
                     prefs,
                     targets,
-                    proc,
                 )
                 true
             }.onFailure { t ->
@@ -70,13 +68,6 @@ class DiscoverAdsFilterModule : XposedModule() {
             }.isSuccess
 
         val status = if (ok) "1/1" else "0/1 failed:StreamSliceFilterHook"
-        runCatching {
-            prefs.edit(commit = true) {
-                SettingsPrefs.hookStatus.write(this, status)
-                SettingsPrefs.hookProcess.write(this, proc)
-            }
-        }
-
         log(
             Log.INFO,
             TAG,
