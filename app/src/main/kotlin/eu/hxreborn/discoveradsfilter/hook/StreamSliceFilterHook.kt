@@ -16,7 +16,6 @@ import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicInteger
 
 object StreamSliceFilterHook {
     private const val TAG = "DiscoverAdsFilter/StreamSlice"
@@ -28,10 +27,8 @@ object StreamSliceFilterHook {
     private val adClusterTokens = setOf("feedads", "homestack")
 
     private val decisionCache = ConcurrentHashMap<String, Boolean>()
-    private val blockedKeys = ConcurrentHashMap.newKeySet<String>()
     private val fieldCache = ConcurrentHashMap<String, Field>()
     private val classFieldCache = ConcurrentHashMap<String, List<Field>>()
-    private val filteredCount = AtomicInteger(0)
 
     @Volatile
     private var resolvedStreamMethod: MethodRef? = null
@@ -41,9 +38,6 @@ object StreamSliceFilterHook {
 
     @Volatile
     private var lastFingerprint: Long = Long.MIN_VALUE
-
-    @Volatile
-    private var lastKeysSnapshot: List<String> = emptyList()
 
     @Volatile
     private var lastFilteredSnapshot: List<Any?>? = null
@@ -154,8 +148,6 @@ object StreamSliceFilterHook {
                         stableItemKey(item) ?: "$NULL_KEY_PREFIX$i"
                     }
                 }
-            lastKeysSnapshot = keys
-
             var removed = 0
             val filtered = ArrayList<Any?>(items.size)
             items.forEachIndexed { i, item ->
@@ -173,7 +165,6 @@ object StreamSliceFilterHook {
 
             HookMetrics.addAdsHidden(removed)
             lastFilteredSnapshot = filtered
-            filteredCount.addAndGet(removed)
             return filtered
         }
     }
@@ -183,7 +174,6 @@ object StreamSliceFilterHook {
         val lower = key.lowercase(Locale.ROOT)
         val isAd = adClusterTokens.any { it in lower }
         decisionCache[key] = isAd
-        if (isAd) blockedKeys.add(key)
         return isAd
     }
 
