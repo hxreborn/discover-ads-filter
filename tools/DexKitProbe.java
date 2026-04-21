@@ -1,13 +1,13 @@
 import org.luckypray.dexkit.DexKitBridge;
 import org.luckypray.dexkit.query.FindClass;
 import org.luckypray.dexkit.query.matchers.ClassMatcher;
-import org.luckypray.dexkit.query.matchers.MethodMatcher;
 import org.luckypray.dexkit.result.ClassData;
 import org.luckypray.dexkit.result.MethodData;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 public final class DexKitProbe {
     private static final List<String> FEED_STRINGS = List.of(
@@ -65,8 +65,10 @@ public final class DexKitProbe {
         ClassMatcher matcher = ClassMatcher.create().usingEqStrings(FEED_STRINGS);
         List<ClassData> classes = bridge.findClass(FindClass.create().matcher(matcher));
         classes.stream()
-            .sorted(Comparator.comparing(ClassData::getName))
+            .sorted(Comparator.comparingInt(DexKitProbe::scoreFeedClass).reversed()
+                .thenComparing(ClassData::getName))
             .forEach(DexKitProbe::printClassSummary);
+        System.out.println("count=" + classes.size());
     }
 
     private static void dumpAdapterSubclasses(DexKitBridge bridge, String superClass) {
@@ -74,7 +76,8 @@ public final class DexKitProbe {
         ClassMatcher matcher = ClassMatcher.create().superClass(superClass);
         List<ClassData> classes = bridge.findClass(FindClass.create().matcher(matcher));
         classes.stream()
-            .sorted(Comparator.comparing(ClassData::getName))
+            .sorted(Comparator.comparingInt(DexKitProbe::scoreAdapterClass).reversed()
+                .thenComparing(ClassData::getName))
             .limit(80)
             .forEach(cls -> {
                 System.out.println(cls.getName());
@@ -90,8 +93,11 @@ public final class DexKitProbe {
         List<ClassData> classes =
             bridge.findClass(FindClass.create().searchPackages("com.google.android.apps.search.googleapp.discover"));
         classes.stream()
-            .sorted(Comparator.comparing(ClassData::getName))
+            .sorted(Comparator.comparingInt(DexKitProbe::scoreDiscoverClass).reversed()
+                .thenComparing(ClassData::getName))
             .forEach(cls -> cls.getMethods().stream()
+                .sorted(Comparator.comparingInt(DexKitProbe::scoreListMethod).reversed()
+                    .thenComparing(MethodData::getMethodName))
                 .filter(method -> isListy(method.getReturnTypeName()) || looksLikeAccessor(method.getMethodName()))
                 .forEach(method -> {
                     System.out.println(
@@ -114,6 +120,46 @@ public final class DexKitProbe {
         return Arrays.asList("getCards", "cards", "getItems", "items", "getFeed", "feed", "getContent",
                 "content", "getEntries", "entries").stream()
             .anyMatch(name::equalsIgnoreCase);
+    }
+
+    private static int scoreFeedClass(ClassData cls) {
+        String name = cls.getName().toLowerCase(Locale.ROOT);
+        int score = 0;
+        if (name.contains("discover")) score += 30;
+        if (name.contains("stream")) score += 20;
+        if (name.contains("card")) score += 20;
+        if (name.contains("adapter")) score += 10;
+        return score;
+    }
+
+    private static int scoreAdapterClass(ClassData cls) {
+        String name = cls.getName().toLowerCase(Locale.ROOT);
+        int score = 0;
+        if (name.contains("discover")) score += 30;
+        if (name.contains("stream")) score += 20;
+        if (name.contains("card")) score += 15;
+        if (name.contains("feed")) score += 10;
+        return score;
+    }
+
+    private static int scoreDiscoverClass(ClassData cls) {
+        String name = cls.getName().toLowerCase(Locale.ROOT);
+        int score = 0;
+        if (name.contains("stream")) score += 25;
+        if (name.contains("render")) score += 15;
+        if (name.contains("content")) score += 15;
+        return score;
+    }
+
+    private static int scoreListMethod(MethodData method) {
+        String name = method.getMethodName().toLowerCase(Locale.ROOT);
+        int score = 0;
+        if (looksLikeAccessor(method.getMethodName())) score += 30;
+        if (name.contains("content")) score += 20;
+        if (name.contains("element")) score += 15;
+        if (name.contains("render")) score += 15;
+        if (isListy(method.getReturnTypeName())) score += 10;
+        return score;
     }
 
     private static void printClassSummary(ClassData cls) {
