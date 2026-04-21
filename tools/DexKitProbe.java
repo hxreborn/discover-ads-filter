@@ -8,8 +8,12 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.io.PrintStream;
 
 public final class DexKitProbe {
+    private static final PrintStream OUT = System.out;
+    private static final PrintStream ERR = System.err;
+
     private static final List<String> FEED_STRINGS = List.of(
         "Sponsored",
         "sponsored",
@@ -38,7 +42,7 @@ public final class DexKitProbe {
 
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
-            System.err.println("usage: DexKitProbe <apk>");
+            ERR.println("usage: DexKitProbe <apk>");
             System.exit(2);
         }
 
@@ -61,18 +65,18 @@ public final class DexKitProbe {
     }
 
     private static void dumpClassesUsingFeedStrings(DexKitBridge bridge) {
-        System.out.println("== classes using feed strings ==");
+        OUT.println("== classes using feed strings ==");
         ClassMatcher matcher = ClassMatcher.create().usingEqStrings(FEED_STRINGS);
         List<ClassData> classes = bridge.findClass(FindClass.create().matcher(matcher));
         classes.stream()
             .sorted(Comparator.comparingInt(DexKitProbe::scoreFeedClass).reversed()
                 .thenComparing(ClassData::getName))
             .forEach(DexKitProbe::printClassSummary);
-        System.out.println("count=" + classes.size());
+        OUT.println("count=" + classes.size());
     }
 
     private static void dumpAdapterSubclasses(DexKitBridge bridge, String superClass) {
-        System.out.println("== adapter subclasses: " + superClass + " ==");
+        OUT.println("== adapter subclasses: " + superClass + " ==");
         ClassMatcher matcher = ClassMatcher.create().superClass(superClass);
         List<ClassData> classes = bridge.findClass(FindClass.create().matcher(matcher));
         classes.stream()
@@ -80,16 +84,16 @@ public final class DexKitProbe {
                 .thenComparing(ClassData::getName))
             .limit(80)
             .forEach(cls -> {
-                System.out.println(cls.getName());
+                OUT.println(cls.getName());
                 cls.getMethods().stream()
                     .filter(method -> method.getMethodName().equals("onBindViewHolder"))
-                    .forEach(method -> System.out.println("  bind " + method.getMethodSign()));
+                    .forEach(method -> OUT.println("  bind " + method.getMethodSign()));
             });
-        System.out.println("count=" + classes.size());
+        OUT.println("count=" + classes.size());
     }
 
     private static void dumpDiscoverPackageListMethods(DexKitBridge bridge) {
-        System.out.println("== discover package list-ish methods ==");
+        OUT.println("== discover package list-ish methods ==");
         List<ClassData> classes =
             bridge.findClass(FindClass.create().searchPackages("com.google.android.apps.search.googleapp.discover"));
         classes.stream()
@@ -100,12 +104,12 @@ public final class DexKitProbe {
                     .thenComparing(MethodData::getMethodName))
                 .filter(method -> isListy(method.getReturnTypeName()) || looksLikeAccessor(method.getMethodName()))
                 .forEach(method -> {
-                    System.out.println(
+                    OUT.println(
                         cls.getName() + " :: " + method.getMethodSign() +
                             " strings=" + preview(method.getUsingStrings())
                     );
                 }));
-        System.out.println("discover-class-count=" + classes.size());
+        OUT.println("discover-class-count=" + classes.size());
     }
 
     private static boolean isListy(String returnType) {
@@ -163,10 +167,10 @@ public final class DexKitProbe {
     }
 
     private static void printClassSummary(ClassData cls) {
-        System.out.println(cls.getName());
+        OUT.println(cls.getName());
         cls.getMethods().stream()
             .filter(method -> isListy(method.getReturnTypeName()) || looksLikeAccessor(method.getMethodName()))
-            .forEach(method -> System.out.println(
+            .forEach(method -> OUT.println(
                 "  " + method.getMethodSign() + " strings=" + preview(method.getUsingStrings())
             ));
     }
