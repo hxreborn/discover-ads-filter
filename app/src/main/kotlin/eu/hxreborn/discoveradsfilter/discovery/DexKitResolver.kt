@@ -14,6 +14,7 @@ object DexKitResolver {
     private const val MAX_CARD_PROCESSOR_METHODS = 120
     private const val CLINIT = "<clinit>"
     private const val TYPE_STRING = "java.lang.String"
+    private val RUNTIME_PACKAGES = listOf("java.", "kotlin.", "android.")
 
     // DexKit 2.x requires explicit System.loadLibrary, no static initializer
     private val nativeLoaded: Boolean by lazy {
@@ -96,13 +97,26 @@ object DexKitResolver {
                 }
             }.getOrDefault(emptyList())
 
-        return candidates.firstOrNull { c ->
-            val fields = runCatching { c.fields }.getOrDefault(emptyList())
-            val nonStatic = fields.filter { !it.isStatic }
-            nonStatic.any { it.typeName == TYPE_STRING } &&
-                nonStatic.any { it.typeName == "boolean" } &&
-                nonStatic.any { it.typeName == "long" }
-        }
+        return candidates
+            .mapNotNull { candidate ->
+                val fields = runCatching { candidate.fields }.getOrDefault(emptyList())
+                val nonStatic = fields.filterNot { it.isStatic }
+                if (nonStatic.none { it.typeName == TYPE_STRING } ||
+                    nonStatic.none { it.typeName == "boolean" } ||
+                    nonStatic.none { it.typeName == "long" }
+                ) {
+                    return@mapNotNull null
+                }
+                val score =
+                    scoreCandidate(
+                        scoreIf(nonStatic.any { it.typeName == TYPE_STRING }, 35),
+                        scoreIf(nonStatic.any { it.typeName == "boolean" }, 30),
+                        scoreIf(nonStatic.any { it.typeName == "long" }, 20),
+                        scoreIf(nonStatic.size in 3..12, 10),
+                    )
+                ScoredClass(candidate, score)
+            }.maxByOrNull(ScoredClass::score)
+            ?.data
     }
 
     private fun findFeedCardClass(
@@ -120,11 +134,24 @@ object DexKitResolver {
                 }
             }.getOrDefault(emptyList())
 
-        return candidates.firstOrNull { c ->
-            val fields = runCatching { c.fields }.getOrDefault(emptyList())
-            val nonStatic = fields.filter { !it.isStatic }
-            nonStatic.count { it.typeName == TYPE_STRING } >= 5
-        }
+        return candidates
+            .mapNotNull { candidate ->
+                val fields = runCatching { candidate.fields }.getOrDefault(emptyList())
+                val nonStatic = fields.filterNot { it.isStatic }
+                val stringCount = nonStatic.count { it.typeName == TYPE_STRING }
+                if (stringCount < 5) {
+                    return@mapNotNull null
+                }
+                val score =
+                    scoreCandidate(
+                        50,
+                        stringCount.coerceAtMost(12),
+                        scoreIf(nonStatic.any { it.typeName == adMetaName }, 20),
+                        scoreIf(nonStatic.size in 6..24, 10),
+                    )
+                ScoredClass(candidate, score)
+            }.maxByOrNull(ScoredClass::score)
+            ?.data
     }
 
     private fun findAdFlagField(adMetaClass: ClassData): String? =
@@ -168,18 +195,22 @@ object DexKitResolver {
         // exclude serialization internals that also read this field
         val fromReaders =
             fieldReaders
+                .asSequence()
                 .filter { isHookableMethod(it, feedCardName) }
                 .sortedByDescending(::scoreCardProcessorCandidate)
                 .map(::toMethodRef)
+                .toList()
 
         // callers catch the active render path when the reader itself is inlined or bypassed
         val fromReaderCallers =
             fieldReaders
+                .asSequence()
                 .flatMap { reader ->
-                    runCatching { reader.callers.toList() }.getOrDefault(emptyList())
+                    runCatching { reader.callers.asSequence() }.getOrDefault(emptySequence())
                 }.filter { isHookableMethod(it, feedCardName) }
                 .sortedByDescending(::scoreCardProcessorCandidate)
                 .map(::toMethodRef)
+                .toList()
 
         val byParam =
             runCatching {
@@ -193,9 +224,11 @@ object DexKitResolver {
 
         val fromByParam =
             byParam
+                .asSequence()
                 .filter { isHookableMethod(it, feedCardName) }
                 .sortedByDescending(::scoreCardProcessorCandidate)
                 .map(::toMethodRef)
+                .toList()
 
         return (fromReaders + fromReaderCallers + fromByParam)
             .distinctBy {
@@ -209,12 +242,7 @@ object DexKitResolver {
     ): Boolean {
         if (method.name == "<init>" || method.name == CLINIT) return false
         if (method.declaredClassName == feedCardName) return false
-        if (method.declaredClassName.startsWith("java.") ||
-            method.declaredClassName.startsWith("kotlin.") ||
-            method.declaredClassName.startsWith(
-                "android.",
-            )
-        ) {
+        if (RUNTIME_PACKAGES.any(method.declaredClassName::startsWith)) {
             return false
         }
         return true
@@ -232,6 +260,8 @@ object DexKitResolver {
         val methodName = method.name
         val className = method.declaredClassName.lowercase(Locale.ROOT)
         if (methodName == "onBindViewHolder" || methodName.contains("bind")) score += 35
+        if (methodName.contains("render")) score += 20
+        if (methodName.contains("slice")) score += 15
         if (className.contains("discover")) score += 25
         if (className.contains("stream")) score += 15
         if (className.contains("card")) score += 10
@@ -255,31 +285,22 @@ object DexKitResolver {
                 }
             }.getOrDefault(emptyList())
 
-        streamClasses.forEach { candidate ->
-            val methods =
+        return streamClasses
+            .asSequence()
+            .flatMap { candidate ->
                 runCatching {
-                    bridge.findMethod {
-                        matcher {
-                            declaredClass(candidate.name)
-                            returnType("java.util.List")
-                            paramCount(0)
-                        }
-                    }
-                }.getOrDefault(emptyList())
-
-            val target =
-                methods.firstOrNull { m ->
-                    m.name != "<init>" && m.name != CLINIT
-                } ?: return@forEach
-
-            return MethodRef(
-                className = target.declaredClassName,
-                methodName = target.name,
-                paramTypeNames = target.paramTypeNames,
-            )
-        }
-
-        return null
+                    bridge
+                        .findMethod {
+                            matcher {
+                                declaredClass(candidate.name)
+                                returnType("java.util.List")
+                                paramCount(0)
+                            }
+                        }.asSequence()
+                }.getOrDefault(emptySequence())
+            }.filterNot { it.name == "<init>" || it.name == CLINIT }
+            .maxByOrNull(::scoreStreamMethodCandidate)
+            ?.let(::toMethodRef)
     }
 
     private val FieldData.isStatic: Boolean
@@ -334,4 +355,29 @@ object DexKitResolver {
                 append("    ${c.name}\n")
             }
         }
+
+    private fun scoreStreamMethodCandidate(method: MethodData): Int {
+        val methodName = method.name.lowercase(Locale.ROOT)
+        val className = method.declaredClassName.lowercase(Locale.ROOT)
+        return scoreCandidate(
+            40,
+            scoreIf(methodName.contains("content"), 20),
+            scoreIf(methodName.contains("element"), 15),
+            scoreIf(methodName.contains("render"), 15),
+            scoreIf(className.contains("discover"), 15),
+            scoreIf(className.contains("stream"), 20),
+        )
+    }
+
+    private fun scoreCandidate(vararg parts: Int): Int = parts.sum()
+
+    private fun scoreIf(
+        condition: Boolean,
+        value: Int,
+    ): Int = if (condition) value else 0
+
+    private data class ScoredClass(
+        val data: ClassData,
+        val score: Int,
+    )
 }
