@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.system.measureTimeMillis
 
 class HomeViewModel(
     private val app: Application,
@@ -111,9 +110,6 @@ class HomeViewModel(
         if (current.phase == VerifyPhase.Running) return
         verifyFlow.update { it?.copy(phase = VerifyPhase.Running) }
         viewModelScope.launch {
-            if (verboseFlow.value) {
-                Log.d(TAG, "scan started")
-            }
             val result =
                 runCatching { scan() }.getOrElse { t ->
                     Log.e(TAG, "scan threw", t)
@@ -145,9 +141,6 @@ class HomeViewModel(
                 runCatching {
                     app.packageManager.getApplicationInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
                 }.getOrElse { t ->
-                    if (verboseFlow.value) {
-                        Log.d(TAG, "AGSA ApplicationInfo lookup failed: ${t.javaClass.simpleName}: ${t.message}")
-                    }
                     return@withContext VerifyResult.Failure(
                         reason = "AGSA not installed on this device",
                         detail = t.message,
@@ -160,18 +153,7 @@ class HomeViewModel(
                     app.packageManager.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0).longVersionCode
                 }.getOrNull() ?: 0L
 
-            if (verboseFlow.value) {
-                Log.d(TAG, "DexKit scan: agsaV=$versionCode apk=$apkPath")
-            }
-
-            var resolved: ResolvedTargets
-            val elapsedMs =
-                measureTimeMillis {
-                    resolved = DexKitResolver.resolveAll(apkPath)
-                }
-            if (verboseFlow.value) {
-                Log.d(TAG, "DexKit finished in ${elapsedMs}ms: ${resolved.summary()}")
-            }
+            val resolved = DexKitResolver.resolveAll(apkPath)
 
             when (resolved) {
                 is ResolvedTargets.Resolved -> {
