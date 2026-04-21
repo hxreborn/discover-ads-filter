@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
@@ -178,7 +177,7 @@ internal fun DashboardScreenContent(
                         title = { Text(stringResource(R.string.pref_category_diagnostics)) },
                     )
 
-                    val advancedCount = 3
+                    val advancedCount = 2
                     val advancedTopShape = shapeForPosition(advancedCount, 0)
                     preference(
                         key = "diagnostics",
@@ -204,7 +203,7 @@ internal fun DashboardScreenContent(
 
                     item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
-                    val advancedMidShape = shapeForPosition(advancedCount, 1)
+                    val advancedBottomShape = shapeForPosition(advancedCount, 1)
                     item(key = "verbose", contentType = "SwitchPreference") {
                         SwitchPreference(
                             value = ready.verbose,
@@ -212,8 +211,8 @@ internal fun DashboardScreenContent(
                             modifier =
                                 Modifier
                                     .padding(horizontal = 8.dp)
-                                    .background(color = surface, shape = advancedMidShape)
-                                    .clip(advancedMidShape),
+                                    .background(color = surface, shape = advancedBottomShape)
+                                    .clip(advancedBottomShape),
                             icon = {
                                 Icon(
                                     imageVector = Icons.Outlined.BugReport,
@@ -231,33 +230,6 @@ internal fun DashboardScreenContent(
                             },
                         )
                     }
-
-                    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-                    val scanning = ready.verify.phase == VerifyPhase.Running
-                    val advancedBottomShape = shapeForPosition(advancedCount, 2)
-                    preference(
-                        key = "clear_cache",
-                        modifier =
-                            Modifier
-                                .padding(horizontal = 8.dp)
-                                .background(color = surface, shape = advancedBottomShape)
-                                .clip(advancedBottomShape),
-                        icon = {
-                            Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
-                        },
-                        title = {
-                            Text(
-                                stringResource(R.string.pref_clear_cache),
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-                        },
-                        summary = {
-                            Text(stringResource(R.string.pref_clear_cache_summary))
-                        },
-                        enabled = moduleActive && !scanning,
-                        onClick = actions.onClearCache,
-                    )
 
                     item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
 
