@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import eu.hxreborn.discoveradsfilter.App
+import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
@@ -17,7 +18,9 @@ class MainActivity :
     private val viewModel: HomeViewModel by viewModels { HomeViewModel.Factory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        installSplashScreen().setKeepOnScreenCondition {
+            viewModel.uiState.value is HomeUiState.Loading
+        }
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
