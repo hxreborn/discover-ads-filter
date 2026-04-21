@@ -19,7 +19,7 @@ class MetricsProvider : ContentProvider() {
     }
 
     private val prefs by lazy {
-        context!!.getSharedPreferences(SettingsPrefs.GROUP, Context.MODE_PRIVATE)
+        requireNotNull(context).getSharedPreferences(SettingsPrefs.GROUP, Context.MODE_PRIVATE)
     }
 
     override fun call(
