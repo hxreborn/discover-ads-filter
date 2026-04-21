@@ -21,6 +21,7 @@ private val NoOpActions =
         onFilterEnabledChange = {},
         onVerify = {},
         onClearCache = {},
+        onDismissStartupScan = {},
     )
 
 @Composable

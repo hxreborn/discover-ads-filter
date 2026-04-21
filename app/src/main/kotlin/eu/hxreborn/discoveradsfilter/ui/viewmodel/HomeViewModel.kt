@@ -63,6 +63,9 @@ class HomeViewModel(
             },
             onVerify = ::verify,
             onClearCache = ::clearCache,
+            onDismissStartupScan = {
+                verifyFlow.update { it?.copy(startupScanDismissed = true) }
+            },
         )
 
     init {

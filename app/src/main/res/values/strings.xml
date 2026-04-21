@@ -4,6 +4,7 @@
     <string name="app_description">Removes sponsored cards from the Google Discover feed by fingerprinting obfuscated hook targets. Targets Google App (AGSA).</string>
 
     <string name="button_rescan">Rescan</string>
+    <string name="button_ok">OK</string>
     <string name="fab_resolving">Resolving\u2026</string>
 
     <!-- Hero status -->

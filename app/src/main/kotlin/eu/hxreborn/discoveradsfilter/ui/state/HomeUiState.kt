@@ -105,6 +105,7 @@ data class HomeActions(
     val onFilterEnabledChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCache: () -> Unit,
+    val onDismissStartupScan: () -> Unit,
 )
 
 @Immutable
@@ -125,6 +126,7 @@ data class VerifyUiState(
     val scanProgress: List<ScanStep> = emptyList(),
     val scanDurationMs: Long = 0,
     val lastRefreshError: String? = null,
+    val startupScanDismissed: Boolean = false,
 ) {
     val hookInstalled: Int get() = parseSlash(hookInstallStatus).first
 

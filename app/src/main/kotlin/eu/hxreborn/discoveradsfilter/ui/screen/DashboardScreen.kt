@@ -22,6 +22,7 @@ import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
-import eu.hxreborn.discoveradsfilter.ui.components.ScanFailureCard
 import eu.hxreborn.discoveradsfilter.ui.components.ScanProgressCard
 import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
 import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
@@ -310,19 +311,56 @@ internal fun DashboardScreenContent(
         }
 
         verify?.scanOrigin == ScanOrigin.Startup &&
-            verify.lastResult is VerifyResult.Failure -> {
-            Surface(Modifier.fillMaxSize()) {
-                Box(
-                    Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    ScanFailureCard(
-                        reason = verify.lastResult.reason,
-                        onOpenDiagnostics = { onNavigate(Destination.Diagnostics) },
-                        onRetry = actions.onVerify,
+            verify.phase == VerifyPhase.Idle &&
+            !verify.startupScanDismissed -> {
+            val isFailure = verify.lastResult is VerifyResult.Failure
+            AlertDialog(
+                onDismissRequest = actions.onDismissStartupScan,
+                title = {
+                    Text(
+                        if (isFailure) {
+                            stringResource(R.string.scan_failed_title)
+                        } else {
+                            stringResource(R.string.scan_complete)
+                        },
                     )
-                }
-            }
+                },
+                text = {
+                    val failure = verify.lastResult as? VerifyResult.Failure
+                    Text(
+                        if (failure != null) {
+                            stringResource(R.string.scan_failed_body)
+                        } else {
+                            stringResource(
+                                R.string.diag_summary_resolved,
+                                verify.resolvedTargetCount,
+                                verify.totalTargetCount,
+                            )
+                        },
+                    )
+                },
+                confirmButton = {
+                    if (isFailure) {
+                        TextButton(onClick = actions.onVerify) {
+                            Text(stringResource(R.string.scan_retry))
+                        }
+                    } else {
+                        TextButton(onClick = actions.onDismissStartupScan) {
+                            Text(stringResource(R.string.button_ok))
+                        }
+                    }
+                },
+                dismissButton =
+                    if (isFailure) {
+                        {
+                            TextButton(onClick = actions.onDismissStartupScan) {
+                                Text(stringResource(R.string.button_ok))
+                            }
+                        }
+                    } else {
+                        null
+                    },
+            )
         }
     }
 }
