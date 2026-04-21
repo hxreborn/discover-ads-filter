@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.Icon
@@ -26,12 +24,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
-import eu.hxreborn.discoveradsfilter.ui.state.HookCoverage
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
 import eu.hxreborn.discoveradsfilter.ui.state.agsaUpdatedSinceScan
-import eu.hxreborn.discoveradsfilter.ui.state.hookCoverage
 import eu.hxreborn.discoveradsfilter.ui.state.moduleUpdatedSinceScan
 import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
@@ -68,27 +64,26 @@ fun StatusCard(
                     text = stringResource(visual.titleRes),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Text(
-                    text =
-                        if (state.hookCoverage() == HookCoverage.ModuleNotActive) {
-                            stringResource(R.string.hero_module_not_active_detail)
-                        } else {
-                            targetLine(state)
-                        },
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                val versionCode = state.installedAgsaVersion
-                if (versionCode != null) {
+                if (!state.moduleActive) {
                     Text(
-                        text = "build $versionCode",
+                        text = stringResource(R.string.hero_module_not_active_detail),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                } else {
+                    Text(
+                        text = targetLine(state),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = hookStatusLine(state),
                         style = MaterialTheme.typography.bodySmall,
                     )
-                }
-                if (state.adsHidden > 0) {
-                    Text(
-                        text = stringResource(R.string.hero_blocked_since_install, state.adsHidden),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    if (state.adsHidden > 0) {
+                        Text(
+                            text = stringResource(R.string.hero_blocked_since_install, state.adsHidden),
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 }
             }
         }
@@ -100,9 +95,21 @@ private fun targetLine(state: VerifyUiState): String {
     val name = state.installedAgsaVersionName
     val code = state.installedAgsaVersion
     return when {
+        name != null && code != null -> stringResource(R.string.hero_target_agsa, "v$name ($code)")
         name != null -> stringResource(R.string.hero_target_agsa, "v$name")
         code != null -> stringResource(R.string.hero_target_agsa, "v$code")
         else -> stringResource(R.string.hero_target_missing)
+    }
+}
+
+@Composable
+private fun hookStatusLine(state: VerifyUiState): String {
+    val installed = state.hookInstalled
+    val total = state.hookTotal
+    return if (installed > 0 || total > 0) {
+        stringResource(R.string.diag_hooks_ratio, installed, total)
+    } else {
+        stringResource(R.string.diag_hooks_unknown)
     }
 }
 
@@ -120,6 +127,15 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
     val stale = state.agsaUpdatedSinceScan() || state.moduleUpdatedSinceScan(BuildConfig.VERSION_CODE)
     val refreshing = state.phase == VerifyPhase.Running
 
+    if (!state.moduleActive) {
+        return StatusVisual(
+            icon = Icons.Outlined.ErrorOutline,
+            titleRes = R.string.hero_module_not_active,
+            container = scheme.errorContainer,
+            content = scheme.onErrorContainer,
+        )
+    }
+
     if (stale && !refreshing && state.lastResult is VerifyResult.Success) {
         return StatusVisual(
             icon = Icons.Outlined.Warning,
@@ -129,43 +145,21 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    return when (state.hookCoverage()) {
-        HookCoverage.Full -> {
-            val titleRes =
-                if (state.hookInstalled > 0 &&
-                    state.adsHidden > 0
-                ) {
-                    R.string.hero_hooks_active_verified
-                } else {
-                    R.string.hero_hooks_active
-                }
-            val elevation = if (state.adsHidden > 0) 3.dp else 0.dp
-            StatusVisual(Icons.Filled.CheckCircle, titleRes, scheme.primaryContainer, scheme.onPrimaryContainer, elevation)
-        }
-
-        HookCoverage.FallbackOnly -> {
-            StatusVisual(Icons.Outlined.Warning, R.string.hero_fallback_only, scheme.secondaryContainer, scheme.onSecondaryContainer)
-        }
-
-        HookCoverage.None -> {
-            StatusVisual(Icons.Outlined.Block, R.string.hero_no_targets, scheme.errorContainer, scheme.onErrorContainer)
-        }
-
-        HookCoverage.NotScanned -> {
-            StatusVisual(
-                Icons.AutoMirrored.Outlined.HelpOutline,
-                R.string.hero_not_configured,
-                scheme.surfaceContainerHighest,
-                scheme.onSurfaceVariant,
-            )
-        }
-
-        HookCoverage.ScanFailed -> {
-            StatusVisual(Icons.Outlined.ErrorOutline, R.string.hero_scan_failed, scheme.errorContainer, scheme.onErrorContainer)
-        }
-
-        HookCoverage.ModuleNotActive -> {
-            StatusVisual(Icons.Outlined.ErrorOutline, R.string.hero_module_not_active, scheme.errorContainer, scheme.onErrorContainer)
-        }
+    if (state.lastResult is VerifyResult.Failure && !refreshing) {
+        return StatusVisual(
+            icon = Icons.Outlined.ErrorOutline,
+            titleRes = R.string.hero_scan_failed,
+            container = scheme.errorContainer,
+            content = scheme.onErrorContainer,
+        )
     }
+
+    val elevation = if (state.adsHidden > 0) 3.dp else 0.dp
+    return StatusVisual(
+        icon = Icons.Filled.CheckCircle,
+        titleRes = R.string.hero_module_active,
+        container = scheme.primaryContainer,
+        content = scheme.onPrimaryContainer,
+        tonalElevation = elevation,
+    )
 }

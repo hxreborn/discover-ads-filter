@@ -32,7 +32,6 @@ import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 
 private val ValueWidth = 112.dp
-private val StatusWidth = 20.dp
 
 @Composable
 internal fun ResolvedSymbolRow(
@@ -73,7 +72,6 @@ internal fun ResolvedSymbolRow(
 @Composable
 private fun StatusBadge(status: SymbolStatus) {
     Box(
-        modifier = Modifier.width(StatusWidth),
         contentAlignment = Alignment.CenterEnd,
     ) {
         when (status) {

@@ -10,6 +10,7 @@
     <string name="fab_resolving">Resolving\u2026</string>
 
     <!-- Hero status -->
+    <string name="hero_module_active">Module Active</string>
     <string name="hero_hooks_active">Hooks Active</string>
     <string name="hero_hooks_active_verified">Hooks Active</string>
     <string name="hero_fallback_only">Fallback only</string>

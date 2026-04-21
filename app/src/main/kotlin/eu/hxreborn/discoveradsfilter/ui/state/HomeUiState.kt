@@ -130,6 +130,7 @@ data class VerifyUiState(
     val startupScanDismissed: Boolean = false,
 ) {
     val hookInstalled: Int get() = parseSlash(hookInstallStatus).first
+    val hookTotal: Int get() = parseSlash(hookInstallStatus).second
 
     val resolvedTargetCount: Int
         get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedFieldCount() ?: 0
@@ -172,33 +173,6 @@ data class ScanStep(
     val rawValue: String?,
     val resolved: Boolean,
 )
-
-enum class HookCoverage { Full, FallbackOnly, None, NotScanned, ScanFailed, ModuleNotActive }
-
-fun VerifyUiState.hookCoverage(): HookCoverage {
-    if (moduleActiveChecked && !moduleActive) return HookCoverage.ModuleNotActive
-
-    return when (val r = lastResult) {
-        null -> {
-            HookCoverage.NotScanned
-        }
-
-        is VerifyResult.Failure -> {
-            HookCoverage.ScanFailed
-        }
-
-        is VerifyResult.Success -> {
-            val t = r.targets
-            val hasProto = t.adMetadataClass != null && t.feedCardClass != null
-            val hasProcessors = t.cardProcessorMethods.isNotEmpty()
-            when {
-                hasProto && hasProcessors -> HookCoverage.Full
-                hasProto -> HookCoverage.FallbackOnly
-                else -> HookCoverage.None
-            }
-        }
-    }
-}
 
 fun VerifyUiState.moduleUpdatedSinceScan(currentModuleVersion: Int): Boolean {
     if (scanModuleVersion == 0) return false

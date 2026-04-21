@@ -187,39 +187,34 @@ private fun ComboCard(state: VerifyUiState) {
     val mappedModuleVersion = state.scanModuleVersion
     val agsaLine =
         when {
-            mappedVersionCode == null -> {
-                stringResource(R.string.diag_mapped_agsa_empty)
-            }
-
-            state.installedAgsaVersionName != null &&
-                state.installedAgsaVersion == mappedVersionCode -> {
+            state.installedAgsaVersionName != null -> {
                 stringResource(
                     R.string.diag_mapped_agsa_versioned,
                     state.installedAgsaVersionName,
-                    mappedVersionCode,
+                    state.installedAgsaVersion!!,
                 )
             }
 
-            else -> {
+            mappedVersionCode != null -> {
                 stringResource(R.string.diag_mapped_agsa_code_only, mappedVersionCode)
+            }
+
+            else -> {
+                stringResource(R.string.diag_mapped_agsa_empty)
             }
         }
     val moduleLine =
         when {
-            mappedModuleVersion <= 0 -> {
-                stringResource(R.string.diag_mapped_module_empty)
+            mappedModuleVersion > 0 && mappedModuleVersion != BuildConfig.VERSION_CODE -> {
+                stringResource(R.string.diag_mapped_module_code_only, mappedModuleVersion)
             }
 
-            mappedModuleVersion == BuildConfig.VERSION_CODE -> {
+            else -> {
                 stringResource(
                     R.string.diag_mapped_module_versioned,
                     BuildConfig.VERSION_NAME,
                     BuildConfig.VERSION_CODE,
                 )
-            }
-
-            else -> {
-                stringResource(R.string.diag_mapped_module_code_only, mappedModuleVersion)
             }
         }
 
