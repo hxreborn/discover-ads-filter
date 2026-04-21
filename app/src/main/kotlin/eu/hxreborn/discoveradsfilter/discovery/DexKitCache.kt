@@ -20,37 +20,18 @@ object DexKitCache {
         moduleVersionCode: Int,
         prefs: SharedPreferences,
     ): ResolvedTargets {
-        val currentVersion =
-            runCatching {
-                SettingsPrefs.fingerprintCurrentVersion.read(prefs)
-            }.getOrDefault(0L)
-        val currentModuleVersion =
-            runCatching {
-                SettingsPrefs.fingerprintCurrentModuleVersion.read(prefs)
-            }.getOrDefault(0)
         val exactRaw =
             versionCode
                 .takeIf { it > 0L }
                 ?.let { prefs.getString(SettingsPrefs.fingerprintKey(it, moduleVersionCode), null) }
-        val currentRaw =
-            SettingsPrefs.fingerprintCurrent.read(prefs)?.takeIf {
-                (versionCode == 0L || currentVersion == versionCode) &&
-                    (currentModuleVersion == 0 || currentModuleVersion == moduleVersionCode)
-            }
 
-        val candidates =
-            buildList {
-                exactRaw?.let { add("exact" to it) }
-                if (currentRaw != null && currentRaw != exactRaw) {
-                    add("current(v$currentVersion)" to currentRaw)
-                }
-            }
-
-        if (candidates.isEmpty()) {
+        if (exactRaw == null) {
             return ResolvedTargets.Missing(
-                missingReason(versionCode = versionCode, currentVersion = currentVersion),
+                missingReason(versionCode = versionCode),
             )
         }
+
+        val candidates = listOf("exact" to exactRaw)
 
         val failures = mutableListOf<String>()
         for ((source, raw) in candidates) {
@@ -97,25 +78,10 @@ object DexKitCache {
             }
         }
 
-    private fun missingReason(
-        versionCode: Long,
-        currentVersion: Long,
-    ): String =
-        when {
-            versionCode == 0L && currentVersion > 0L -> {
-                "hook-side AGSA version unavailable; only cached v$currentVersion exists"
-            }
-
-            versionCode == 0L -> {
-                "hook-side AGSA version unavailable and no current cache exists"
-            }
-
-            currentVersion > 0L && currentVersion != versionCode -> {
-                "no matching cache for AGSA v$versionCode (current cache is v$currentVersion); run Verify from module app"
-            }
-
-            else -> {
-                "no cache for AGSA v$versionCode; run Verify from module app"
-            }
+    private fun missingReason(versionCode: Long): String =
+        if (versionCode == 0L) {
+            "AGSA version unavailable and no cache exists"
+        } else {
+            "no cache for AGSA v$versionCode; run Verify from module app"
         }
 }

@@ -34,37 +34,23 @@ class SettingsRepository(
 
         val keysToPrune =
             localPrefs.all.keys.filterTo(mutableSetOf()) { key ->
-                key.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) && key !in
-                    setOf(
-                        SettingsPrefs.fingerprintCurrent.key,
-                        SettingsPrefs.fingerprintCurrentVersion.key,
-                        SettingsPrefs.fingerprintCurrentModuleVersion.key,
-                        resolvedKey,
-                    )
+                key.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) && key != resolvedKey
             }
         save {
-            // Keep the per-version entry so hook-side can load by AGSA+module version.
             putString(resolvedKey, encoded)
-
-            // Drop stale entries from older schema/module/AGSA builds.
             // Prefix bump (fp_v4_ → fp_v5_) invalidates old entries without touching new ones.
             keysToPrune.forEach { remove(it) }
-
-            // Fallback for hook-side reads where the AGSA versionCode is unavailable.
-            SettingsPrefs.fingerprintCurrent.write(this, encoded)
-            SettingsPrefs.fingerprintCurrentVersion.write(this, agsaVersionCode)
-            SettingsPrefs.fingerprintCurrentModuleVersion.write(this, BuildConfig.VERSION_CODE)
         }
     }
 
-    fun readLastScan(): CachedScan? {
-        val raw = SettingsPrefs.fingerprintCurrent.read(localPrefs) ?: return null
+    fun readLastScan(agsaVersionCode: Long): CachedScan? {
+        if (agsaVersionCode == 0L) return null
+        val key = SettingsPrefs.fingerprintKey(agsaVersionCode, BuildConfig.VERSION_CODE)
+        val raw = localPrefs.getString(key, null) ?: return null
         val resolved =
             runCatching { DexKitCache.decode(raw) }.getOrNull() as? ResolvedTargets.Resolved
                 ?: return null
-        val version = SettingsPrefs.fingerprintCurrentVersion.read(localPrefs)
-        val moduleVersion = SettingsPrefs.fingerprintCurrentModuleVersion.read(localPrefs)
-        return CachedScan(version, resolved, moduleVersion)
+        return CachedScan(agsaVersionCode, resolved, BuildConfig.VERSION_CODE)
     }
 
     fun readHookStatus(): String? =

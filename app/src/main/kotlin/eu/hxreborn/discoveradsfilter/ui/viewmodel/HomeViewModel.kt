@@ -67,8 +67,8 @@ class HomeViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val snapshot = repo.snapshot()
             verboseFlow.value = snapshot.verbose
-            val lastScan = repo.readLastScan()
             val agsaPkg = currentAgsaPackageInfo()
+            val lastScan = repo.readLastScan(agsaPkg?.versionCode ?: 0L)
             val hookStatus = repo.readHookStatus()
             val hookProcess = repo.readHookProcess()
             val adsHidden = repo.readAdsHidden()

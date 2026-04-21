@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Fingerprint
 import androidx.compose.material.icons.outlined.Map
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -47,15 +46,11 @@ fun LazyListScope.diagnosticsItems(
                     .background(color = surface, shape = shape)
                     .clip(shape),
             leadingContent = {
-                if (agsaPainter != null) {
-                    Image(
-                        painter = agsaPainter,
-                        contentDescription = null,
-                        modifier = Modifier.size(IconSize.md),
-                    )
-                } else {
-                    Icon(imageVector = Icons.Outlined.Public, contentDescription = null)
-                }
+                Image(
+                    painter = agsaPainter,
+                    contentDescription = null,
+                    modifier = Modifier.size(IconSize.md),
+                )
             },
             headlineContent = { Text(stringResource(R.string.diag_target_app)) },
             supportingContent = { Text(targetSupporting(state)) },
