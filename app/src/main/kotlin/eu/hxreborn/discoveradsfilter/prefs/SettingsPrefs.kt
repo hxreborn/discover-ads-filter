@@ -6,7 +6,7 @@ object SettingsPrefs {
     val verbose = BoolPref("verbose", false)
     val filterEnabled = BoolPref("filter_enabled", true)
 
-    // Written by the hook process; read by the module-app via remote prefs
+    // Read by the module-app via remote prefs, written by the hook process
     val hookStatus = NullableStringPref("hook_install_status")
     val hookProcess = NullableStringPref("hook_process")
     val adsHidden = LongPref("ads_hidden", 0L)
