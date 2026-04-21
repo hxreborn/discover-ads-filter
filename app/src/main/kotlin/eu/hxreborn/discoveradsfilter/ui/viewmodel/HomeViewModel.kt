@@ -2,8 +2,11 @@ package eu.hxreborn.discoveradsfilter.ui.viewmodel
 
 import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.hxreborn.discoveradsfilter.App
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
@@ -27,11 +30,11 @@ import kotlinx.coroutines.withContext
 import kotlin.system.measureTimeMillis
 
 class HomeViewModel(
-    application: Application,
-) : AndroidViewModel(application) {
+    private val app: Application,
+) : ViewModel() {
     private val repo =
         SettingsRepository(
-            context = application,
+            context = app,
             remotePrefsProvider = { App.remotePrefs },
         )
 
@@ -146,7 +149,7 @@ class HomeViewModel(
 
     private suspend fun scan(): VerifyResult =
         withContext(Dispatchers.IO) {
-            val app = getApplication<Application>()
+            val app = app
             val agsaInfo =
                 runCatching {
                     app.packageManager.getApplicationInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
@@ -198,7 +201,7 @@ class HomeViewModel(
     )
 
     private fun currentAgsaPackageInfo(): AgsaPackageInfo? {
-        val pm = getApplication<Application>().packageManager
+        val pm = app.packageManager
         return runCatching {
             val info = pm.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
             AgsaPackageInfo(
@@ -209,7 +212,12 @@ class HomeViewModel(
         }.getOrNull()
     }
 
-    private companion object {
+    companion object {
         private const val TAG = "DiscoverAdsFilter"
+
+        val Factory =
+            viewModelFactory {
+                initializer { HomeViewModel(this[APPLICATION_KEY] as Application) }
+            }
     }
 }

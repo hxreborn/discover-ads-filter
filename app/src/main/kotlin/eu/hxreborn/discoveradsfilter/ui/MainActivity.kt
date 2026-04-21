@@ -14,7 +14,7 @@ import io.github.libxposed.service.XposedServiceHelper
 class MainActivity :
     ComponentActivity(),
     XposedServiceHelper.OnServiceListener {
-    private val viewModel: HomeViewModel by viewModels()
+    private val viewModel: HomeViewModel by viewModels { HomeViewModel.Factory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -23,7 +23,7 @@ class MainActivity :
 
         App.addServiceListener(this)
 
-        setContent { DiscoverAdsFilterApp() }
+        setContent { DiscoverAdsFilterApp(viewModel) }
     }
 
     override fun onServiceBind(service: XposedService) {

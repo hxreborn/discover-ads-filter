@@ -52,7 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.DexKitDialog
@@ -75,8 +74,8 @@ private const val GITHUB_URL = "https://github.com/hxreborn/discover-ads-filter"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     HomeScreenContent(
