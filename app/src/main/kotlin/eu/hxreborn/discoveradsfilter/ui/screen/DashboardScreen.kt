@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
@@ -35,6 +36,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -86,6 +90,7 @@ internal fun DashboardScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val ready = state as? HomeUiState.Ready
+    var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
 
@@ -177,7 +182,7 @@ internal fun DashboardScreenContent(
                         title = { Text(stringResource(R.string.pref_category_diagnostics)) },
                     )
 
-                    val advancedCount = 2
+                    val advancedCount = 3
                     val advancedTopShape = shapeForPosition(advancedCount, 0)
                     preference(
                         key = "diagnostics",
@@ -203,7 +208,7 @@ internal fun DashboardScreenContent(
 
                     item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
-                    val advancedBottomShape = shapeForPosition(advancedCount, 1)
+                    val advancedMidShape = shapeForPosition(advancedCount, 1)
                     item(key = "verbose", contentType = "SwitchPreference") {
                         SwitchPreference(
                             value = ready.verbose,
@@ -211,8 +216,8 @@ internal fun DashboardScreenContent(
                             modifier =
                                 Modifier
                                     .padding(horizontal = 8.dp)
-                                    .background(color = surface, shape = advancedBottomShape)
-                                    .clip(advancedBottomShape),
+                                    .background(color = surface, shape = advancedMidShape)
+                                    .clip(advancedMidShape),
                             icon = {
                                 Icon(
                                     imageVector = Icons.Outlined.BugReport,
@@ -230,6 +235,33 @@ internal fun DashboardScreenContent(
                             },
                         )
                     }
+
+                    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+                    val scanning = ready.verify.phase == VerifyPhase.Running
+                    val advancedBottomShape = shapeForPosition(advancedCount, 2)
+                    preference(
+                        key = "clear_cache",
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 8.dp)
+                                .background(color = surface, shape = advancedBottomShape)
+                                .clip(advancedBottomShape),
+                        icon = {
+                            Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
+                        },
+                        title = {
+                            Text(
+                                stringResource(R.string.pref_clear_cache),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        },
+                        summary = {
+                            Text(stringResource(R.string.pref_clear_cache_summary))
+                        },
+                        enabled = !scanning,
+                        onClick = { showClearCacheDialog = true },
+                    )
 
                     item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
 
@@ -334,5 +366,28 @@ internal fun DashboardScreenContent(
                     },
             )
         }
+    }
+
+    if (showClearCacheDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearCacheDialog = false },
+            title = { Text(stringResource(R.string.pref_clear_cache)) },
+            text = { Text(stringResource(R.string.pref_clear_cache_summary)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearCacheDialog = false
+                        actions.onClearCacheOnly()
+                    },
+                ) {
+                    Text(stringResource(R.string.button_ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCacheDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        )
     }
 }

@@ -3,11 +3,8 @@
 package eu.hxreborn.discoveradsfilter.ui.screen
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,9 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -29,7 +24,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -74,7 +68,6 @@ fun DiagnosticsScreen(
     DiagnosticsScreenContent(
         state = state,
         onVerify = viewModel.actions.onVerify,
-        onClearCacheAndVerify = viewModel.actions.onClearCache,
         onBack = onBack,
     )
 }
@@ -84,12 +77,10 @@ fun DiagnosticsScreen(
 internal fun DiagnosticsScreenContent(
     state: VerifyUiState,
     onVerify: () -> Unit,
-    onClearCacheAndVerify: () -> Unit,
     onBack: () -> Unit,
 ) {
     var showInfoDialog by rememberSaveable { mutableStateOf(false) }
     var showManualProgressThisVisit by remember { mutableStateOf(false) }
-    var fabExpanded by rememberSaveable { mutableStateOf(false) }
     val anyRunning = state.phase == VerifyPhase.Running
     val manualRunning = anyRunning && state.scanOrigin == ScanOrigin.Manual
     val showProgress = showManualProgressThisVisit && (manualRunning || state.scanProgress.isNotEmpty())
@@ -106,62 +97,23 @@ internal fun DiagnosticsScreenContent(
             }
         },
         floatingActionButton = {
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                AnimatedVisibility(
-                    visible = fabExpanded && !anyRunning,
-                    enter = fadeIn() + slideInVertically { it },
-                    exit = fadeOut() + slideOutVertically { it },
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalAlignment = Alignment.End,
-                    ) {
-                        SmallFloatingActionButton(
-                            onClick = {
-                                fabExpanded = false
-                                showManualProgressThisVisit = true
-                                onClearCacheAndVerify()
-                            },
-                        ) {
-                            Icon(
-                                Icons.Outlined.DeleteSweep,
-                                contentDescription = stringResource(R.string.button_clear_cache_reverify),
-                            )
-                        }
-                        SmallFloatingActionButton(
-                            onClick = {
-                                fabExpanded = false
-                                showManualProgressThisVisit = true
-                                onVerify()
-                            },
-                        ) {
-                            Icon(
-                                Icons.Outlined.Refresh,
-                                contentDescription = stringResource(R.string.button_reverify),
-                            )
-                        }
+            ExtendedFloatingActionButton(
+                onClick = {
+                    if (!anyRunning) {
+                        showManualProgressThisVisit = true
+                        onVerify()
                     }
-                }
-
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        if (anyRunning) return@ExtendedFloatingActionButton
-                        fabExpanded = !fabExpanded
-                    },
-                ) {
-                    AnimatedContent(
-                        targetState = manualRunning,
-                        label = "fab-content",
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                    ) { isRunning ->
-                        if (isRunning) {
-                            LoadingIndicator(modifier = Modifier.size(24.dp))
-                        } else {
-                            Text(stringResource(R.string.button_rescan))
-                        }
+                },
+            ) {
+                AnimatedContent(
+                    targetState = manualRunning,
+                    label = "fab-content",
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                ) { isRunning ->
+                    if (isRunning) {
+                        LoadingIndicator(modifier = Modifier.size(24.dp))
+                    } else {
+                        Text(stringResource(R.string.button_reverify))
                     }
                 }
             }

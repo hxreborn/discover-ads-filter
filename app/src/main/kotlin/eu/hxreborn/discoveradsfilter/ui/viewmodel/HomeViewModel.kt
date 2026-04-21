@@ -63,6 +63,7 @@ class HomeViewModel(
             },
             onVerify = ::verify,
             onClearCache = ::clearCache,
+            onClearCacheOnly = ::clearCacheOnly,
             onDismissStartupScan = {
                 verifyFlow.update { it?.copy(startupScanDismissed = true) }
             },
@@ -133,6 +134,19 @@ class HomeViewModel(
                     adsHidden = maxOf(adsHidden, current.adsHidden),
                     moduleActive = true,
                     moduleActiveChecked = true,
+                )
+            }
+        }
+    }
+
+    private fun clearCacheOnly() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.clearScanCache()
+            verifyFlow.update {
+                it?.copy(
+                    lastResult = null,
+                    scanProgress = emptyList(),
+                    scanModuleVersion = 0,
                 )
             }
         }

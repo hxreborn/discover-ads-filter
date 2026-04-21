@@ -105,6 +105,7 @@ data class HomeActions(
     val onFilterEnabledChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCache: () -> Unit,
+    val onClearCacheOnly: () -> Unit,
     val onDismissStartupScan: () -> Unit,
 )
 

@@ -17,7 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.LibraryBooks
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -125,7 +125,7 @@ fun AboutScreen(onBack: () -> Unit) {
         libs.forEachIndexed { index, (name, license) ->
             if (index > 0) Spacer(Modifier.height(2.dp))
             AboutCard(
-                icon = Icons.Outlined.Extension,
+                icon = Icons.Outlined.LibraryBooks,
                 title = name,
                 subtitle = license,
                 shape = shapeForPosition(libs.size, index),
