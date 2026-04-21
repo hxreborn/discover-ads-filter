@@ -1,8 +1,6 @@
 package eu.hxreborn.discoveradsfilter.ui.state
 
 import androidx.compose.runtime.Immutable
-import eu.hxreborn.discoveradsfilter.discovery.KnownGoodEntry
-import eu.hxreborn.discoveradsfilter.discovery.RegistryStatus
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 
 sealed interface HomeUiState {
@@ -12,16 +10,7 @@ sealed interface HomeUiState {
     data class Ready(
         val verbose: Boolean = false,
         val verify: VerifyUiState = VerifyUiState(),
-        val knownGood: KnownGoodUiState = KnownGoodUiState(),
     ) : HomeUiState
-}
-
-@Immutable
-data class KnownGoodUiState(
-    val bundled: List<KnownGoodEntry> = emptyList(),
-    val local: List<KnownGoodEntry> = emptyList(),
-) {
-    val total: Int get() = bundled.size + local.size
 }
 
 @Immutable
@@ -29,8 +18,6 @@ data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
     val onFilterEnabledChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
-    val onForgetKnownGood: (KnownGoodEntry) -> Unit,
-    val onOpenSource: () -> Unit,
 )
 
 @Immutable
@@ -45,7 +32,6 @@ data class VerifyUiState(
     val hookInstallStatus: String? = null,
     val hookProcess: String? = null,
     val adsHidden: Long = 0,
-    val registryStatus: RegistryStatus = RegistryStatus.Unknown,
     val filterEnabled: Boolean = true,
 ) {
     val hookInstalled: Int get() = parseSlash(hookInstallStatus).first
