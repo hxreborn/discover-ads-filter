@@ -57,17 +57,16 @@ data class VerifyUiState(
     }
 }
 
-private fun ResolvedTargets.Resolved.resolvedFieldCount(): Int {
-    var n = 0
-    if (!adMetadataClass.isNullOrBlank()) n++
-    if (!feedCardClass.isNullOrBlank()) n++
-    if (!adFlagFieldName.isNullOrBlank()) n++
-    if (!adLabelFieldName.isNullOrBlank()) n++
-    if (!adMetadataFieldName.isNullOrBlank()) n++
-    if (cardProcessorMethods.isNotEmpty()) n++
-    if (streamRenderableListMethod != null) n++
-    return n
-}
+private fun ResolvedTargets.Resolved.resolvedFieldCount(): Int =
+    listOf(
+        !adMetadataClass.isNullOrBlank(),
+        !feedCardClass.isNullOrBlank(),
+        !adFlagFieldName.isNullOrBlank(),
+        !adLabelFieldName.isNullOrBlank(),
+        !adMetadataFieldName.isNullOrBlank(),
+        cardProcessorMethods.isNotEmpty(),
+        streamRenderableListMethod != null,
+    ).count { it }
 
 enum class VerifyPhase { Idle, Running }
 

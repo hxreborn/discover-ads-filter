@@ -256,17 +256,17 @@ object DexKitResolver {
         )
 
     private fun scoreCardProcessorCandidate(method: MethodData): Int {
-        var score = 0
         val methodName = method.name
         val className = method.declaredClassName.lowercase(Locale.ROOT)
-        if (methodName == "onBindViewHolder" || methodName.contains("bind")) score += 35
-        if (methodName.contains("render")) score += 20
-        if (methodName.contains("slice")) score += 15
-        if (className.contains("discover")) score += 25
-        if (className.contains("stream")) score += 15
-        if (className.contains("card")) score += 10
-        if (method.paramTypeNames.size <= 3) score += 5
-        return score
+        return scoreCandidate(
+            scoreIf(methodName == "onBindViewHolder" || methodName.contains("bind"), 35),
+            scoreIf(methodName.contains("render"), 20),
+            scoreIf(methodName.contains("slice"), 15),
+            scoreIf(className.contains("discover"), 25),
+            scoreIf(className.contains("stream"), 15),
+            scoreIf(className.contains("card"), 10),
+            scoreIf(method.paramTypeNames.size <= 3, 5),
+        )
     }
 
     // anchor: toString literal "WithContent(sessionRepresentation=..." is stable across renames

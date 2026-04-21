@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -55,7 +56,7 @@ fun HeroStatusCard(
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
         colors =
-            androidx.compose.material3.CardDefaults.elevatedCardColors(
+            CardDefaults.elevatedCardColors(
                 containerColor = visual.container,
                 contentColor = visual.content,
             ),
