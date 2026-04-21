@@ -56,7 +56,7 @@ android {
     packaging {
         jniLibs.useLegacyPackaging = false
         resources {
-            // Ship META-INF/xposed/* as-is; merge if any dep ever contributes there.
+            // Keep META-INF/xposed/* untouched.
             merges += listOf("META-INF/xposed/**")
             excludes +=
                 listOf(
@@ -86,13 +86,13 @@ val ktlint: Configuration by configurations.creating
 dependencies {
     ktlint(libs.ktlint.cli)
 
-    // Provided by LSPosed at runtime, never packaged in the APK.
+    // LSPosed provides this at runtime.
     compileOnly(libs.libxposed.api)
 
-    // Module-app side: bind an XposedService to write prefs the hook process can actually read.
+    // Bind XposedService so the hook process can read prefs.
     implementation(libs.libxposed.service)
 
-    // Used by the module-app's Verify action to resolve obfuscated AGSA symbols.
+    // Verify scans AGSA with DexKit.
     implementation(libs.dexkit)
 
     implementation(libs.androidx.core)
@@ -110,6 +110,9 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.preferences)
     debugImplementation(libs.compose.ui.tooling)
+
+    implementation(libs.navigation3.runtime)
+    implementation(libs.navigation3.ui)
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)

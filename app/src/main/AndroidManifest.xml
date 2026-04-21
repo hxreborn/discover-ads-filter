@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <queries>
-        <!-- Needed for the Verify action to read the installed AGSA APK path -->
+        <!-- Verify reads the installed AGSA APK path. -->
         <package android:name="com.google.android.googlequicksearchbox" />
     </queries>
 
@@ -17,6 +17,7 @@
 
         <activity
             android:name=".ui.MainActivity"
+            android:enableOnBackInvokedCallback="true"
             android:exported="true"
             android:theme="@style/Theme.DiscoverAdsFilter.Splash">
             <intent-filter>

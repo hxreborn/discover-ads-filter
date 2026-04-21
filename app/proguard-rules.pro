@@ -1,6 +1,5 @@
-# libxposed API 101 entry point - loaded reflectively via META-INF/xposed/java_init.list.
-# -adaptresourcefilecontents rewrites the list if the class is renamed; -keep below pins both
-# name and lifecycle members so LSPosed can instantiate it and dispatch callbacks.
+# LSPosed loads the module entry point from META-INF/xposed/java_init.list.
+# Keep the class and let -adaptresourcefilecontents rewrite the list on rename.
 -adaptresourcefilecontents META-INF/xposed/java_init.list
 
 -keep,allowobfuscation,allowoptimization public class * extends io.github.libxposed.api.XposedModule {
@@ -12,12 +11,11 @@
 }
 -keep class eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule { *; }
 
-# Hooker implementations are invoked reflectively via module.hook(...).intercept(hooker).
+# LSPosed resolves hookers reflectively.
 -keep class * implements io.github.libxposed.api.XposedInterface$Hooker { *; }
 
-# kotlinx-serialization: $$serializer companions are discovered reflectively from
-# ResolvedTargets.serializer(). Without these rules, release builds throw SerializationException
-# when the hooked process decodes cached fingerprints.
+# kotlinx-serialization resolves these companions reflectively.
+# Without these rules, release builds fail when the hook process decodes cached targets.
 -keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,InnerClasses,EnclosingMethod,Signature
 -keepclasseswithmembers class eu.hxreborn.discoveradsfilter.discovery.** {
     kotlinx.serialization.KSerializer serializer(...);
@@ -29,11 +27,11 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# DexKit: bundled library; belt-and-suspenders on top of its own consumer rules.
+# Keep DexKit on top of its own consumer rules.
 -keep class org.luckypray.dexkit.** { *; }
 -dontwarn org.luckypray.dexkit.**
 
-# libxposed API is compileOnly - do not warn when its classes aren't on the classpath.
+# libxposed is compileOnly.
 -dontwarn io.github.libxposed.api.**
 
 -keepattributes SourceFile, LineNumberTable

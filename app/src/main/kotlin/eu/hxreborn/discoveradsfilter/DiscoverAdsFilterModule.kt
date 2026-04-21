@@ -61,6 +61,7 @@ class DiscoverAdsFilterModule : XposedModule() {
                     param.classLoader,
                     prefs,
                     targets,
+                    proc,
                 )
                 true
             }.onFailure { t ->

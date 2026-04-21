@@ -4,9 +4,18 @@ import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.MethodRef
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.state.SymbolRow
+import eu.hxreborn.discoveradsfilter.ui.state.SymbolSection
+import eu.hxreborn.discoveradsfilter.ui.state.SymbolStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import eu.hxreborn.discoveradsfilter.ui.state.toSymbolSections
+
+internal data class DiagnosticsPreviewCase(
+    val state: VerifyUiState,
+    val sections: List<SymbolSection>,
+)
 
 internal object PreviewFixtures {
     private const val AGSA_VERSION_CODE_AT_SCAN = 405_678_123L
@@ -64,6 +73,200 @@ internal object PreviewFixtures {
             verifyFailureDexKitNoMatches(),
         )
 
+    private fun allMappedSections(): List<SymbolSection> = verifySuccessFull().toSymbolSections()
+
+    private fun oneNotFoundSections(): List<SymbolSection> =
+        listOf(
+            SymbolSection(
+                title = "Classes",
+                rows =
+                    listOf(
+                        SymbolRow("AdMetadata", "fwm1", SymbolStatus.Mapped),
+                        SymbolRow("FeedCard", "fwrv", SymbolStatus.Mapped),
+                        SymbolRow("PromoUnit", null, SymbolStatus.NotFound),
+                    ),
+            ),
+            SymbolSection(
+                title = "Fields",
+                rows =
+                    listOf(
+                        SymbolRow("isAd", "e", SymbolStatus.Mapped),
+                        SymbolRow("adLabel", "d", SymbolStatus.Mapped),
+                        SymbolRow("adMetadata", "l", SymbolStatus.Mapped),
+                    ),
+            ),
+            SymbolSection(
+                title = "Methods",
+                rows =
+                    listOf(
+                        SymbolRow("Card processors", "17 methods", SymbolStatus.Mapped),
+                        SymbolRow("Stream list", "bzat.a", SymbolStatus.Mapped),
+                    ),
+            ),
+        )
+
+    private fun oneNotMappedSections(): List<SymbolSection> =
+        listOf(
+            SymbolSection(
+                title = "Classes",
+                rows =
+                    listOf(
+                        SymbolRow("AdMetadata", "fwm1", SymbolStatus.Mapped),
+                        SymbolRow("FeedCard", "fwrv", SymbolStatus.Mapped),
+                    ),
+            ),
+            SymbolSection(
+                title = "Fields",
+                rows =
+                    listOf(
+                        SymbolRow("isAd", "e", SymbolStatus.Mapped),
+                        SymbolRow("adLabel", "d", SymbolStatus.Mapped),
+                        SymbolRow("adMetadata", null, SymbolStatus.NotMapped),
+                    ),
+            ),
+            SymbolSection(
+                title = "Methods",
+                rows =
+                    listOf(
+                        SymbolRow("Card processors", "17 methods", SymbolStatus.Mapped),
+                        SymbolRow("Stream list", "bzat.a", SymbolStatus.Mapped),
+                    ),
+            ),
+        )
+
+    private fun onePartialSections(): List<SymbolSection> =
+        listOf(
+            SymbolSection(
+                title = "Classes",
+                rows =
+                    listOf(
+                        SymbolRow("AdMetadata", "fwm1", SymbolStatus.Mapped),
+                        SymbolRow("FeedCard", "fwrv", SymbolStatus.Mapped),
+                    ),
+            ),
+            SymbolSection(
+                title = "Fields",
+                rows =
+                    listOf(
+                        SymbolRow("isAd", "e", SymbolStatus.Mapped),
+                        SymbolRow("adLabel", "d", SymbolStatus.Mapped),
+                        SymbolRow("trackingToken", null, SymbolStatus.Partial),
+                    ),
+            ),
+            SymbolSection(
+                title = "Methods",
+                rows =
+                    listOf(
+                        SymbolRow("Card processors", "17 methods", SymbolStatus.Mapped),
+                        SymbolRow("Stream list", "bzat.a", SymbolStatus.Mapped),
+                    ),
+            ),
+        )
+
+    private fun mixedSections(): List<SymbolSection> =
+        listOf(
+            SymbolSection(
+                title = "Classes",
+                rows =
+                    listOf(
+                        SymbolRow("AdMetadata", "fwm1", SymbolStatus.Mapped),
+                        SymbolRow("FeedCard", "fwrv", SymbolStatus.Mapped),
+                        SymbolRow("PromoUnit", null, SymbolStatus.NotFound),
+                    ),
+            ),
+            SymbolSection(
+                title = "Fields",
+                rows =
+                    listOf(
+                        SymbolRow("isAd", "e", SymbolStatus.Mapped),
+                        SymbolRow("adLabel", "d", SymbolStatus.Mapped),
+                        SymbolRow("adMetadata", null, SymbolStatus.NotMapped),
+                        SymbolRow("trackingToken", null, SymbolStatus.Partial),
+                    ),
+            ),
+            SymbolSection(
+                title = "Methods",
+                rows =
+                    listOf(
+                        SymbolRow("Card processors", "17 methods", SymbolStatus.Mapped),
+                        SymbolRow("Stream list", "bzat.a", SymbolStatus.Mapped),
+                    ),
+            ),
+        )
+
+    private fun longValueSections(): List<SymbolSection> =
+        listOf(
+            SymbolSection(
+                title = "Classes",
+                rows =
+                    listOf(
+                        SymbolRow(
+                            "AdMetadataCandidateWithVeryLongDiagnosticName",
+                            "com.google.android.apps.search.feed.rendering.obfuscated.LongClassName",
+                            SymbolStatus.Mapped,
+                        ),
+                        SymbolRow("FeedCard", "fwrv", SymbolStatus.Mapped),
+                    ),
+            ),
+            SymbolSection(
+                title = "Fields",
+                rows =
+                    listOf(
+                        SymbolRow("trackingTokenResolverCandidate", "obfuscated_field_with_extra_suffix", SymbolStatus.Mapped),
+                        SymbolRow("adLabel", "d", SymbolStatus.Mapped),
+                    ),
+            ),
+            SymbolSection(
+                title = "Methods",
+                rows =
+                    listOf(
+                        SymbolRow("Card processors", "17 methods", SymbolStatus.Mapped),
+                        SymbolRow("StreamRenderableSliceAssembler", "bzat.superLongMethodName", SymbolStatus.Mapped),
+                    ),
+            ),
+        )
+
+    private fun zeroResolvedSections(): List<SymbolSection> =
+        listOf(
+            SymbolSection(
+                title = "Classes",
+                rows =
+                    listOf(
+                        SymbolRow("AdMetadata", null, SymbolStatus.NotFound),
+                        SymbolRow("FeedCard", null, SymbolStatus.NotFound),
+                    ),
+            ),
+            SymbolSection(
+                title = "Fields",
+                rows =
+                    listOf(
+                        SymbolRow("isAd", null, SymbolStatus.NotMapped),
+                        SymbolRow("adLabel", null, SymbolStatus.NotMapped),
+                        SymbolRow("adMetadata", null, SymbolStatus.NotFound),
+                    ),
+            ),
+            SymbolSection(
+                title = "Methods",
+                rows =
+                    listOf(
+                        SymbolRow("Card processors", null, SymbolStatus.Partial),
+                        SymbolRow("Stream list", null, SymbolStatus.NotFound),
+                    ),
+            ),
+        )
+
+    val diagnosticsPreviewCases: List<DiagnosticsPreviewCase> =
+        listOf(
+            DiagnosticsPreviewCase(verifySuccessFull(), allMappedSections()),
+            DiagnosticsPreviewCase(verifySuccessFull(), oneNotFoundSections()),
+            DiagnosticsPreviewCase(verifySuccessFull(), oneNotMappedSections()),
+            DiagnosticsPreviewCase(verifySuccessFull(), onePartialSections()),
+            DiagnosticsPreviewCase(verifySuccessFull(), mixedSections()),
+            DiagnosticsPreviewCase(verifySuccessFull(), longValueSections()),
+            DiagnosticsPreviewCase(verifyNoTargetsResolved(), zeroResolvedSections()),
+            DiagnosticsPreviewCase(verifyStaleModuleUpdated(), allMappedSections()),
+        )
+
     fun verifyNotScanned(): VerifyUiState = VerifyUiState()
 
     fun verifyRunning(): VerifyUiState = VerifyUiState(phase = VerifyPhase.Running)
@@ -78,7 +281,6 @@ internal object PreviewFixtures {
             installedAgsaVersion = AGSA_VERSION_CODE_AT_SCAN,
             installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
             installedAgsaLastUpdateTime = AGSA_LAST_UPDATE_TIME,
-            xposedServiceBound = true,
             scanModuleVersion = BuildConfig.VERSION_CODE,
             hookInstallStatus = "5/5",
             hookProcess = "com.google.android.googlequicksearchbox",
@@ -147,7 +349,7 @@ internal object PreviewFixtures {
             scanModuleVersion = BuildConfig.VERSION_CODE - 1,
         )
 
-    fun verifyNoServiceBoundYet(): VerifyUiState = verifyNotScanned().copy(xposedServiceBound = false)
+    fun verifyNoServiceBoundYet(): VerifyUiState = verifyNotScanned()
 
     val verifyStatesAll: List<VerifyUiState> =
         listOf(

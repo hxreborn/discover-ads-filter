@@ -64,7 +64,7 @@ data class MethodRef(
         loader: ClassLoader,
         name: String,
     ): Class<*> {
-        // Peel array dimensions first: DexKit may return "int[]", "java.lang.String[][]", etc.
+        // DexKit may return names like int[] or java.lang.String[][].
         var base = name
         var rank = 0
         while (base.endsWith("[]")) {

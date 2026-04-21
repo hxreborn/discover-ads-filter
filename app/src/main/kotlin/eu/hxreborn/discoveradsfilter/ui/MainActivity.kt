@@ -33,9 +33,7 @@ class MainActivity :
         viewModel.onServiceBound()
     }
 
-    override fun onServiceDied(service: XposedService) {
-        viewModel.onServiceDied()
-    }
+    override fun onServiceDied(service: XposedService) = Unit
 
     override fun onDestroy() {
         App.removeServiceListener(this)

@@ -9,47 +9,60 @@ import org.luckypray.dexkit.result.MethodData
 import java.util.Locale
 
 object DexKitResolver {
-    // stable across obfuscation: proto wire-format field number in fwml's <clinit>
+    // This proto wire-format field number survives obfuscation in fwml.<clinit>.
     private const val AD_METADATA_EXTENSION_FIELD_NUMBER = 393053250L
     private const val MAX_CARD_PROCESSOR_METHODS = 120
     private const val CLINIT = "<clinit>"
     private const val TYPE_STRING = "java.lang.String"
     private val RUNTIME_PACKAGES = listOf("java.", "kotlin.", "android.")
 
-    // DexKit 2.x requires explicit System.loadLibrary, no static initializer
+    // DexKit 2.x needs an explicit System.loadLibrary call.
     private val nativeLoaded: Boolean by lazy {
         runCatching { System.loadLibrary("dexkit") }.isSuccess
     }
 
     @Suppress("kotlin:S6310")
-    suspend fun resolveAll(agsaApkPath: String): ResolvedTargets =
+    suspend fun resolveAll(
+        agsaApkPath: String,
+        onStep: ((name: String, value: String?) -> Unit)? = null,
+    ): ResolvedTargets =
         withContext(Dispatchers.IO) {
             if (!nativeLoaded) {
                 return@withContext ResolvedTargets.Missing("libdexkit.so failed to load")
             }
             runCatching {
                 DexKitBridge.create(agsaApkPath).use { bridge ->
-                    resolve(bridge)
+                    resolve(bridge, onStep)
                 }
             }.getOrElse { t ->
                 ResolvedTargets.Missing("DexKit threw ${t.javaClass.simpleName}: ${t.message}")
             }
         }
 
-    private fun resolve(bridge: DexKitBridge): ResolvedTargets {
+    private fun resolve(
+        bridge: DexKitBridge,
+        onStep: ((name: String, value: String?) -> Unit)?,
+    ): ResolvedTargets {
         val adMetaClass =
             findAdMetadataClass(bridge) ?: return ResolvedTargets.Missing(diagnostic(bridge))
         val adMetaName = adMetaClass.name
+        onStep?.invoke("Ad metadata", adMetaName)
 
         val feedCardClass =
             findFeedCardClass(bridge, adMetaName) ?: return ResolvedTargets.Missing(
                 "found ad-metadata class $adMetaName but no feed-card class referencing it",
             )
         val feedCardName = feedCardClass.name
+        onStep?.invoke("Feed card", feedCardName)
 
         val adFlagField = findAdFlagField(adMetaClass)
+        onStep?.invoke("Ad flag", adFlagField)
+
         val adLabelField = findAdLabelField(adMetaClass)
+        onStep?.invoke("Ad label", adLabelField)
+
         val adMetaField = findAdMetadataField(feedCardClass, adMetaName)
+        onStep?.invoke("Ad metadata ref", adMetaField)
 
         if (adFlagField == null && adLabelField == null) {
             return ResolvedTargets.Missing(
@@ -63,7 +76,18 @@ object DexKitResolver {
         }
 
         val processors = findCardProcessorMethods(bridge, feedCardName, adMetaName, adMetaField)
+        val processorValue =
+            processors
+                .takeIf { it.isNotEmpty() }
+                ?.let { "${it.size} methods" }
+        onStep?.invoke("Card processors", processorValue)
+
         val streamRenderableListMethod = findStreamRenderableListMethod(bridge)
+        val streamValue =
+            streamRenderableListMethod?.let {
+                "${it.className.substringAfterLast('.')}.${it.methodName}"
+            }
+        onStep?.invoke("Stream list", streamValue)
 
         if (processors.isEmpty()) {
             return ResolvedTargets.Missing(
@@ -192,7 +216,7 @@ object DexKitResolver {
                 field?.readers ?: emptyList()
             }.getOrDefault(emptyList())
 
-        // exclude serialization internals that also read this field
+        // Skip serialization internals that also read this field.
         val fromReaders =
             fieldReaders
                 .asSequence()
@@ -201,7 +225,7 @@ object DexKitResolver {
                 .map(::toMethodRef)
                 .toList()
 
-        // callers catch the active render path when the reader itself is inlined or bypassed
+        // Callers catch the active render path when the reader is inlined or bypassed.
         val fromReaderCallers =
             fieldReaders
                 .asSequence()
@@ -269,7 +293,7 @@ object DexKitResolver {
         )
     }
 
-    // anchor: toString literal "WithContent(sessionRepresentation=..." is stable across renames
+    // The toString literal "WithContent(sessionRepresentation=..." survives renames.
     private fun findStreamRenderableListMethod(bridge: DexKitBridge): MethodRef? {
         val streamClasses =
             runCatching {

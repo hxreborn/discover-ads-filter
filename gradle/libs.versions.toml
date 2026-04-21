@@ -12,6 +12,7 @@ composeBom = "2026.03.01"
 material3 = "1.5.0-alpha17"
 splashscreen = "1.2.0"
 composePreferences = "2.2.0"
+navigation3 = "1.1.0"
 ktlint = "1.8.0"
 
 [libraries]
@@ -34,6 +35,8 @@ compose-material-icons-extended = { module = "androidx.compose.material:material
 compose-preferences            = { module = "me.zhanghai.compose.preference:preference",            version.ref = "composePreferences" }
 kotlinx-coroutines-android    = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android",      version.ref = "kotlinxCoroutines" }
 kotlinx-serialization-json    = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json",      version.ref = "kotlinxSerialization" }
+navigation3-runtime           = { module = "androidx.navigation3:navigation3-runtime",              version.ref = "navigation3" }
+navigation3-ui                = { module = "androidx.navigation3:navigation3-ui",                  version.ref = "navigation3" }
 ktlint-cli                    = { module = "com.pinterest.ktlint:ktlint-cli",                         version.ref = "ktlint" }
 
 [plugins]

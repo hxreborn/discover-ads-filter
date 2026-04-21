@@ -1,0 +1,293 @@
+@file:Suppress("ktlint:standard:function-naming")
+
+package eu.hxreborn.discoveradsfilter.ui.screen
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import eu.hxreborn.discoveradsfilter.BuildConfig
+import eu.hxreborn.discoveradsfilter.R
+import eu.hxreborn.discoveradsfilter.ui.components.ScanFailureCard
+import eu.hxreborn.discoveradsfilter.ui.components.ScanProgressCard
+import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
+import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
+import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
+import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.state.ScanOrigin
+import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
+import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
+import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
+import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
+import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
+import me.zhanghai.compose.preference.ProvidePreferenceLocals
+import me.zhanghai.compose.preference.SwitchPreference
+import me.zhanghai.compose.preference.preference
+import me.zhanghai.compose.preference.preferenceCategory
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun DashboardScreen(
+    viewModel: HomeViewModel,
+    onNavigate: (Destination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    DashboardScreenContent(
+        modifier = modifier,
+        state = state,
+        actions = viewModel.actions,
+        onNavigate = onNavigate,
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@Composable
+internal fun DashboardScreenContent(
+    state: HomeUiState,
+    actions: HomeActions,
+    onNavigate: (Destination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val ready = state as? HomeUiState.Ready
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val listState = rememberLazyListState()
+
+    Scaffold(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            LargeTopAppBar(
+                title = {
+                    val isExpanded =
+                        LocalTextStyle.current.fontSize >=
+                            MaterialTheme.typography.headlineMedium.fontSize
+                    Text(
+                        text = stringResource(R.string.app_name),
+                        style =
+                            if (isExpanded) {
+                                MaterialTheme.typography.headlineLarge.copy(lineHeight = 36.sp)
+                            } else {
+                                LocalTextStyle.current
+                            },
+                        maxLines = if (isExpanded) 2 else 1,
+                    )
+                },
+                scrollBehavior = scrollBehavior,
+                windowInsets =
+                    WindowInsets.safeDrawing.only(
+                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+                    ),
+            )
+        },
+        contentWindowInsets =
+            WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
+            ),
+    ) { innerPadding ->
+        ProvidePreferenceLocals {
+            val surface = MaterialTheme.colorScheme.surfaceVariant
+
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize().drawVerticalScrollbar(listState),
+                contentPadding =
+                    PaddingValues(
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = innerPadding.calculateBottomPadding() + 32.dp,
+                    ),
+            ) {
+                if (ready != null) {
+                    item(key = "status") {
+                        StatusCard(state = ready.verify)
+                    }
+
+                    preferenceCategory(
+                        key = "cat_filter",
+                        title = { Text(stringResource(R.string.pref_category_filter)) },
+                    )
+
+                    val filterShape = shapeForPosition(1, 0)
+                    item(key = "filter_enabled", contentType = "SwitchPreference") {
+                        SwitchPreference(
+                            value = ready.verify.filterEnabled,
+                            onValueChange = actions.onFilterEnabledChange,
+                            modifier =
+                                Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .background(color = surface, shape = filterShape)
+                                    .clip(filterShape),
+                            icon = {
+                                Icon(imageVector = Icons.Outlined.Block, contentDescription = null)
+                            },
+                            title = {
+                                Text(
+                                    text = stringResource(R.string.pref_filter_sponsored),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            },
+                            summary = {
+                                Text(stringResource(R.string.pref_filter_sponsored_summary))
+                            },
+                        )
+                    }
+
+                    preferenceCategory(
+                        key = "cat_diagnostics",
+                        title = { Text(stringResource(R.string.pref_category_diagnostics)) },
+                    )
+
+                    val advancedCount = 2
+                    val advancedTopShape = shapeForPosition(advancedCount, 0)
+                    preference(
+                        key = "diagnostics",
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 8.dp)
+                                .background(color = surface, shape = advancedTopShape)
+                                .clip(advancedTopShape),
+                        icon = {
+                            Icon(imageVector = Icons.Outlined.Map, contentDescription = null)
+                        },
+                        title = {
+                            Text(
+                                stringResource(R.string.pref_dexkit_title),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        },
+                        summary = {
+                            Text(stringResource(R.string.pref_dexkit_summary_ready))
+                        },
+                        onClick = { onNavigate(Destination.Diagnostics) },
+                    )
+
+                    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+                    val advancedBottomShape = shapeForPosition(advancedCount, 1)
+                    item(key = "verbose", contentType = "SwitchPreference") {
+                        SwitchPreference(
+                            value = ready.verbose,
+                            onValueChange = actions.onVerboseChange,
+                            modifier =
+                                Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .background(color = surface, shape = advancedBottomShape)
+                                    .clip(advancedBottomShape),
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.BugReport,
+                                    contentDescription = null,
+                                )
+                            },
+                            title = {
+                                Text(
+                                    text = stringResource(R.string.toggle_verbose),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                            },
+                            summary = {
+                                Text(stringResource(R.string.toggle_verbose_summary))
+                            },
+                        )
+                    }
+
+                    item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
+
+                    val aboutShape = shapeForPosition(1, 0)
+                    preference(
+                        key = "about",
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 8.dp)
+                                .background(color = surface, shape = aboutShape)
+                                .clip(aboutShape),
+                        icon = {
+                            Icon(imageVector = Icons.Rounded.Info, contentDescription = null)
+                        },
+                        title = {
+                            Text(
+                                stringResource(R.string.pref_category_about),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        },
+                        summary = { Text("v${BuildConfig.VERSION_NAME}") },
+                        onClick = { onNavigate(Destination.About) },
+                    )
+                }
+            }
+        }
+    }
+
+    val verify = ready?.verify
+    when {
+        verify?.scanOrigin == ScanOrigin.Startup &&
+            verify.phase == VerifyPhase.Running -> {
+            Surface(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ScanProgressCard(
+                        progress = verify.scanProgress,
+                        phase = verify.phase,
+                        maxVisibleCompleted = 3,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                    )
+                }
+            }
+        }
+
+        verify?.scanOrigin == ScanOrigin.Startup &&
+            verify.lastResult is VerifyResult.Failure -> {
+            Surface(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    ScanFailureCard(
+                        reason = verify.lastResult.reason,
+                        onOpenDiagnostics = { onNavigate(Destination.Diagnostics) },
+                        onRetry = actions.onVerify,
+                    )
+                }
+            }
+        }
+    }
+}

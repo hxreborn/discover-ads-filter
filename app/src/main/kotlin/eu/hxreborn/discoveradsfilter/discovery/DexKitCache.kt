@@ -24,12 +24,7 @@ object DexKitCache {
             versionCode
                 .takeIf { it > 0L }
                 ?.let { prefs.getString(SettingsPrefs.fingerprintKey(it, moduleVersionCode), null) }
-
-        if (exactRaw == null) {
-            return ResolvedTargets.Missing(
-                missingReason(versionCode = versionCode),
-            )
-        }
+                ?: return ResolvedTargets.Missing(missingReason(versionCode = versionCode))
 
         val candidates = listOf("exact" to exactRaw)
 
@@ -41,7 +36,7 @@ object DexKitCache {
                         module.log(
                             Log.ERROR,
                             TAG,
-                            "failed to parse cached fingerprints from $source",
+                            "failed to parse cached targets from $source",
                             it,
                         )
                     }.getOrNull()

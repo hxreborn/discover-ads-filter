@@ -15,6 +15,8 @@ import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.prefs.SettingsRepository
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.state.ScanOrigin
+import eu.hxreborn.discoveradsfilter.ui.state.ScanStep
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
@@ -27,7 +29,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.system.measureTimeMillis
 
 class HomeViewModel(
     private val app: Application,
@@ -43,7 +44,11 @@ class HomeViewModel(
 
     val uiState: StateFlow<HomeUiState> =
         combine(verboseFlow, verifyFlow) { verbose, verify ->
-            verify?.let { HomeUiState.Ready(verbose = verbose, verify = it) } ?: HomeUiState.Loading
+            if (verify == null) {
+                HomeUiState.Loading
+            } else {
+                HomeUiState.Ready(verbose = verbose, verify = verify)
+            }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 
     val actions: HomeActions =
@@ -63,15 +68,34 @@ class HomeViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val snapshot = repo.snapshot()
             verboseFlow.value = snapshot.verbose
+            val lastScan = repo.readLastScan()
             val agsaPkg = currentAgsaPackageInfo()
-            val lastScan = repo.readLastScan(agsaPkg?.versionCode ?: 0L)
             val hookStatus = repo.readHookStatus()
             val hookProcess = repo.readHookProcess()
             val adsHidden = repo.readAdsHidden()
 
-            val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
+            val result =
+                lastScan?.let {
+                    VerifyResult.Success(it.versionCode, it.targets)
+                }
+            val hasUsableResult = result is VerifyResult.Success
+            val needsScan =
+                result == null ||
+                    agsaPkg?.versionCode?.let {
+                        it != result.versionCode
+                    } == true ||
+                    lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
+            val origin =
+                if (hasUsableResult) {
+                    ScanOrigin.Background
+                } else {
+                    ScanOrigin.Startup
+                }
+
             verifyFlow.value =
                 VerifyUiState(
+                    phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
+                    scanOrigin = if (needsScan) origin else null,
                     lastResult = result,
                     installedAgsaVersion = agsaPkg?.versionCode,
                     installedAgsaVersionName = agsaPkg?.versionName,
@@ -82,11 +106,14 @@ class HomeViewModel(
                     adsHidden = adsHidden,
                     filterEnabled = snapshot.filterEnabled,
                 )
+
+            if (needsScan) {
+                runScanAndUpdate()
+            }
         }
     }
 
     fun onServiceBound() {
-        verifyFlow.update { it?.copy(xposedServiceBound = true) }
         viewModelScope.launch(Dispatchers.IO) {
             repo.syncLocalToRemote()
             val hookStatus = repo.readHookStatus()
@@ -102,62 +129,113 @@ class HomeViewModel(
         }
     }
 
-    fun onServiceDied() {
-        verifyFlow.update { it?.copy(xposedServiceBound = false) }
-    }
-
     private fun verify() {
         val current = verifyFlow.value ?: return
         if (current.phase == VerifyPhase.Running) return
-        verifyFlow.update { it?.copy(phase = VerifyPhase.Running) }
-        viewModelScope.launch {
-            val result =
-                runCatching { scan() }.getOrElse { t ->
-                    Log.e(TAG, "scan threw", t)
-                    VerifyResult.Failure("Unexpected exception", t.message)
-                }
-            val installed = withContext(Dispatchers.IO) { currentAgsaPackageInfo() }
-            verifyFlow.update { current ->
-                val preserved =
-                    when (result) {
-                        is VerifyResult.Success -> result
-                        is VerifyResult.Failure -> current?.lastResult ?: result
-                    }
-                current?.copy(
-                    phase = VerifyPhase.Idle,
-                    lastResult = preserved,
-                    installedAgsaVersion = installed?.versionCode,
-                    installedAgsaVersionName = installed?.versionName,
-                    installedAgsaLastUpdateTime = installed?.lastUpdateTime ?: 0L,
-                    scanModuleVersion = if (result is VerifyResult.Success) BuildConfig.VERSION_CODE else current.scanModuleVersion,
-                )
+        verifyFlow.update {
+            it?.copy(
+                phase = VerifyPhase.Running,
+                scanOrigin = ScanOrigin.Manual,
+                scanProgress = emptyList(),
+            )
+        }
+        viewModelScope.launch { runScanAndUpdate() }
+    }
+
+    private suspend fun runScanAndUpdate() {
+        if (verboseFlow.value) Log.d(TAG, "scan started")
+        val steps = mutableListOf<ScanStep>()
+        val startTime = System.currentTimeMillis()
+        val result =
+            runCatching { scan(steps) }.getOrElse { t ->
+                Log.e(TAG, "scan threw", t)
+                VerifyResult.Failure("Unexpected exception", t.message)
             }
+        val elapsed = System.currentTimeMillis() - startTime
+        val installed = withContext(Dispatchers.IO) { currentAgsaPackageInfo() }
+        val origin = verifyFlow.value?.scanOrigin
+        verifyFlow.update { current ->
+            val preserved =
+                when (result) {
+                    is VerifyResult.Success -> result
+                    is VerifyResult.Failure -> current?.lastResult ?: result
+                }
+            val refreshError =
+                if (
+                    origin == ScanOrigin.Background && result is VerifyResult.Failure
+                ) {
+                    result.reason
+                } else {
+                    null
+                }
+            current?.copy(
+                phase = VerifyPhase.Idle,
+                lastResult = preserved,
+                scanDurationMs = elapsed,
+                lastRefreshError = refreshError,
+                installedAgsaVersion = installed?.versionCode,
+                installedAgsaVersionName = installed?.versionName,
+                installedAgsaLastUpdateTime = installed?.lastUpdateTime ?: 0L,
+                scanModuleVersion =
+                    if (result is VerifyResult.Success) {
+                        BuildConfig.VERSION_CODE
+                    } else {
+                        current.scanModuleVersion
+                    },
+            )
         }
     }
 
-    private suspend fun scan(): VerifyResult =
+    private suspend fun scan(steps: MutableList<ScanStep>): VerifyResult =
         withContext(Dispatchers.IO) {
             val app = app
             val agsaInfo =
                 runCatching {
-                    app.packageManager.getApplicationInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
+                    app.packageManager.getApplicationInfo(
+                        DiscoverAdsFilterModule.AGSA_PKG,
+                        0,
+                    )
                 }.getOrElse { t ->
+                    if (verboseFlow.value) {
+                        Log.d(
+                            TAG,
+                            "AGSA lookup failed: ${t.javaClass.simpleName}: ${t.message}",
+                        )
+                    }
                     return@withContext VerifyResult.Failure(
                         reason = "AGSA not installed on this device",
                         detail = t.message,
                     )
                 }
-            val apkPath = agsaInfo.sourceDir ?: return@withContext VerifyResult.Failure("AGSA ApplicationInfo.sourceDir was null")
+            val apkPath =
+                agsaInfo.sourceDir
+                    ?: return@withContext VerifyResult.Failure(
+                        "AGSA ApplicationInfo.sourceDir was null",
+                    )
 
             val versionCode =
                 runCatching {
-                    app.packageManager.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0).longVersionCode
+                    app.packageManager
+                        .getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
+                        .longVersionCode
                 }.getOrNull() ?: 0L
 
-            Log.d(TAG, "scan agsaV=$versionCode apk=$apkPath")
-            var resolved: ResolvedTargets
-            val elapsedMs = measureTimeMillis { resolved = DexKitResolver.resolveAll(apkPath) }
-            Log.d(TAG, "scan done in ${elapsedMs}ms: ${resolved.summary()}")
+            if (verboseFlow.value) {
+                Log.d(TAG, "DexKit scan: agsaV=$versionCode apk=$apkPath")
+            }
+
+            val resolved =
+                DexKitResolver.resolveAll(apkPath) { name, value ->
+                    val rawShort = value?.substringAfterLast('.')
+                    steps.add(ScanStep(name, rawShort, value != null))
+                    verifyFlow.update {
+                        it?.copy(scanProgress = steps.toList())
+                    }
+                }
+
+            if (verboseFlow.value) {
+                Log.d(TAG, "DexKit finished: ${resolved.summary()}")
+            }
 
             when (resolved) {
                 is ResolvedTargets.Resolved -> {
@@ -166,7 +244,10 @@ class HomeViewModel(
                 }
 
                 is ResolvedTargets.Missing -> {
-                    VerifyResult.Failure(reason = "Signatures not resolved", detail = resolved.reason)
+                    VerifyResult.Failure(
+                        reason = "Signatures not resolved",
+                        detail = resolved.reason,
+                    )
                 }
             }
         }

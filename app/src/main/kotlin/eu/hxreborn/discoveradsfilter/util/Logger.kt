@@ -30,10 +30,8 @@ object Logger {
     @Volatile
     private var prefs: SharedPreferences? = null
 
-    private fun cachedPrefs(): SharedPreferences? {
-        prefs?.let { return it }
-        return runCatching { module.getRemotePreferences(SettingsPrefs.GROUP) }
+    private fun cachedPrefs(): SharedPreferences? =
+        prefs ?: runCatching { module.getRemotePreferences(SettingsPrefs.GROUP) }
             .getOrNull()
             ?.also { prefs = it }
-    }
 }

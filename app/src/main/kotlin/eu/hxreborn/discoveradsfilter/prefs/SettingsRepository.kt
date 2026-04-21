@@ -34,23 +34,37 @@ class SettingsRepository(
 
         val keysToPrune =
             localPrefs.all.keys.filterTo(mutableSetOf()) { key ->
-                key.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) && key != resolvedKey
+                key.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) && key !in
+                    setOf(
+                        SettingsPrefs.fingerprintCurrent.key,
+                        SettingsPrefs.fingerprintCurrentVersion.key,
+                        SettingsPrefs.fingerprintCurrentModuleVersion.key,
+                        resolvedKey,
+                    )
             }
         save {
+            // Keep the versioned entry for AGSA+module lookups.
             putString(resolvedKey, encoded)
-            // Prefix bump (fp_v4_ → fp_v5_) invalidates old entries without touching new ones.
+
+            // Drop entries from older schema, module, and AGSA builds.
+            // A prefix bump invalidates old entries without touching new ones.
             keysToPrune.forEach { remove(it) }
+
+            // Fall back to the latest scan when the hook side has no AGSA version code.
+            SettingsPrefs.fingerprintCurrent.write(this, encoded)
+            SettingsPrefs.fingerprintCurrentVersion.write(this, agsaVersionCode)
+            SettingsPrefs.fingerprintCurrentModuleVersion.write(this, BuildConfig.VERSION_CODE)
         }
     }
 
-    fun readLastScan(agsaVersionCode: Long): CachedScan? {
-        if (agsaVersionCode == 0L) return null
-        val key = SettingsPrefs.fingerprintKey(agsaVersionCode, BuildConfig.VERSION_CODE)
-        val raw = localPrefs.getString(key, null) ?: return null
+    fun readLastScan(): CachedScan? {
+        val raw = SettingsPrefs.fingerprintCurrent.read(localPrefs) ?: return null
         val resolved =
             runCatching { DexKitCache.decode(raw) }.getOrNull() as? ResolvedTargets.Resolved
                 ?: return null
-        return CachedScan(agsaVersionCode, resolved, BuildConfig.VERSION_CODE)
+        val version = SettingsPrefs.fingerprintCurrentVersion.read(localPrefs)
+        val moduleVersion = SettingsPrefs.fingerprintCurrentModuleVersion.read(localPrefs)
+        return CachedScan(version, resolved, moduleVersion)
     }
 
     fun readHookStatus(): String? =
@@ -69,8 +83,7 @@ class SettingsRepository(
         if (ads > localAds) {
             localPrefs.edit { SettingsPrefs.adsHidden.write(this, ads) }
         }
-        if (ads > 0L) return ads
-        return readAdsFromAgsa()
+        return if (ads > 0L) ads else readAdsFromAgsa()
     }
 
     private fun readAdsFromAgsa(): Long {
