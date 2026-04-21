@@ -41,6 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -94,11 +95,20 @@ internal fun DashboardScreenContent(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
 
+    val verify = ready?.verify
+    val showStartupOverlay =
+        verify?.scanOrigin == ScanOrigin.Startup &&
+            (
+                verify.phase == VerifyPhase.Running ||
+                    (verify.phase == VerifyPhase.Idle && !verify.startupScanDismissed && verify.scanProgress.isNotEmpty())
+            )
+
     Scaffold(
         modifier =
             modifier
                 .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .then(if (showStartupOverlay) Modifier.blur(20.dp) else Modifier),
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -295,13 +305,6 @@ internal fun DashboardScreenContent(
         }
     }
 
-    val verify = ready?.verify
-    val showStartupOverlay =
-        verify?.scanOrigin == ScanOrigin.Startup &&
-            (
-                verify.phase == VerifyPhase.Running ||
-                    (verify.phase == VerifyPhase.Idle && !verify.startupScanDismissed && verify.scanProgress.isNotEmpty())
-            )
     if (showStartupOverlay && verify != null) {
         Box(
             Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
