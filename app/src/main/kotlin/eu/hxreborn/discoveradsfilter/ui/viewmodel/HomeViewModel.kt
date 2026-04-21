@@ -21,7 +21,6 @@ import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -94,6 +93,7 @@ class HomeViewModel(
                     ScanOrigin.Startup
                 }
 
+            val serviceAlreadyBound = App.boundService != null
             verifyFlow.value =
                 VerifyUiState(
                     phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
@@ -107,16 +107,13 @@ class HomeViewModel(
                     hookProcess = hookProcess,
                     adsHidden = adsHidden,
                     filterEnabled = snapshot.filterEnabled,
+                    moduleActive = serviceAlreadyBound,
+                    moduleActiveChecked = true,
                 )
 
             if (needsScan) {
                 runScanAndUpdate()
             }
-        }
-
-        viewModelScope.launch {
-            delay(MODULE_ACTIVE_TIMEOUT_MS)
-            verifyFlow.update { it?.copy(moduleActiveChecked = true) }
         }
     }
 
@@ -298,7 +295,6 @@ class HomeViewModel(
 
     companion object {
         private const val TAG = "DiscoverAdsFilter"
-        private const val MODULE_ACTIVE_TIMEOUT_MS = 3_000L
 
         val Factory =
             viewModelFactory {
