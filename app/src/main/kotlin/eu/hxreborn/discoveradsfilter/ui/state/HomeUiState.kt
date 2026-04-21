@@ -61,7 +61,7 @@ fun VerifyUiState.toSymbolSections(): List<SymbolSection> {
                     name = "Card processors",
                     value = targets?.cardProcessorMethods?.takeIf { it.isNotEmpty() }?.let { "${it.size} methods" },
                     status =
-                        if (targets?.cardProcessorMethods?.isNotEmpty() == true) {
+                        if (!targets?.cardProcessorMethods.isNullOrEmpty()) {
                             SymbolStatus.Mapped
                         } else {
                             SymbolStatus.NotFound
@@ -129,8 +129,9 @@ data class VerifyUiState(
     val lastRefreshError: String? = null,
     val startupScanDismissed: Boolean = false,
 ) {
-    val hookInstalled: Int get() = parseSlash(hookInstallStatus).first
-    val hookTotal: Int get() = parseSlash(hookInstallStatus).second
+    private val hookCounts: Pair<Int, Int> get() = parseSlash(hookInstallStatus)
+    val hookInstalled: Int get() = hookCounts.first
+    val hookTotal: Int get() = hookCounts.second
 
     val resolvedTargetCount: Int
         get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedFieldCount() ?: 0
@@ -141,13 +142,10 @@ data class VerifyUiState(
         const val TOTAL_TARGETS = 7
 
         private fun parseSlash(status: String?): Pair<Int, Int> {
-            val raw = status ?: return 0 to 0
-            val head = raw.substringBefore(' ')
-            val parts = head.split('/')
-            if (parts.size != 2) return 0 to 0
-            val a = parts[0].toIntOrNull() ?: return 0 to 0
-            val b = parts[1].toIntOrNull() ?: return 0 to 0
-            return a to b
+            val parts = status?.substringBefore(' ')?.split('/')
+            if (parts?.size != 2) return 0 to 0
+            return (parts[0].toIntOrNull() ?: return 0 to 0) to
+                (parts[1].toIntOrNull() ?: return 0 to 0)
         }
     }
 }
@@ -174,10 +172,8 @@ data class ScanStep(
     val resolved: Boolean,
 )
 
-fun VerifyUiState.moduleUpdatedSinceScan(currentModuleVersion: Int): Boolean {
-    if (scanModuleVersion == 0) return false
-    return scanModuleVersion != currentModuleVersion
-}
+fun VerifyUiState.moduleUpdatedSinceScan(currentModuleVersion: Int): Boolean =
+    scanModuleVersion != 0 && scanModuleVersion != currentModuleVersion
 
 fun VerifyUiState.agsaUpdatedSinceScan(): Boolean {
     val result = lastResult as? VerifyResult.Success ?: return false

@@ -90,12 +90,7 @@ class HomeViewModel(
                         it != result.versionCode
                     } == true ||
                     lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
-            val origin =
-                if (hasUsableResult) {
-                    ScanOrigin.Background
-                } else {
-                    ScanOrigin.Startup
-                }
+            val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
 
             val serviceAlreadyBound = App.boundService != null
             verifyFlow.value =
@@ -153,16 +148,12 @@ class HomeViewModel(
     }
 
     private fun clearCache() {
-        val current = verifyFlow.value ?: return
-        if (current.phase == VerifyPhase.Running) return
+        if (!transitionToManualScan()) return
         viewModelScope.launch(Dispatchers.IO) {
             repo.clearScanCache()
             verifyFlow.update {
                 it?.copy(
-                    phase = VerifyPhase.Running,
-                    scanOrigin = ScanOrigin.Manual,
                     lastResult = null,
-                    scanProgress = emptyList(),
                 )
             }
             runScanAndUpdate()
@@ -170,8 +161,13 @@ class HomeViewModel(
     }
 
     private fun verify() {
-        val current = verifyFlow.value ?: return
-        if (current.phase == VerifyPhase.Running) return
+        if (!transitionToManualScan()) return
+        viewModelScope.launch { runScanAndUpdate() }
+    }
+
+    private fun transitionToManualScan(): Boolean {
+        val current = verifyFlow.value ?: return false
+        if (current.phase == VerifyPhase.Running) return false
         verifyFlow.update {
             it?.copy(
                 phase = VerifyPhase.Running,
@@ -179,7 +175,7 @@ class HomeViewModel(
                 scanProgress = emptyList(),
             )
         }
-        viewModelScope.launch { runScanAndUpdate() }
+        return true
     }
 
     private suspend fun runScanAndUpdate() {
@@ -216,19 +212,13 @@ class HomeViewModel(
                 installedAgsaVersion = installed?.versionCode,
                 installedAgsaVersionName = installed?.versionName,
                 installedAgsaLastUpdateTime = installed?.lastUpdateTime ?: 0L,
-                scanModuleVersion =
-                    if (result is VerifyResult.Success) {
-                        BuildConfig.VERSION_CODE
-                    } else {
-                        current.scanModuleVersion
-                    },
+                scanModuleVersion = if (result is VerifyResult.Success) BuildConfig.VERSION_CODE else current.scanModuleVersion,
             )
         }
     }
 
     private suspend fun scan(steps: MutableList<ScanStep>): VerifyResult =
         withContext(Dispatchers.IO) {
-            val app = app
             val agsaInfo =
                 runCatching {
                     app.packageManager.getApplicationInfo(

@@ -2,7 +2,6 @@ package eu.hxreborn.discoveradsfilter.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -71,41 +72,37 @@ internal fun ResolvedSymbolRow(
 
 @Composable
 private fun StatusBadge(status: SymbolStatus) {
-    Box(
-        contentAlignment = Alignment.CenterEnd,
-    ) {
-        when (status) {
-            SymbolStatus.Mapped -> {
-                QuietStatus(
-                    icon = Icons.Outlined.CheckCircle,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+    when (status) {
+        SymbolStatus.Mapped -> {
+            QuietStatus(
+                icon = Icons.Outlined.CheckCircle,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
 
-            SymbolStatus.Partial -> {
-                LoudStatus(
-                    icon = Icons.Outlined.Info,
-                    label = stringResource(R.string.badge_partial),
-                    background = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                )
-            }
+        SymbolStatus.Partial -> {
+            LoudStatus(
+                icon = Icons.Outlined.Info,
+                label = stringResource(R.string.badge_partial),
+                background = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+        }
 
-            SymbolStatus.NotFound -> {
-                LoudStatus(
-                    icon = Icons.Outlined.ErrorOutline,
-                    label = stringResource(R.string.badge_not_found),
-                    background = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            }
+        SymbolStatus.NotFound -> {
+            LoudStatus(
+                icon = Icons.Outlined.ErrorOutline,
+                label = stringResource(R.string.badge_not_found),
+                background = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+            )
+        }
 
-            SymbolStatus.NotMapped -> {
-                QuietStatus(
-                    label = stringResource(R.string.badge_not_mapped),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+        SymbolStatus.NotMapped -> {
+            QuietStatus(
+                label = stringResource(R.string.badge_not_mapped),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -113,8 +110,8 @@ private fun StatusBadge(status: SymbolStatus) {
 @Composable
 private fun QuietStatus(
     label: String? = null,
-    tint: androidx.compose.ui.graphics.Color,
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    tint: Color,
+    icon: ImageVector? = null,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -140,10 +137,10 @@ private fun QuietStatus(
 
 @Composable
 private fun LoudStatus(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
-    background: androidx.compose.ui.graphics.Color,
-    contentColor: androidx.compose.ui.graphics.Color,
+    background: Color,
+    contentColor: Color,
 ) {
     Row(
         modifier =

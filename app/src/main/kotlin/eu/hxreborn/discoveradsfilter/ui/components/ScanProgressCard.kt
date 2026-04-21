@@ -69,12 +69,7 @@ internal fun ScanProgressCard(
     val scheme = MaterialTheme.colorScheme
     val completed = progress.size
     val done = !running && completed > 0
-    val visibleCompleted =
-        if (maxVisibleCompleted < completed) {
-            progress.takeLast(maxVisibleCompleted)
-        } else {
-            progress
-        }
+    val visibleCompleted = progress.takeLast(maxVisibleCompleted)
 
     Surface(
         modifier = modifier,

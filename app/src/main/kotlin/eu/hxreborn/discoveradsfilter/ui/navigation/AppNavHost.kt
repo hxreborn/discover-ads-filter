@@ -34,10 +34,7 @@ private val slideTransitionMetadata =
 @Composable
 fun AppNavHost(viewModel: HomeViewModel) {
     val backStack = rememberNavBackStack(Destination.Dashboard)
-    val navigateUp = {
-        backStack.removeLastOrNull()
-        Unit
-    }
+    val navigateUp: () -> Unit = { backStack.removeLastOrNull() }
 
     val entries =
         rememberDecoratedNavEntries(

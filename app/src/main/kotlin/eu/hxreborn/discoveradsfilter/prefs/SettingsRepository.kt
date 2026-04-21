@@ -67,46 +67,40 @@ class SettingsRepository(
         return CachedScan(version, resolved, moduleVersion)
     }
 
-    fun readHookStatus(): String? =
-        remotePrefsProvider()?.let { SettingsPrefs.hookStatus.read(it) }
-            ?: SettingsPrefs.hookStatus.read(localPrefs)
+    fun readHookStatus(): String? = readPrefRemoteFirst(SettingsPrefs.hookStatus)
 
-    fun readHookProcess(): String? =
-        remotePrefsProvider()?.let { SettingsPrefs.hookProcess.read(it) }
-            ?: SettingsPrefs.hookProcess.read(localPrefs)
+    fun readHookProcess(): String? = readPrefRemoteFirst(SettingsPrefs.hookProcess)
+
+    private fun readPrefRemoteFirst(spec: PrefSpec<String?>): String? =
+        remotePrefsProvider()?.let { spec.read(it) } ?: spec.read(localPrefs)
 
     fun readAdsHidden(): Long {
         val localAds = SettingsPrefs.adsHidden.read(localPrefs)
-        val remote = remotePrefsProvider()
-        val remoteAds = remote?.let { SettingsPrefs.adsHidden.read(it) } ?: 0L
+        val remoteAds = remotePrefsProvider()?.let { SettingsPrefs.adsHidden.read(it) } ?: 0L
         val ads = maxOf(localAds, remoteAds)
-        if (ads > localAds) {
+        if (remoteAds > localAds) {
             localPrefs.edit { SettingsPrefs.adsHidden.write(this, ads) }
         }
         return if (ads > 0L) ads else readAdsFromAgsa()
     }
 
-    private fun readAdsFromAgsa(): Long {
-        var ads = 0L
+    private fun readAdsFromAgsa(): Long =
         runCatching {
             val agsaInfo =
                 context.packageManager.getApplicationInfo(
                     "com.google.android.googlequicksearchbox",
                     0,
                 )
-            val cacheDir = File(agsaInfo.dataDir, "cache")
-            val metricsFile = File(cacheDir, "discover_adsfilter_metrics.txt")
-            if (metricsFile.exists()) {
-                metricsFile.readLines().forEach { line ->
-                    val parts = line.split("=", limit = 2)
-                    if (parts.size == 2 && parts[0] == "ads") {
-                        ads = parts[1].toLongOrNull() ?: 0
-                    }
-                }
-            }
-        }
-        return ads
-    }
+            val metricsFile =
+                File(File(agsaInfo.dataDir, "cache"), "discover_adsfilter_metrics.txt")
+            if (!metricsFile.exists()) return@runCatching 0L
+            metricsFile
+                .readLines()
+                .firstOrNull { it.startsWith("ads=") }
+                ?.substringAfter('=')
+                ?.toLongOrNull()
+                ?: 0L
+        }.getOrDefault(0L)
 
     fun clearScanCache() {
         val keysToRemove =

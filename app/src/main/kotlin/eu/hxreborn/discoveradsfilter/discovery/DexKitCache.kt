@@ -26,33 +26,22 @@ object DexKitCache {
                 ?.let { prefs.getString(SettingsPrefs.fingerprintKey(it, moduleVersionCode), null) }
                 ?: return ResolvedTargets.Missing(missingReason(versionCode = versionCode))
 
-        val candidates = listOf("exact" to exactRaw)
+        val decoded =
+            runCatching { json.decodeFromString(ResolvedTargets.serializer(), exactRaw) }
+                .onFailure {
+                    module.log(Log.ERROR, TAG, "failed to parse cached targets", it)
+                }.getOrNull()
 
-        val failures = mutableListOf<String>()
-        for ((source, raw) in candidates) {
-            val decoded =
-                runCatching { json.decodeFromString(ResolvedTargets.serializer(), raw) }
-                    .onFailure {
-                        module.log(
-                            Log.ERROR,
-                            TAG,
-                            "failed to parse cached targets from $source",
-                            it,
-                        )
-                    }.getOrNull()
+        if (decoded != null && decoded.isUsableHookCache()) return decoded
 
-            failures +=
-                when {
-                    decoded == null -> "$source: corrupt cache entry"
-                    decoded.isUsableHookCache() -> return decoded
-                    decoded is ResolvedTargets.Missing -> "$source: ${decoded.reason}"
-                    else -> "$source: cached targets contained no installable hook methods"
-                }
-        }
-
+        val reason =
+            when (decoded) {
+                null -> "corrupt cache entry"
+                is ResolvedTargets.Missing -> decoded.reason
+                else -> "cached targets contained no installable hook methods"
+            }
         return ResolvedTargets.Missing(
-            "no usable hook cache for AGSA v$versionCode; " +
-                "${failures.joinToString("; ")}; rerun Verify after updating signatures",
+            "no usable hook cache for AGSA v$versionCode; $reason; rerun Verify after updating signatures",
         )
     }
 
@@ -63,15 +52,7 @@ object DexKitCache {
         json.decodeFromString(ResolvedTargets.serializer(), raw)
 
     private fun ResolvedTargets.isUsableHookCache(): Boolean =
-        when (this) {
-            is ResolvedTargets.Missing -> {
-                false
-            }
-
-            is ResolvedTargets.Resolved -> {
-                adMetadataClass != null && feedCardClass != null
-            }
-        }
+        this is ResolvedTargets.Resolved && adMetadataClass != null && feedCardClass != null
 
     private fun missingReason(versionCode: Long): String =
         if (versionCode == 0L) {

@@ -16,7 +16,7 @@ object HookMetrics {
 
     fun init() {
         val dir = File(AGSA_CACHE)
-        runCatching { dir.mkdirs() }
+        dir.mkdirs()
         val file = File(dir, METRICS_FILENAME)
         metricsFile = file
         runCatching {
