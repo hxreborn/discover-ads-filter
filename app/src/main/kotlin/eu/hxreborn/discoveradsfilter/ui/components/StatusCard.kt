@@ -64,7 +64,7 @@ fun StatusCard(
                     text = stringResource(visual.titleRes),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                if (!state.moduleActive) {
+                if (state.moduleActiveChecked && !state.moduleActive) {
                     Text(
                         text = stringResource(R.string.hero_module_not_active_detail),
                         style = MaterialTheme.typography.bodyMedium,
@@ -74,10 +74,13 @@ fun StatusCard(
                         text = targetLine(state),
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    Text(
-                        text = hookStatusLine(state),
-                        style = MaterialTheme.typography.bodySmall,
-                    )
+                    val hookLine = hookStatusLine(state)
+                    if (hookLine != null) {
+                        Text(
+                            text = hookLine,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                     if (state.adsHidden > 0) {
                         Text(
                             text = stringResource(R.string.hero_blocked_since_install, state.adsHidden),
@@ -103,14 +106,11 @@ private fun targetLine(state: VerifyUiState): String {
 }
 
 @Composable
-private fun hookStatusLine(state: VerifyUiState): String {
+private fun hookStatusLine(state: VerifyUiState): String? {
     val installed = state.hookInstalled
     val total = state.hookTotal
-    return if (installed > 0 || total > 0) {
-        stringResource(R.string.diag_hooks_ratio, installed, total)
-    } else {
-        stringResource(R.string.diag_hooks_unknown)
-    }
+    if (installed == 0 && total == 0) return null
+    return stringResource(R.string.diag_hooks_ratio, installed, total)
 }
 
 private data class StatusVisual(
@@ -127,7 +127,7 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
     val stale = state.agsaUpdatedSinceScan() || state.moduleUpdatedSinceScan(BuildConfig.VERSION_CODE)
     val refreshing = state.phase == VerifyPhase.Running
 
-    if (!state.moduleActive) {
+    if (state.moduleActiveChecked && !state.moduleActive) {
         return StatusVisual(
             icon = Icons.Outlined.ErrorOutline,
             titleRes = R.string.hero_module_not_active,
