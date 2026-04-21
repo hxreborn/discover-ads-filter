@@ -6,7 +6,7 @@ import eu.hxreborn.discoveradsfilter.module
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import kotlinx.serialization.json.Json
 
-object FingerprintCache {
+object DexKitCache {
     private const val TAG = "DiscoverAdsFilter/Fp"
 
     private val json =
