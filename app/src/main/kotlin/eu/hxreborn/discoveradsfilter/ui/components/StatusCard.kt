@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.state.HookCoverage
@@ -46,6 +48,7 @@ fun StatusCard(
         shape = MaterialTheme.shapes.large,
         color = visual.container,
         contentColor = visual.content,
+        tonalElevation = visual.tonalElevation,
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(Spacing.lg),
@@ -66,7 +69,12 @@ fun StatusCard(
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
-                    text = targetLine(state),
+                    text =
+                        if (state.hookCoverage() == HookCoverage.ModuleNotActive) {
+                            stringResource(R.string.hero_module_not_active_detail)
+                        } else {
+                            targetLine(state)
+                        },
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 val versionCode = state.installedAgsaVersion
@@ -103,6 +111,7 @@ private data class StatusVisual(
     val titleRes: Int,
     val container: Color,
     val content: Color,
+    val tonalElevation: Dp = 0.dp,
 )
 
 @Composable
@@ -130,7 +139,8 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
                 } else {
                     R.string.hero_hooks_active
                 }
-            StatusVisual(Icons.Filled.CheckCircle, titleRes, scheme.primaryContainer, scheme.onPrimaryContainer)
+            val elevation = if (state.adsHidden > 0) 3.dp else 0.dp
+            StatusVisual(Icons.Filled.CheckCircle, titleRes, scheme.primaryContainer, scheme.onPrimaryContainer, elevation)
         }
 
         HookCoverage.FallbackOnly -> {
@@ -152,6 +162,10 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
 
         HookCoverage.ScanFailed -> {
             StatusVisual(Icons.Outlined.ErrorOutline, R.string.hero_scan_failed, scheme.errorContainer, scheme.onErrorContainer)
+        }
+
+        HookCoverage.ModuleNotActive -> {
+            StatusVisual(Icons.Outlined.ErrorOutline, R.string.hero_module_not_active, scheme.errorContainer, scheme.onErrorContainer)
         }
     }
 }

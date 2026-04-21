@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import eu.hxreborn.discoveradsfilter.App
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
@@ -76,6 +78,14 @@ fun AboutScreen(onBack: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
+            App.boundService?.let { service ->
+                Text(
+                    text = "${service.frameworkName} v${service.frameworkVersion}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
 
         Spacer(Modifier.height(8.dp))
@@ -95,6 +105,32 @@ fun AboutScreen(onBack: () -> Unit) {
             shape = shapeForPosition(2, 1),
             onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, GITHUB_ISSUES_URL.toUri())) },
         )
+
+        Spacer(Modifier.height(24.dp))
+        Text(
+            text = stringResource(R.string.about_libraries),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
+        Spacer(Modifier.height(4.dp))
+
+        val libs =
+            listOf(
+                "DexKit" to "LuckyPray / LGPL-3.0",
+                "libxposed" to "libxposed / Apache-2.0",
+                "compose-preference" to "Hai Zhang / Apache-2.0",
+                "kotlinx-serialization" to "JetBrains / Apache-2.0",
+            )
+        libs.forEachIndexed { index, (name, license) ->
+            if (index > 0) Spacer(Modifier.height(2.dp))
+            AboutCard(
+                icon = Icons.Outlined.Extension,
+                title = name,
+                subtitle = license,
+                shape = shapeForPosition(libs.size, index),
+            )
+        }
     }
 }
 

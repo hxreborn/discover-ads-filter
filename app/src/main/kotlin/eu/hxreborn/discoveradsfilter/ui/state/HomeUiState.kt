@@ -104,6 +104,7 @@ data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
     val onFilterEnabledChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
+    val onClearCache: () -> Unit,
 )
 
 @Immutable
@@ -118,6 +119,8 @@ data class VerifyUiState(
     val hookProcess: String? = null,
     val adsHidden: Long = 0,
     val filterEnabled: Boolean = true,
+    val moduleActive: Boolean = false,
+    val moduleActiveChecked: Boolean = false,
     val scanOrigin: ScanOrigin? = null,
     val scanProgress: List<ScanStep> = emptyList(),
     val scanDurationMs: Long = 0,
@@ -167,10 +170,12 @@ data class ScanStep(
     val resolved: Boolean,
 )
 
-enum class HookCoverage { Full, FallbackOnly, None, NotScanned, ScanFailed }
+enum class HookCoverage { Full, FallbackOnly, None, NotScanned, ScanFailed, ModuleNotActive }
 
-fun VerifyUiState.hookCoverage(): HookCoverage =
-    when (val r = lastResult) {
+fun VerifyUiState.hookCoverage(): HookCoverage {
+    if (moduleActiveChecked && !moduleActive) return HookCoverage.ModuleNotActive
+
+    return when (val r = lastResult) {
         null -> {
             HookCoverage.NotScanned
         }
@@ -190,6 +195,7 @@ fun VerifyUiState.hookCoverage(): HookCoverage =
             }
         }
     }
+}
 
 fun VerifyUiState.moduleUpdatedSinceScan(currentModuleVersion: Int): Boolean {
     if (scanModuleVersion == 0) return false

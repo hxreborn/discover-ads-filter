@@ -108,6 +108,12 @@ class SettingsRepository(
         return ads
     }
 
+    fun clearScanCache() {
+        val keysToRemove =
+            localPrefs.all.keys.filter { it.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) }
+        save { keysToRemove.forEach { remove(it) } }
+    }
+
     fun syncLocalToRemote() {
         val remote = remotePrefsProvider() ?: return
         remote.edit(commit = true) {

@@ -20,6 +20,7 @@ private val NoOpActions =
         onVerboseChange = {},
         onFilterEnabledChange = {},
         onVerify = {},
+        onClearCache = {},
     )
 
 @Composable

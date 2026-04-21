@@ -286,6 +286,8 @@ internal object PreviewFixtures {
             hookProcess = "com.google.android.googlequicksearchbox",
             adsHidden = 1_247L,
             filterEnabled = true,
+            moduleActive = true,
+            moduleActiveChecked = true,
         )
 
     fun verifySuccessFullNoBlocks(): VerifyUiState = verifySuccessFull().copy(adsHidden = 0L)
@@ -349,6 +351,8 @@ internal object PreviewFixtures {
             scanModuleVersion = BuildConfig.VERSION_CODE - 1,
         )
 
+    fun verifyModuleNotActive(): VerifyUiState = VerifyUiState(moduleActiveChecked = true, moduleActive = false)
+
     fun verifyNoServiceBoundYet(): VerifyUiState = verifyNotScanned()
 
     val verifyStatesAll: List<VerifyUiState> =
@@ -363,6 +367,7 @@ internal object PreviewFixtures {
             verifyFailureDexKitNoMatches(),
             verifyStaleAgsaUpdated(),
             verifyStaleModuleUpdated(),
+            verifyModuleNotActive(),
             verifyNoServiceBoundYet(),
         )
 
@@ -378,5 +383,6 @@ internal object PreviewFixtures {
             HomeUiState.Ready(verify = verifyFailureDexKitNoMatches()),
             HomeUiState.Ready(verbose = true, verify = verifyStaleAgsaUpdated()),
             HomeUiState.Ready(verbose = true, verify = verifyStaleModuleUpdated()),
+            HomeUiState.Ready(verify = verifyModuleNotActive()),
         )
 }
