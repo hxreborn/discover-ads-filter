@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.system.measureTimeMillis
 
 class HomeViewModel(
     private val app: Application,
@@ -153,7 +154,10 @@ class HomeViewModel(
                     app.packageManager.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0).longVersionCode
                 }.getOrNull() ?: 0L
 
-            val resolved = DexKitResolver.resolveAll(apkPath)
+            Log.d(TAG, "scan agsaV=$versionCode apk=$apkPath")
+            var resolved: ResolvedTargets
+            val elapsedMs = measureTimeMillis { resolved = DexKitResolver.resolveAll(apkPath) }
+            Log.d(TAG, "scan done in ${elapsedMs}ms: ${resolved.summary()}")
 
             when (resolved) {
                 is ResolvedTargets.Resolved -> {
