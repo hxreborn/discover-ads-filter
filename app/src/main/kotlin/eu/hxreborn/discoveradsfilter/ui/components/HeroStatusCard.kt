@@ -85,7 +85,7 @@ fun HeroStatusCard(
                 ) {
                     Text(
                         text = stringResource(visual.titleRes),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineSmall,
                     )
                     Text(
                         text = targetLine(state),
@@ -102,7 +102,7 @@ private fun targetLine(state: VerifyUiState): String {
     val name = state.installedAgsaVersionName
     val code = state.installedAgsaVersion
     return when {
-        name != null -> stringResource(R.string.hero_target_agsa, name)
+        name != null -> "Google v$name"
         code != null -> stringResource(R.string.hero_target_agsa, "v$code")
         else -> stringResource(R.string.hero_target_missing)
     }
