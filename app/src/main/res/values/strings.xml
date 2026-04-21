@@ -17,7 +17,7 @@
     <string name="hero_target_missing">Target app not detected</string>
     <string name="hero_blocked_since_install">%1$s ads blocked since install</string>
 
-    <!-- Engine diagnostics -->
+    <!-- Module status -->
     <string name="diag_target_app">Target Application</string>
     <string name="diag_module">Module</string>
     <string name="diag_runtime_hooks">Runtime Hooks</string>
@@ -44,13 +44,6 @@
     <string name="pref_version_easter_egg">v%1$s (%2$d) – %3$s build</string>
     <string name="pref_github_title">Source code</string>
     <string name="pref_github_summary">View source on GitHub</string>
-
-    <!-- Known-good (dialog only, not exposed in main UI) -->
-    <string name="info_known_good_title">Known-good builds</string>
-    <string name="info_known_good_empty">No builds confirmed yet</string>
-    <string name="info_known_good_entry_local">AGSA %1$s · module %2$s</string>
-    <string name="info_known_good_entry_bundled">AGSA %1$s · bundled</string>
-    <string name="info_known_good_forget">Forget</string>
 
     <!-- DexKit fingerprints -->
     <string name="pref_dexkit_title">Fingerprints</string>
