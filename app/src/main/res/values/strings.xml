@@ -3,7 +3,8 @@
     <string name="app_name">Discover Ads Filter</string>
     <string name="app_description">Removes sponsored cards from the Google Discover feed using structural DexKit fingerprinting. Targets Google App (AGSA).</string>
 
-    <string name="button_reverify">Re-scan</string>
+    <string name="button_rescan">Rescan</string>
+    <string name="fab_resolving">Resolving\u2026</string>
 
     <!-- Hero status -->
     <string name="hero_hooks_active">Hooks Active</string>
@@ -12,8 +13,8 @@
     <string name="hero_not_configured">Not configured</string>
     <string name="hero_scan_failed">Scan failed</string>
     <string name="hero_stale">Stale signatures</string>
-    <string name="hero_no_targets">No targets resolved</string>
-    <string name="hero_target_agsa">Google (AGSA) %1$s</string>
+    <string name="hero_no_targets">No symbols mapped</string>
+    <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_target_missing">Target app not detected</string>
     <string name="hero_blocked_since_install">%1$s ads blocked since install</string>
 
@@ -33,10 +34,10 @@
     <string name="pref_filter_sponsored">Filter sponsored posts</string>
     <string name="pref_filter_sponsored_summary">Hide ads from the Discover feed</string>
     <string name="toggle_verbose">Debug logging</string>
-    <string name="toggle_verbose_summary">Writes hook events to logcat</string>
+    <string name="toggle_verbose_summary">Verbose logging for troubleshooting</string>
 
     <!-- Diagnostics category -->
-    <string name="pref_category_diagnostics">Diagnostics</string>
+    <string name="pref_category_diagnostics">Advanced</string>
 
     <!-- About -->
     <string name="pref_category_about">About</string>
@@ -45,10 +46,53 @@
     <string name="pref_github_title">Source code</string>
     <string name="pref_github_summary">View source on GitHub</string>
 
-    <!-- DexKit fingerprints -->
-    <string name="pref_dexkit_title">Fingerprints</string>
-    <string name="pref_dexkit_summary_ready">%1$d/%2$d symbols — tap to inspect</string>
-    <string name="pref_dexkit_summary_none">Run a scan first</string>
+    <!-- DexKit fingerprint -->
+    <string name="pref_dexkit_title">DexKit Fingerprint</string>
+    <string name="pref_dexkit_summary_ready">View mapped hook symbols</string>
+    <string name="pref_dexkit_summary_none">View mapped hook symbols</string>
     <string name="dexkit_dialog_title">Resolved Symbols</string>
-    <string name="dexkit_no_results">Run a scan to populate fingerprints</string>
+    <string name="dexkit_no_results">Run a scan first</string>
+
+    <!-- Navigation -->
+    <string name="nav_diagnostics">DexKit Scan</string>
+    <string name="nav_back">Back</string>
+    <string name="nav_info">Info</string>
+
+    <!-- Diagnostics screen -->
+    <string name="diag_mapped_combo_title">Scanned against</string>
+    <string name="diag_mapped_google_app_label">Google App</string>
+    <string name="diag_mapped_module_label">Module</string>
+    <string name="diag_mapped_agsa_empty">—</string>
+    <string name="diag_mapped_agsa_versioned">v%1$s (%2$d)</string>
+    <string name="diag_mapped_agsa_code_only">(%1$d)</string>
+    <string name="diag_mapped_module_empty">—</string>
+    <string name="diag_mapped_module_versioned">v%1$s (%2$d)</string>
+    <string name="diag_mapped_module_code_only">(%1$d)</string>
+    <string name="diag_summary_resolved">%1$d/%2$d symbols mapped</string>
+    <string name="diag_symbols_title">Mapped symbols</string>
+    <string name="diag_section_summary">%1$s · %2$d/%3$d</string>
+    <string name="badge_partial">partial</string>
+    <string name="badge_not_found">not found</string>
+    <string name="badge_not_mapped">not mapped</string>
+    <string name="diag_info_title">How DexKit scanning works</string>
+    <string name="diag_info_body_1">DexKit opens the installed Google App APK and uses structural fingerprints (field types, extension numbers, inheritance) to locate the obfuscated classes, fields, and methods this module hooks. Results are cached by longVersionCode.</string>
+    <string name="diag_info_body_2">When Google App updates, rescan to rebuild the cache. A missing symbol means the obfuscation shifted and the fingerprint needs updating.</string>
+
+    <!-- Scan progress -->
+    <string name="scan_verifying">Verifying Google App\u2026</string>
+    <string name="scan_progress">Resolving symbols %1$d/%2$d</string>
+    <string name="scan_complete">Scan complete</string>
+    <string name="scan_step_found">Found</string>
+    <string name="scan_step_scanning">Scanning\u2026</string>
+    <string name="scan_step_not_found">Not found</string>
+    <string name="scan_failed_title">Verification failed</string>
+    <string name="scan_failed_body">DexKit couldn\'t map symbols for this Google App version.</string>
+    <string name="scan_open_diagnostics">Open diagnostics</string>
+    <string name="scan_retry">Retry</string>
+
+    <!-- About screen -->
+    <string name="about_source_code">Source code</string>
+    <string name="about_source_code_summary">View on GitHub</string>
+    <string name="about_report_issue">Report issue</string>
+    <string name="about_report_issue_summary">Open an issue on GitHub</string>
 </resources>
