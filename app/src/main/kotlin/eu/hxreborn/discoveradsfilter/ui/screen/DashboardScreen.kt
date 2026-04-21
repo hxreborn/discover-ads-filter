@@ -311,7 +311,7 @@ internal fun DashboardScreenContent(
                 ScanProgressCard(
                     progress = verify.scanProgress,
                     phase = verify.phase,
-                    maxVisibleCompleted = 3,
+                    durationMs = verify.scanDurationMs,
                     onDismiss = if (verify.phase == VerifyPhase.Idle) actions.onDismissStartupScan else null,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
                 )
