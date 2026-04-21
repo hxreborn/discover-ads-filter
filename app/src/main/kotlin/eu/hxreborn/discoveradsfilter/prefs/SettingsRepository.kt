@@ -4,9 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import eu.hxreborn.discoveradsfilter.BuildConfig
-import eu.hxreborn.discoveradsfilter.discovery.FingerprintCache
-import eu.hxreborn.discoveradsfilter.discovery.KnownGoodEntry
-import eu.hxreborn.discoveradsfilter.discovery.KnownGoodRegistry
+import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import java.io.File
 
@@ -23,17 +21,16 @@ class SettingsRepository(
             filterEnabled = SettingsPrefs.filterEnabled.read(localPrefs),
         )
 
-    fun setVerbose(value: Boolean) = dualEdit { SettingsPrefs.verbose.write(this, value) }
+    fun setVerbose(value: Boolean) = save { SettingsPrefs.verbose.write(this, value) }
 
-    fun setFilterEnabled(value: Boolean) =
-        dualEdit { SettingsPrefs.filterEnabled.write(this, value) }
+    fun setFilterEnabled(value: Boolean) = save { SettingsPrefs.filterEnabled.write(this, value) }
 
     fun writeResolvedTargets(
         agsaVersionCode: Long,
         targets: ResolvedTargets,
     ) {
         val resolvedKey = SettingsPrefs.fingerprintKey(agsaVersionCode, BuildConfig.VERSION_CODE)
-        val encoded = FingerprintCache.encode(targets)
+        val encoded = DexKitCache.encode(targets)
 
         val keysToPrune =
             localPrefs.all.keys.filterTo(mutableSetOf()) { key ->
@@ -45,7 +42,7 @@ class SettingsRepository(
                         resolvedKey,
                     )
             }
-        dualEdit {
+        save {
             // Keep the per-version entry so hook-side can load by AGSA+module version.
             putString(resolvedKey, encoded)
 
@@ -63,7 +60,7 @@ class SettingsRepository(
     fun readLastScan(): CachedScan? {
         val raw = SettingsPrefs.fingerprintCurrent.read(localPrefs) ?: return null
         val resolved =
-            runCatching { FingerprintCache.decode(raw) }.getOrNull() as? ResolvedTargets.Resolved
+            runCatching { DexKitCache.decode(raw) }.getOrNull() as? ResolvedTargets.Resolved
                 ?: return null
         val version = SettingsPrefs.fingerprintCurrentVersion.read(localPrefs)
         val moduleVersion = SettingsPrefs.fingerprintCurrentModuleVersion.read(localPrefs)
@@ -112,41 +109,6 @@ class SettingsRepository(
         return ads
     }
 
-    fun readKnownGood(): KnownGoodLists {
-        val bundled = KnownGoodRegistry.bundled(context)
-        val local = KnownGoodRegistry.decode(SettingsPrefs.knownGoodLocal.read(localPrefs))
-        return KnownGoodLists(bundled = bundled, local = local)
-    }
-
-    fun addKnownGood(entry: KnownGoodEntry): KnownGoodLists {
-        val current = KnownGoodRegistry.decode(SettingsPrefs.knownGoodLocal.read(localPrefs))
-        val deduped =
-            current.filterNot {
-                it.agsaVersionCode == entry.agsaVersionCode &&
-                    it.moduleVersionCode == entry.moduleVersionCode &&
-                    it.targetsHash == entry.targetsHash
-            }
-        val next = deduped + entry.copy(source = KnownGoodEntry.Source.Local)
-        dualEdit { SettingsPrefs.knownGoodLocal.write(this, KnownGoodRegistry.encode(next)) }
-        return KnownGoodLists(bundled = KnownGoodRegistry.bundled(context), local = next)
-    }
-
-    fun removeKnownGood(
-        agsaVersionCode: Long,
-        moduleVersionCode: Int,
-        targetsHash: String,
-    ): KnownGoodLists {
-        val current = KnownGoodRegistry.decode(SettingsPrefs.knownGoodLocal.read(localPrefs))
-        val next =
-            current.filterNot {
-                it.agsaVersionCode == agsaVersionCode &&
-                    it.moduleVersionCode == moduleVersionCode &&
-                    it.targetsHash == targetsHash
-            }
-        dualEdit { SettingsPrefs.knownGoodLocal.write(this, KnownGoodRegistry.encode(next)) }
-        return KnownGoodLists(bundled = KnownGoodRegistry.bundled(context), local = next)
-    }
-
     fun syncLocalToRemote() {
         val remote = remotePrefsProvider() ?: return
         remote.edit(commit = true) {
@@ -163,7 +125,7 @@ class SettingsRepository(
         }
     }
 
-    private inline fun dualEdit(crossinline block: SharedPreferences.Editor.() -> Unit) {
+    private inline fun save(crossinline block: SharedPreferences.Editor.() -> Unit) {
         localPrefs.edit { block() }
         remotePrefsProvider()?.edit(commit = true) {
             block()
@@ -185,13 +147,6 @@ data class PersistedSettings(
     val verbose: Boolean,
     val filterEnabled: Boolean = true,
 )
-
-data class KnownGoodLists(
-    val bundled: List<KnownGoodEntry>,
-    val local: List<KnownGoodEntry>,
-) {
-    fun all(): List<KnownGoodEntry> = bundled + local
-}
 
 data class CachedScan(
     val versionCode: Long,

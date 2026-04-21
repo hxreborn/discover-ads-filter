@@ -12,10 +12,7 @@ object SettingsPrefs {
     val adsHidden = LongPref("ads_hidden", 0L)
     val lastRemoteWrite = LongPref("_last_remote_write", 0L)
 
-    // Known-good registry: JSON array of user-confirmed (agsa,module,hash) tuples
-    val knownGoodLocal = NullableStringPref("known_good_local_v1")
-
-    // Fingerprint cache: written by the module-app, read by the hook process
+    // DexKit cache: written by the module-app, read by the hook process
     val fingerprintCurrent = NullableStringPref("fp_v4_current")
     val fingerprintCurrentVersion = LongPref("fp_v4_current_version", 0L)
     val fingerprintCurrentModuleVersion = IntPref("fp_v4_current_module_version", 0)

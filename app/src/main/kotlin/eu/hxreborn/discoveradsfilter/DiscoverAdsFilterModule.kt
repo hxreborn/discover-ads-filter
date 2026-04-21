@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.util.Log
 import androidx.core.content.edit
-import eu.hxreborn.discoveradsfilter.discovery.FingerprintCache
+import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.hook.HookMetrics
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
@@ -39,7 +39,7 @@ class DiscoverAdsFilterModule : XposedModule() {
         val prefs = getRemotePreferences(SettingsPrefs.GROUP)
 
         val versionCode = currentAgsaVersionCode()
-        val targets = FingerprintCache.load(versionCode, BuildConfig.VERSION_CODE, prefs)
+        val targets = DexKitCache.load(versionCode, BuildConfig.VERSION_CODE, prefs)
         if (targets is ResolvedTargets.Missing) {
             val allKeys = runCatching { prefs.all.keys.sorted() }.getOrDefault(emptyList())
             val lastRemoteWrite =
