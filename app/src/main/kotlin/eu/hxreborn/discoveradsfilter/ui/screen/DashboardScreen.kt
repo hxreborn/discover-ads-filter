@@ -303,19 +303,17 @@ internal fun DashboardScreenContent(
                     (verify.phase == VerifyPhase.Idle && !verify.startupScanDismissed && verify.scanProgress.isNotEmpty())
             )
     if (showStartupOverlay && verify != null) {
-        Surface(Modifier.fillMaxSize()) {
-            Box(
-                Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                ScanProgressCard(
-                    progress = verify.scanProgress,
-                    phase = verify.phase,
-                    durationMs = verify.scanDurationMs,
-                    onDismiss = if (verify.phase == VerifyPhase.Idle) actions.onDismissStartupScan else null,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-                )
-            }
+        Box(
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            ScanProgressCard(
+                progress = verify.scanProgress,
+                phase = verify.phase,
+                durationMs = verify.scanDurationMs,
+                onDismiss = if (verify.phase == VerifyPhase.Idle) actions.onDismissStartupScan else null,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+            )
         }
     }
 
