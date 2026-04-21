@@ -43,11 +43,7 @@ class HomeViewModel(
 
     val uiState: StateFlow<HomeUiState> =
         combine(verboseFlow, verifyFlow) { verbose, verify ->
-            if (verify == null) {
-                HomeUiState.Loading
-            } else {
-                HomeUiState.Ready(verbose = verbose, verify = verify)
-            }
+            verify?.let { HomeUiState.Ready(verbose = verbose, verify = it) } ?: HomeUiState.Loading
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 
     val actions: HomeActions =
@@ -136,12 +132,7 @@ class HomeViewModel(
                     installedAgsaVersion = installed?.versionCode,
                     installedAgsaVersionName = installed?.versionName,
                     installedAgsaLastUpdateTime = installed?.lastUpdateTime ?: 0L,
-                    scanModuleVersion =
-                        if (result is VerifyResult.Success) {
-                            BuildConfig.VERSION_CODE
-                        } else {
-                            current.scanModuleVersion
-                        },
+                    scanModuleVersion = if (result is VerifyResult.Success) BuildConfig.VERSION_CODE else current.scanModuleVersion,
                 )
             }
         }

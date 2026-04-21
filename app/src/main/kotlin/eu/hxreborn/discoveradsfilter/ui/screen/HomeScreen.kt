@@ -124,7 +124,9 @@ internal fun HomeScreenContent(
                             text = stringResource(R.string.app_name),
                             style =
                                 if (isExpanded) {
-                                    MaterialTheme.typography.headlineLarge.copy(lineHeight = 36.sp)
+                                    MaterialTheme.typography.headlineLarge.copy(
+                                        lineHeight = 36.sp,
+                                    )
                                 } else {
                                     LocalTextStyle.current
                                 },
