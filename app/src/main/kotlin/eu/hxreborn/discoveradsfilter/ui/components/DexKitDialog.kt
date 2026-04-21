@@ -54,7 +54,10 @@ private fun MappingTable(targets: ResolvedTargets.Resolved) {
     val dimColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Column(
-        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         MappingRow(
@@ -117,7 +120,10 @@ private fun MappingRow(
     val dimColor = MaterialTheme.colorScheme.onSurfaceVariant
 
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -151,17 +151,14 @@ private fun Modifier.drawScrollbar(
         val atEnd = if (orientation == Orientation.Vertical) isLtr else true
         val color = barColor
 
-        Modifier
-            .nestedScroll(nestedScrollConnection)
-            .drawWithContent {
-                drawContent()
-                onDraw(reverseDirection, atEnd, color, alpha::value)
-            }
+        Modifier.nestedScroll(nestedScrollConnection).drawWithContent {
+            drawContent()
+            onDraw(reverseDirection, atEnd, color, alpha::value)
+        }
     }
 
 private val barColor: Color
     @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
 
 private val THICKNESS = 4.dp
-private val FADE_OUT_ANIMATION_SPEC =
-    tween<Float>(durationMillis = ViewConfiguration.getScrollBarFadeDuration())
+private val FADE_OUT_ANIMATION_SPEC = tween<Float>(durationMillis = ViewConfiguration.getScrollBarFadeDuration())

@@ -40,11 +40,7 @@ fun LazyListScope.diagnosticsItems(
         val agsaPainter = rememberAgsaIconPainter()
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            modifier =
-                Modifier
-                    .padding(horizontal = 8.dp)
-                    .background(color = surface, shape = shape)
-                    .clip(shape),
+            modifier = Modifier.padding(horizontal = 8.dp).background(color = surface, shape = shape).clip(shape),
             leadingContent = {
                 Image(
                     painter = agsaPainter,
@@ -63,11 +59,7 @@ fun LazyListScope.diagnosticsItems(
         val shape = shapeForPosition(DIAG_COUNT, 1)
         ListItem(
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-            modifier =
-                Modifier
-                    .padding(horizontal = 8.dp)
-                    .background(color = surface, shape = shape)
-                    .clip(shape),
+            modifier = Modifier.padding(horizontal = 8.dp).background(color = surface, shape = shape).clip(shape),
             leadingContent = {
                 Icon(imageVector = Icons.Outlined.Map, contentDescription = null)
             },

@@ -3,7 +3,6 @@ package eu.hxreborn.discoveradsfilter.ui.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,7 +25,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.state.HookCoverage
@@ -51,10 +49,7 @@ fun HeroStatusCard(
     val running = state.phase == VerifyPhase.Running
 
     ElevatedCard(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+        modifier = modifier.fillMaxWidth().padding(horizontal = Spacing.sm, vertical = Spacing.xs),
         colors =
             CardDefaults.elevatedCardColors(
                 containerColor = visual.container,
@@ -119,9 +114,7 @@ private data class HeroVisual(
 @Composable
 private fun heroVisual(state: VerifyUiState): HeroVisual {
     val scheme = MaterialTheme.colorScheme
-    val stale =
-        state.agsaUpdatedSinceScan() ||
-            state.moduleUpdatedSinceScan(BuildConfig.VERSION_CODE)
+    val stale = state.agsaUpdatedSinceScan() || state.moduleUpdatedSinceScan(BuildConfig.VERSION_CODE)
 
     if (stale && state.lastResult is VerifyResult.Success) {
         return HeroVisual(

@@ -2,6 +2,7 @@
 
 package eu.hxreborn.discoveradsfilter.ui.screen
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
@@ -85,6 +86,7 @@ fun HomeScreen(
     )
 }
 
+@SuppressLint("LocalContextGetResourceValueCall")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HomeScreenContent(
@@ -118,8 +120,7 @@ internal fun HomeScreenContent(
                 )
                 LargeTopAppBar(
                     title = {
-                        val isExpanded =
-                            LocalTextStyle.current.fontSize >= MaterialTheme.typography.headlineMedium.fontSize
+                        val isExpanded = LocalTextStyle.current.fontSize >= MaterialTheme.typography.headlineMedium.fontSize
                         Text(
                             text = stringResource(R.string.app_name),
                             style =
@@ -162,8 +163,7 @@ internal fun HomeScreenContent(
                 )
             }
         },
-        contentWindowInsets =
-            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
     ) { innerPadding ->
         ProvidePreferenceLocals {
             val surface = MaterialTheme.colorScheme.surfaceVariant
@@ -257,11 +257,7 @@ internal fun HomeScreenContent(
                     val aboutShape0 = shapeForPosition(aboutCount, 0)
                     preference(
                         key = "version",
-                        modifier =
-                            Modifier
-                                .padding(horizontal = 8.dp)
-                                .background(color = surface, shape = aboutShape0)
-                                .clip(aboutShape0),
+                        modifier = Modifier.padding(horizontal = 8.dp).background(color = surface, shape = aboutShape0).clip(aboutShape0),
                         icon = { Icon(imageVector = Icons.Rounded.Info, contentDescription = null) },
                         title = {
                             Text(
@@ -292,11 +288,7 @@ internal fun HomeScreenContent(
                     val aboutShape1 = shapeForPosition(aboutCount, 1)
                     preference(
                         key = "source",
-                        modifier =
-                            Modifier
-                                .padding(horizontal = 8.dp)
-                                .background(color = surface, shape = aboutShape1)
-                                .clip(aboutShape1),
+                        modifier = Modifier.padding(horizontal = 8.dp).background(color = surface, shape = aboutShape1).clip(aboutShape1),
                         icon = {
                             Icon(
                                 painter = painterResource(R.drawable.ic_github_24),
