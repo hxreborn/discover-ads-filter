@@ -15,36 +15,12 @@ object Logger {
         module.log(Log.DEBUG, TAG, msg())
     }
 
-    fun log(
-        message: String,
-        throwable: Throwable? = null,
-    ) {
-        if (throwable != null) {
-            module.log(Log.ERROR, TAG, message, throwable)
-        } else {
-            module.log(Log.INFO, TAG, message)
-        }
-    }
-
-    inline fun logDebug(message: () -> String) = v(message)
-
     fun i(msg: String) {
         module.log(Log.INFO, TAG, msg)
     }
 
     fun w(msg: String) {
         module.log(Log.WARN, TAG, msg)
-    }
-
-    fun e(
-        msg: String,
-        t: Throwable? = null,
-    ) {
-        if (t != null) {
-            module.log(Log.ERROR, TAG, msg, t)
-        } else {
-            module.log(Log.ERROR, TAG, msg)
-        }
     }
 
     @PublishedApi
@@ -61,10 +37,3 @@ object Logger {
             ?.also { prefs = it }
     }
 }
-
-fun log(
-    message: String,
-    throwable: Throwable? = null,
-): Unit = Logger.log(message, throwable)
-
-inline fun logDebug(message: () -> String): Unit = Logger.logDebug(message)

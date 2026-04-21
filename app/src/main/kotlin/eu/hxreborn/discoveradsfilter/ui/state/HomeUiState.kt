@@ -35,7 +35,6 @@ data class VerifyUiState(
     val filterEnabled: Boolean = true,
 ) {
     val hookInstalled: Int get() = parseSlash(hookInstallStatus).first
-    val hookTotal: Int get() = parseSlash(hookInstallStatus).second
 
     val resolvedTargetCount: Int
         get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedFieldCount() ?: 0

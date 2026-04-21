@@ -4,9 +4,8 @@ import eu.hxreborn.discoveradsfilter.util.Logger
 import java.io.File
 import java.util.concurrent.atomic.AtomicLong
 
+@Suppress("SdCardPath") // no Context in hook process
 object HookMetrics {
-    // Known AGSA data dir — hook process runs as this UID so we can write here.
-    // Avoids depending on ActivityThread.currentApplication(), which is null in onPackageReady.
     private const val AGSA_CACHE = "/data/data/com.google.android.googlequicksearchbox/cache"
     private const val METRICS_FILENAME = "discover_adsfilter_metrics.txt"
 
@@ -40,6 +39,4 @@ object HookMetrics {
             Logger.w("metrics file write failed: ${it.message}")
         }
     }
-
-    fun adsCount(): Long = adsHidden.get()
 }

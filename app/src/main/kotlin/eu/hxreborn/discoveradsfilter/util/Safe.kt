@@ -12,16 +12,6 @@ object Safe {
         runCatching(block).onFailure { t -> logFailure(tag, what, t) }
     }
 
-    inline fun <T> compute(
-        tag: String,
-        what: String,
-        block: () -> T,
-    ): T? =
-        runCatching(block).getOrElse { t ->
-            logFailure(tag, what, t)
-            null
-        }
-
     @PublishedApi
     internal fun logFailure(
         tag: String,

@@ -59,6 +59,7 @@ data class MethodRef(
 
     override fun toString(): String = "$className.$methodName(${paramTypeNames.joinToString(",")})"
 
+    @Suppress("RemoveRedundantQualifierName") // clearer for JVM reflection
     private fun typeFor(
         loader: ClassLoader,
         name: String,
@@ -92,6 +93,7 @@ data class MethodRef(
         return Class.forName(descriptor, false, loader)
     }
 
+    @Suppress("RemoveRedundantQualifierName") // clearer for JVM reflection
     private fun primitiveDescriptor(c: Class<*>): String? =
         when (c) {
             java.lang.Boolean.TYPE -> "Z"
