@@ -17,10 +17,10 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -173,7 +173,7 @@ internal fun DashboardScreenContent(
                                     .background(color = surface, shape = filterShape)
                                     .clip(filterShape),
                             icon = {
-                                Icon(imageVector = Icons.Outlined.Block, contentDescription = null)
+                                Icon(imageVector = Icons.Outlined.VisibilityOff, contentDescription = null)
                             },
                             title = {
                                 Text(

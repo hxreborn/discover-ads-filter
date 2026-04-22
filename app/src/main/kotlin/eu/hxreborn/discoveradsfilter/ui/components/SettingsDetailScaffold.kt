@@ -1,5 +1,6 @@
 package eu.hxreborn.discoveradsfilter.ui.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
@@ -36,7 +37,11 @@ internal fun SettingsDetailScaffold(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        floatingActionButton = floatingActionButton,
+        floatingActionButton = {
+            Box(modifier = Modifier.padding(bottom = 16.dp)) {
+                floatingActionButton()
+            }
+        },
         topBar = {
             LargeTopAppBar(
                 title = {
