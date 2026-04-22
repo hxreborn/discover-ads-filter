@@ -72,7 +72,7 @@ object HookMetrics {
         }.onFailure {
             Logger.w("metrics file write failed: ${it.message}")
         }
-        Logger.i("ads filtered: +$count (total=$total)")
+        Logger.v { "ads filtered: +$count (total=$total)" }
         callProvider(
             MetricsProvider.METHOD_INCREMENT,
             Bundle().apply { putInt(MetricsProvider.KEY_COUNT, count) },

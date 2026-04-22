@@ -143,9 +143,10 @@ data class VerifyUiState(
                 (phase == VerifyPhase.Running || (phase == VerifyPhase.Idle && scanProgress.isNotEmpty()))
 
     val resolvedTargetCount: Int
-        get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedFieldCount() ?: 0
+        get() = (lastResult as? VerifyResult.Success)?.targets?.targetChecks()?.count { it } ?: 0
 
-    val totalTargetCount: Int get() = TOTAL_TARGETS
+    val totalTargetCount: Int
+        get() = (lastResult as? VerifyResult.Success)?.targets?.targetChecks()?.size ?: TOTAL_TARGETS
 
     companion object {
         const val TOTAL_TARGETS = 7
@@ -160,7 +161,7 @@ data class VerifyUiState(
     }
 }
 
-private fun ResolvedTargets.Resolved.resolvedFieldCount(): Int =
+internal fun ResolvedTargets.Resolved.targetChecks(): List<Boolean> =
     listOf(
         !adMetadataClass.isNullOrBlank(),
         !feedCardClass.isNullOrBlank(),
@@ -169,7 +170,7 @@ private fun ResolvedTargets.Resolved.resolvedFieldCount(): Int =
         !adMetadataFieldName.isNullOrBlank(),
         cardProcessorMethods.isNotEmpty(),
         streamRenderableListMethod != null,
-    ).count { it }
+    )
 
 enum class VerifyPhase { Idle, Running }
 

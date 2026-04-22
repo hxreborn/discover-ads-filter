@@ -22,10 +22,10 @@ object StreamSliceFilterHook {
     private const val TARGET_PACKAGE = "com.google.android.googlequicksearchbox"
     private const val NULL_KEY_PREFIX = "__null__#"
 
-    // Keep homestack during local testing. Ship only feedads.
-    private val adClusterTokens = setOf("feedads", "homestack")
+    private val adClusterTokens = setOf("feedads")
 
     private val decisionCache = ConcurrentHashMap<String, Boolean>()
+    private val countedAdKeys = ConcurrentHashMap.newKeySet<String>()
     private val fieldCache = ConcurrentHashMap<String, Field>()
     private val classFieldCache = ConcurrentHashMap<String, List<Field>>()
 
@@ -141,13 +141,17 @@ object StreamSliceFilterHook {
                     item?.let(::stableItemKey) ?: "$NULL_KEY_PREFIX$i"
                 }
             var removed = 0
+            var newAds = 0
             val filtered = ArrayList<Any?>(items.size)
             items.forEachIndexed { i, item ->
                 val key = keys[i].takeIf { !it.startsWith(NULL_KEY_PREFIX) }
                 val drop = item != null && key != null && isAdItem(key)
                 if (drop) {
                     removed++
-                    Logger.v { "filtered ad #$removed key=$key" }
+                    if (countedAdKeys.add(key)) {
+                        newAds++
+                        Logger.v { "blocked ad key=$key" }
+                    }
                 } else {
                     filtered += item
                 }
@@ -160,7 +164,7 @@ object StreamSliceFilterHook {
                 return result
             }
 
-            HookMetrics.addAdsHidden(removed)
+            if (newAds > 0) HookMetrics.addAdsHidden(newAds)
             lastFilteredSnapshot = filtered
             return filtered
         }
