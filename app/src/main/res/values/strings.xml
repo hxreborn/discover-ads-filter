@@ -41,6 +41,7 @@
     <string name="pref_clear_cache_summary">Delete cached symbols</string>
     <string name="pref_reset_counter">Reset ad counter</string>
     <string name="pref_reset_counter_summary">Set blocked count to zero</string>
+    <string name="toast_reset_no_root">Counter reset locally. Grant root to also reset hook-side file.</string>
 
     <!-- Diagnostics category -->
     <string name="pref_category_diagnostics">Advanced</string>

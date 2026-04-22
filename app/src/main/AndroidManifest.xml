@@ -26,10 +26,5 @@
             </intent-filter>
         </activity>
 
-        <provider
-            android:name=".provider.MetricsProvider"
-            android:authorities="eu.hxreborn.discoveradsfilter.metrics"
-            android:exported="true" />
-
     </application>
 </manifest>

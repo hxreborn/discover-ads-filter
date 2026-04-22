@@ -67,10 +67,11 @@ class HomeViewModel(
             },
             onVerify = ::verify,
             onClearCacheOnly = ::clearCacheOnly,
-            onResetAdsCounter = {
+            onResetAdsCounter = { onResult ->
                 viewModelScope.launch(Dispatchers.IO) {
-                    repo.resetAdsCounter()
+                    val hasRoot = repo.resetAdsCounter()
                     verifyFlow.update { it?.copy(adsHidden = 0) }
+                    onResult(hasRoot)
                 }
             },
             onDismissStartupScan = {

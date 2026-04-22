@@ -3,11 +3,11 @@ package eu.hxreborn.discoveradsfilter.prefs
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.topjohnwu.superuser.Shell
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
-import java.io.File
 
 class SettingsRepository(
     private val context: Context,
@@ -77,29 +77,34 @@ class SettingsRepository(
     private fun readPrefRemoteFirst(spec: PrefSpec<String?>): String? =
         remotePrefsProvider()?.let { spec.read(it) } ?: spec.read(localPrefs)
 
-    private fun readMetricsField(key: String): String? =
-        runCatching {
-            val agsaInfo = context.packageManager.getApplicationInfo(AGSA_PKG, 0)
-            val file = File(File(agsaInfo.dataDir, "cache"), METRICS_FILENAME)
-            if (!file.exists()) return@runCatching null
-            file
-                .readLines()
-                .firstOrNull { it.startsWith("$key=") }
-                ?.substringAfter('=')
-        }.getOrNull()
-
     fun readAdsHidden(): Long {
+        val fileAds = readMetricsField("ads")?.toLongOrNull() ?: 0L
         val localAds = SettingsPrefs.adsHidden.read(localPrefs)
-        val remoteAds = remotePrefsProvider()?.let { SettingsPrefs.adsHidden.read(it) } ?: 0L
-        val ads = maxOf(localAds, remoteAds)
-        if (remoteAds > localAds) {
+        val ads = maxOf(fileAds, localAds)
+        if (ads > localAds) {
             localPrefs.edit { SettingsPrefs.adsHidden.write(this, ads) }
         }
         return ads
     }
 
-    fun resetAdsCounter() {
+    fun resetAdsCounter(): Boolean {
         save { SettingsPrefs.adsHidden.write(this, 0L) }
+        if (Shell.isAppGrantedRoot() != true) return false
+        resetMetricsFileCounter()
+        return true
+    }
+
+    private fun readMetricsField(key: String): String? {
+        if (Shell.isAppGrantedRoot() != true) return null
+        val result = Shell.cmd("cat $METRICS_FILE_PATH").exec()
+        if (!result.isSuccess) return null
+        return result.out
+            .firstOrNull { it.startsWith("$key=") }
+            ?.substringAfter('=')
+    }
+
+    private fun resetMetricsFileCounter() {
+        Shell.cmd("sed -i 's/^ads=.*/ads=0/' $METRICS_FILE_PATH").submit()
     }
 
     fun clearScanCache() {
@@ -133,8 +138,8 @@ class SettingsRepository(
     }
 
     private companion object {
-        private const val AGSA_PKG = DiscoverAdsFilterModule.AGSA_PKG
-        private const val METRICS_FILENAME = "discover_adsfilter_metrics.txt"
+        private const val METRICS_FILE_PATH =
+            "/data/data/${DiscoverAdsFilterModule.AGSA_PKG}/cache/discover_adsfilter_metrics.txt"
 
         private val HOOK_OWNED_KEYS: Set<String> =
             setOf(
