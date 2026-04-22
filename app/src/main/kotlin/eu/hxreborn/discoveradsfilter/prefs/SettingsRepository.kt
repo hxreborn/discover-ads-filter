@@ -77,21 +77,10 @@ class SettingsRepository(
     private fun readPrefRemoteFirst(spec: PrefSpec<String?>): String? =
         remotePrefsProvider()?.let { spec.read(it) } ?: spec.read(localPrefs)
 
-    fun readAdsHidden(): Long {
-        val fileAds = readMetricsField("ads")?.toLongOrNull() ?: 0L
-        val localAds = SettingsPrefs.adsHidden.read(localPrefs)
-        val ads = maxOf(fileAds, localAds)
-        if (ads > localAds) {
-            localPrefs.edit { SettingsPrefs.adsHidden.write(this, ads) }
-        }
-        return ads
-    }
+    fun readAdsHidden(): Long = SettingsPrefs.adsHidden.read(localPrefs)
 
-    fun resetAdsCounter(): Boolean {
+    fun resetAdsCounter() {
         save { SettingsPrefs.adsHidden.write(this, 0L) }
-        if (Shell.isAppGrantedRoot() != true) return false
-        resetMetricsFileCounter()
-        return true
     }
 
     private fun readMetricsField(key: String): String? {
@@ -101,10 +90,6 @@ class SettingsRepository(
         return result.out
             .firstOrNull { it.startsWith("$key=") }
             ?.substringAfter('=')
-    }
-
-    private fun resetMetricsFileCounter() {
-        Shell.cmd("sed -i 's/^ads=.*/ads=0/' $METRICS_FILE_PATH").submit()
     }
 
     fun clearScanCache() {

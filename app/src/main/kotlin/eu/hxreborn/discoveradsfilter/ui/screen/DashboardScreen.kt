@@ -91,8 +91,6 @@ internal fun DashboardScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val ready = state as? HomeUiState.Ready
-    val appContext = androidx.compose.ui.platform.LocalContext.current
-    val noRootMsg = stringResource(R.string.toast_reset_no_root)
     var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
     var startupDismissed by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -293,15 +291,7 @@ internal fun DashboardScreenContent(
                         summary = {
                             Text(stringResource(R.string.pref_reset_counter_summary))
                         },
-                        onClick = {
-                            actions.onResetAdsCounter { hasRoot ->
-                                if (!hasRoot) {
-                                    android.widget.Toast
-                                        .makeText(appContext, noRootMsg, android.widget.Toast.LENGTH_LONG)
-                                        .show()
-                                }
-                            }
-                        },
+                        onClick = { actions.onResetAdsCounter() },
                     )
 
                     item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
@@ -336,7 +326,7 @@ internal fun DashboardScreenContent(
         }
     }
 
-    if (showStartupOverlay && verify != null) {
+    if (showStartupOverlay) {
         Box(
             Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
             contentAlignment = Alignment.Center,

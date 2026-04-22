@@ -21,7 +21,7 @@ private val NoOpActions =
         onFilterEnabledChange = {},
         onVerify = {},
         onClearCacheOnly = {},
-        onResetAdsCounter = { it(true) },
+        onResetAdsCounter = {},
         onDismissStartupScan = {},
     )
 

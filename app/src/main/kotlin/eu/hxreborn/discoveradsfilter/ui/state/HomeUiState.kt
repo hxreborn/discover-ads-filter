@@ -106,7 +106,7 @@ data class HomeActions(
     val onFilterEnabledChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,
-    val onResetAdsCounter: (onResult: (hasRoot: Boolean) -> Unit) -> Unit,
+    val onResetAdsCounter: () -> Unit,
     val onDismissStartupScan: () -> Unit,
 )
 
@@ -144,10 +144,9 @@ data class VerifyUiState(
                 (phase == VerifyPhase.Running || (phase == VerifyPhase.Idle && scanProgress.isNotEmpty()))
 
     val resolvedTargetCount: Int
-        get() = (lastResult as? VerifyResult.Success)?.targets?.targetChecks()?.count { it } ?: 0
+        get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedCount() ?: 0
 
-    val totalTargetCount: Int
-        get() = (lastResult as? VerifyResult.Success)?.targets?.targetChecks()?.size ?: TOTAL_TARGETS
+    val totalTargetCount: Int get() = TOTAL_TARGETS
 
     companion object {
         const val TOTAL_TARGETS = 7
@@ -162,16 +161,17 @@ data class VerifyUiState(
     }
 }
 
-internal fun ResolvedTargets.Resolved.targetChecks(): List<Boolean> =
-    listOf(
-        !adMetadataClass.isNullOrBlank(),
-        !feedCardClass.isNullOrBlank(),
-        !adFlagFieldName.isNullOrBlank(),
-        !adLabelFieldName.isNullOrBlank(),
-        !adMetadataFieldName.isNullOrBlank(),
-        cardProcessorMethods.isNotEmpty(),
-        streamRenderableListMethod != null,
-    )
+internal fun ResolvedTargets.Resolved.resolvedCount(): Int {
+    var n = 0
+    if (!adMetadataClass.isNullOrBlank()) n++
+    if (!feedCardClass.isNullOrBlank()) n++
+    if (!adFlagFieldName.isNullOrBlank()) n++
+    if (!adLabelFieldName.isNullOrBlank()) n++
+    if (!adMetadataFieldName.isNullOrBlank()) n++
+    if (cardProcessorMethods.isNotEmpty()) n++
+    if (streamRenderableListMethod != null) n++
+    return n
+}
 
 enum class VerifyPhase { Idle, Running }
 
