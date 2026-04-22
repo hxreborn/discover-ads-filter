@@ -77,6 +77,7 @@
     <string name="diag_summary_resolved">%1$d/%2$d symbols mapped</string>
     <string name="diag_symbols_title">Mapped symbols</string>
     <string name="diag_section_summary">%1$s · %2$d/%3$d</string>
+    <string name="diag_last_refresh_failed">Last background refresh failed: %1$s</string>
     <string name="badge_partial">partial</string>
     <string name="badge_not_found">not found</string>
     <string name="badge_not_mapped">not mapped</string>
@@ -88,6 +89,14 @@
     <string name="scan_verifying">Verifying Google App\u2026</string>
     <string name="scan_progress">Resolving symbols %1$d/%2$d</string>
     <string name="scan_complete">Scan complete</string>
+    <string name="scan_step_ad_metadata">Ad metadata</string>
+    <string name="scan_step_feed_card">Feed card</string>
+    <string name="scan_step_ad_flag">Ad flag</string>
+    <string name="scan_step_ad_label">Ad label</string>
+    <string name="scan_step_ad_metadata_ref">Ad metadata ref</string>
+    <string name="scan_step_card_processors">Card processors</string>
+    <string name="scan_step_stream_list">Stream list</string>
+    <string name="scan_step_generic">Step %1$d</string>
     <string name="scan_step_found">Found</string>
     <string name="scan_step_scanning">Scanning\u2026</string>
     <string name="scan_step_not_found">Not found</string>

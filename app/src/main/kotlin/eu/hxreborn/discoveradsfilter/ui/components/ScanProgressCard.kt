@@ -41,17 +41,6 @@ import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 
-val SCAN_STEP_LABELS =
-    listOf(
-        "Ad metadata",
-        "Feed card",
-        "Ad flag",
-        "Ad label",
-        "Ad metadata ref",
-        "Card processors",
-        "Stream list",
-    )
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ScanProgressCard(
@@ -114,9 +103,7 @@ internal fun ScanProgressCard(
                     }
 
                     if (running && completed < totalSteps) {
-                        val activeLabel =
-                            SCAN_STEP_LABELS.getOrNull(completed)
-                                ?: "Step ${completed + 1}"
+                        val activeLabel = scanStepLabel(stepIndex = completed)
                         ActiveStepRow(
                             label = activeLabel,
                             paddingValues = PaddingValues(vertical = 12.dp),
@@ -136,6 +123,19 @@ internal fun ScanProgressCard(
         }
     }
 }
+
+@Composable
+private fun scanStepLabel(stepIndex: Int): String =
+    when (stepIndex) {
+        0 -> stringResource(R.string.scan_step_ad_metadata)
+        1 -> stringResource(R.string.scan_step_feed_card)
+        2 -> stringResource(R.string.scan_step_ad_flag)
+        3 -> stringResource(R.string.scan_step_ad_label)
+        4 -> stringResource(R.string.scan_step_ad_metadata_ref)
+        5 -> stringResource(R.string.scan_step_card_processors)
+        6 -> stringResource(R.string.scan_step_stream_list)
+        else -> stringResource(R.string.scan_step_generic, stepIndex + 1)
+    }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
