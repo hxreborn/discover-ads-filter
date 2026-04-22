@@ -1,6 +1,5 @@
 package eu.hxreborn.discoveradsfilter.ui.components
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
@@ -22,7 +21,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import eu.hxreborn.discoveradsfilter.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,11 +38,7 @@ internal fun SettingsDetailScaffold(
 
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        floatingActionButton = {
-            Box(modifier = Modifier.padding(bottom = 16.dp)) {
-                floatingActionButton()
-            }
-        },
+        floatingActionButton = floatingActionButton,
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -58,7 +55,10 @@ internal fun SettingsDetailScaffold(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.nav_back),
+                        )
                     }
                 },
                 actions = actions,
