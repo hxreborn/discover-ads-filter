@@ -83,9 +83,8 @@ object HookMetrics {
 
     fun addAdsHidden(count: Int) {
         if (count <= 0) return
-        val total = adsHidden.addAndGet(count.toLong())
+        adsHidden.addAndGet(count.toLong())
         writeMetricsFile()
-        Logger.v { "ads filtered: +$count (total=$total)" }
         callProvider(
             MetricsProvider.METHOD_INCREMENT,
             Bundle().apply { putInt(MetricsProvider.KEY_COUNT, count) },
