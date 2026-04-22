@@ -30,7 +30,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -79,7 +78,7 @@ internal fun DiagnosticsScreenContent(
     onBack: () -> Unit,
 ) {
     var showInfoDialog by rememberSaveable { mutableStateOf(false) }
-    var showManualProgressThisVisit by remember { mutableStateOf(false) }
+    var showManualProgressThisVisit by rememberSaveable { mutableStateOf(false) }
     val anyRunning = state.phase == VerifyPhase.Running
     val manualRunning = anyRunning && state.scanOrigin == ScanOrigin.Manual
     val showProgress = showManualProgressThisVisit && (manualRunning || state.scanProgress.isNotEmpty())

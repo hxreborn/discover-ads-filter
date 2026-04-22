@@ -20,7 +20,6 @@ private val NoOpActions =
         onVerboseChange = {},
         onFilterEnabledChange = {},
         onVerify = {},
-        onClearCache = {},
         onClearCacheOnly = {},
         onDismissStartupScan = {},
     )

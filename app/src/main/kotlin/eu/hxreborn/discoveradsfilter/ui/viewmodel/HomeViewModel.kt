@@ -15,6 +15,7 @@ import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.prefs.SettingsRepository
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.ScanOrigin
 import eu.hxreborn.discoveradsfilter.ui.state.ScanStep
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
@@ -40,14 +41,15 @@ class HomeViewModel(
         )
 
     private val verboseFlow = MutableStateFlow(false)
+    private val filterEnabledFlow = MutableStateFlow(true)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
 
     val uiState: StateFlow<HomeUiState> =
-        combine(verboseFlow, verifyFlow) { verbose, verify ->
+        combine(verboseFlow, filterEnabledFlow, verifyFlow) { verbose, filterEnabled, verify ->
             if (verify == null) {
                 HomeUiState.Loading
             } else {
-                HomeUiState.Ready(verbose = verbose, verify = verify)
+                HomeUiState.Ready(verbose = verbose, filterEnabled = filterEnabled, verify = verify)
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 
@@ -59,13 +61,12 @@ class HomeViewModel(
             },
             onFilterEnabledChange = { value ->
                 repo.setFilterEnabled(value)
-                verifyFlow.update { it?.copy(filterEnabled = value) }
+                filterEnabledFlow.value = value
             },
             onVerify = ::verify,
-            onClearCache = ::clearCache,
             onClearCacheOnly = ::clearCacheOnly,
             onDismissStartupScan = {
-                verifyFlow.update { it?.copy(startupScanDismissed = true) }
+                verifyFlow.update { it?.copy(scanOrigin = null) }
             },
         )
 
@@ -73,9 +74,10 @@ class HomeViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val snapshot = repo.snapshot()
             verboseFlow.value = snapshot.verbose
+            filterEnabledFlow.value = snapshot.filterEnabled
             val lastScan = repo.readLastScan()
             val agsaPkg = currentAgsaPackageInfo()
-            val hookStatus = repo.readHookStatus()
+            val hookStatusRaw = repo.readHookStatus()
             val hookProcess = repo.readHookProcess()
             val adsHidden = repo.readAdsHidden()
 
@@ -102,12 +104,10 @@ class HomeViewModel(
                     installedAgsaVersionName = agsaPkg?.versionName,
                     installedAgsaLastUpdateTime = agsaPkg?.lastUpdateTime ?: 0L,
                     scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
-                    hookInstallStatus = hookStatus,
+                    hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw),
                     hookProcess = hookProcess,
                     adsHidden = adsHidden,
-                    filterEnabled = snapshot.filterEnabled,
-                    moduleActive = serviceAlreadyBound,
-                    moduleActiveChecked = true,
+                    moduleStatus = if (serviceAlreadyBound) ModuleStatus.Active else ModuleStatus.Inactive,
                 )
 
             if (needsScan) {
@@ -119,16 +119,15 @@ class HomeViewModel(
     fun onServiceBound() {
         viewModelScope.launch(Dispatchers.IO) {
             repo.syncLocalToRemote()
-            val hookStatus = repo.readHookStatus()
+            val hookStatusRaw = repo.readHookStatus()
             val hookProcess = repo.readHookProcess()
             val adsHidden = repo.readAdsHidden()
             verifyFlow.update { current ->
                 current?.copy(
-                    hookInstallStatus = hookStatus ?: current.hookInstallStatus,
+                    hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw) ?: current.hookStatus,
                     hookProcess = hookProcess ?: current.hookProcess,
                     adsHidden = maxOf(adsHidden, current.adsHidden),
-                    moduleActive = true,
-                    moduleActiveChecked = true,
+                    moduleStatus = ModuleStatus.Active,
                 )
             }
         }
@@ -144,19 +143,6 @@ class HomeViewModel(
                     scanModuleVersion = 0,
                 )
             }
-        }
-    }
-
-    private fun clearCache() {
-        if (!transitionToManualScan()) return
-        viewModelScope.launch(Dispatchers.IO) {
-            repo.clearScanCache()
-            verifyFlow.update {
-                it?.copy(
-                    lastResult = null,
-                )
-            }
-            runScanAndUpdate()
         }
     }
 

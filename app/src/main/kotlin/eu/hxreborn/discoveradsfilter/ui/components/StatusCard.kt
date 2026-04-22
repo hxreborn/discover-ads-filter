@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
+import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
@@ -65,7 +66,7 @@ fun StatusCard(
                     text = stringResource(visual.titleRes),
                     style = MaterialTheme.typography.titleMedium,
                 )
-                if (state.moduleActiveChecked && !state.moduleActive) {
+                if (state.moduleStatus == ModuleStatus.Inactive) {
                     Text(
                         text = stringResource(R.string.hero_module_not_active_detail),
                         style = MaterialTheme.typography.bodyMedium,
@@ -124,7 +125,7 @@ private data class StatusVisual(
 private fun statusVisual(state: VerifyUiState): StatusVisual {
     val scheme = MaterialTheme.colorScheme
 
-    if (state.moduleActiveChecked && !state.moduleActive) {
+    if (state.moduleStatus == ModuleStatus.Inactive) {
         return StatusVisual(
             icon = Icons.Outlined.ErrorOutline,
             titleRes = R.string.hero_module_not_active,

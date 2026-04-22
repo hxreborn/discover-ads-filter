@@ -55,9 +55,8 @@ import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
 import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
-import eu.hxreborn.discoveradsfilter.ui.state.ScanOrigin
+import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
-import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
@@ -92,16 +91,12 @@ internal fun DashboardScreenContent(
 ) {
     val ready = state as? HomeUiState.Ready
     var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
+    var startupDismissed by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
 
     val verify = ready?.verify
-    val showStartupOverlay =
-        verify?.scanOrigin == ScanOrigin.Startup &&
-            (
-                verify.phase == VerifyPhase.Running ||
-                    (verify.phase == VerifyPhase.Idle && !verify.startupScanDismissed && verify.scanProgress.isNotEmpty())
-            )
+    val showStartupOverlay = verify?.showStartupOverlay == true && !startupDismissed
 
     Scaffold(
         modifier =
@@ -160,11 +155,11 @@ internal fun DashboardScreenContent(
                         title = { Text(stringResource(R.string.pref_category_filter)) },
                     )
 
-                    val moduleActive = ready.verify.moduleActive || !ready.verify.moduleActiveChecked
+                    val moduleActive = ready.verify.moduleStatus != ModuleStatus.Inactive
                     val filterShape = shapeForPosition(1, 0)
                     item(key = "filter_enabled", contentType = "SwitchPreference") {
                         SwitchPreference(
-                            value = ready.verify.filterEnabled,
+                            value = ready.filterEnabled,
                             onValueChange = actions.onFilterEnabledChange,
                             enabled = moduleActive,
                             modifier =
@@ -314,7 +309,15 @@ internal fun DashboardScreenContent(
                 progress = verify.scanProgress,
                 phase = verify.phase,
                 durationMs = verify.scanDurationMs,
-                onDismiss = if (verify.phase == VerifyPhase.Idle) actions.onDismissStartupScan else null,
+                onDismiss =
+                    if (verify.phase == VerifyPhase.Idle) {
+                        {
+                            startupDismissed = true
+                            actions.onDismissStartupScan()
+                        }
+                    } else {
+                        null
+                    },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
             )
         }

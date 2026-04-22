@@ -4,6 +4,8 @@ import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.MethodRef
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.state.HookStatus
+import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.SymbolRow
 import eu.hxreborn.discoveradsfilter.ui.state.SymbolSection
 import eu.hxreborn.discoveradsfilter.ui.state.SymbolStatus
@@ -282,12 +284,10 @@ internal object PreviewFixtures {
             installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
             installedAgsaLastUpdateTime = AGSA_LAST_UPDATE_TIME,
             scanModuleVersion = BuildConfig.VERSION_CODE,
-            hookInstallStatus = "5/5",
+            hookStatus = HookStatus(5, 5),
             hookProcess = "com.google.android.googlequicksearchbox",
             adsHidden = 1_247L,
-            filterEnabled = true,
-            moduleActive = true,
-            moduleActiveChecked = true,
+            moduleStatus = ModuleStatus.Active,
         )
 
     fun verifySuccessFullNoBlocks(): VerifyUiState = verifySuccessFull().copy(adsHidden = 0L)
@@ -302,10 +302,9 @@ internal object PreviewFixtures {
             installedAgsaVersion = AGSA_VERSION_CODE_AT_SCAN,
             installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
             installedAgsaLastUpdateTime = AGSA_LAST_UPDATE_TIME,
-            hookInstallStatus = "2/5",
+            hookStatus = HookStatus(2, 5),
             hookProcess = "com.google.android.googlequicksearchbox",
             adsHidden = 89L,
-            filterEnabled = true,
         )
 
     fun verifyNoTargetsResolved(): VerifyUiState =
@@ -317,9 +316,8 @@ internal object PreviewFixtures {
                 ),
             installedAgsaVersion = AGSA_VERSION_CODE_AT_SCAN,
             installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
-            hookInstallStatus = "0/5",
+            hookStatus = HookStatus(0, 5),
             adsHidden = 0L,
-            filterEnabled = false,
         )
 
     fun verifyFailureAgsaMissing(): VerifyUiState =
@@ -351,7 +349,7 @@ internal object PreviewFixtures {
             scanModuleVersion = BuildConfig.VERSION_CODE - 1,
         )
 
-    fun verifyModuleNotActive(): VerifyUiState = VerifyUiState(moduleActiveChecked = true, moduleActive = false)
+    fun verifyModuleNotActive(): VerifyUiState = VerifyUiState(moduleStatus = ModuleStatus.Inactive)
 
     fun verifyNoServiceBoundYet(): VerifyUiState = verifyNotScanned()
 
@@ -378,7 +376,7 @@ internal object PreviewFixtures {
             HomeUiState.Ready(verify = verifyRunning()),
             HomeUiState.Ready(verify = verifySuccessFull()),
             HomeUiState.Ready(verify = verifyFallbackOnly()),
-            HomeUiState.Ready(verify = verifyNoTargetsResolved()),
+            HomeUiState.Ready(filterEnabled = false, verify = verifyNoTargetsResolved()),
             HomeUiState.Ready(verify = verifyFailureAgsaMissing()),
             HomeUiState.Ready(verify = verifyFailureDexKitNoMatches()),
             HomeUiState.Ready(verbose = true, verify = verifyStaleAgsaUpdated()),

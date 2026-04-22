@@ -95,6 +95,7 @@ sealed interface HomeUiState {
     @Immutable
     data class Ready(
         val verbose: Boolean = false,
+        val filterEnabled: Boolean = true,
         val verify: VerifyUiState = VerifyUiState(),
     ) : HomeUiState
 }
@@ -104,9 +105,16 @@ data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
     val onFilterEnabledChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
-    val onClearCache: () -> Unit,
     val onClearCacheOnly: () -> Unit,
     val onDismissStartupScan: () -> Unit,
+)
+
+enum class ModuleStatus { Unknown, Active, Inactive }
+
+@Immutable
+data class HookStatus(
+    val installed: Int,
+    val total: Int,
 )
 
 @Immutable
@@ -117,21 +125,22 @@ data class VerifyUiState(
     val installedAgsaVersionName: String? = null,
     val installedAgsaLastUpdateTime: Long = 0,
     val scanModuleVersion: Int = 0,
-    val hookInstallStatus: String? = null,
+    val hookStatus: HookStatus? = null,
     val hookProcess: String? = null,
     val adsHidden: Long = 0,
-    val filterEnabled: Boolean = true,
-    val moduleActive: Boolean = false,
-    val moduleActiveChecked: Boolean = false,
+    val moduleStatus: ModuleStatus = ModuleStatus.Unknown,
     val scanOrigin: ScanOrigin? = null,
     val scanProgress: List<ScanStep> = emptyList(),
     val scanDurationMs: Long = 0,
     val lastRefreshError: String? = null,
-    val startupScanDismissed: Boolean = false,
 ) {
-    private val hookCounts: Pair<Int, Int> get() = parseSlash(hookInstallStatus)
-    val hookInstalled: Int get() = hookCounts.first
-    val hookTotal: Int get() = hookCounts.second
+    val hookInstalled: Int get() = hookStatus?.installed ?: 0
+    val hookTotal: Int get() = hookStatus?.total ?: 0
+
+    val showStartupOverlay: Boolean
+        get() =
+            scanOrigin == ScanOrigin.Startup &&
+                (phase == VerifyPhase.Running || (phase == VerifyPhase.Idle && scanProgress.isNotEmpty()))
 
     val resolvedTargetCount: Int
         get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedFieldCount() ?: 0
@@ -141,11 +150,12 @@ data class VerifyUiState(
     companion object {
         const val TOTAL_TARGETS = 7
 
-        private fun parseSlash(status: String?): Pair<Int, Int> {
-            val parts = status?.substringBefore(' ')?.split('/')
-            if (parts?.size != 2) return 0 to 0
-            return (parts[0].toIntOrNull() ?: return 0 to 0) to
-                (parts[1].toIntOrNull() ?: return 0 to 0)
+        fun parseHookStatus(raw: String?): HookStatus? {
+            val parts = raw?.substringBefore(' ')?.split('/') ?: return null
+            if (parts.size != 2) return null
+            val installed = parts[0].toIntOrNull() ?: return null
+            val total = parts[1].toIntOrNull() ?: return null
+            return HookStatus(installed, total)
         }
     }
 }
