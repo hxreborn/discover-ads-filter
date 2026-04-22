@@ -5,10 +5,13 @@ package eu.hxreborn.discoveradsfilter.ui.screen
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
 import eu.hxreborn.discoveradsfilter.ui.preview.PreviewFixtures
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.state.SymbolSection
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 
@@ -34,10 +37,19 @@ private fun StatusCardPreviewContent(state: VerifyUiState) {
     PreviewSurface { StatusCard(state = state) }
 }
 
+private class StatusCardStateProvider : PreviewParameterProvider<VerifyUiState> {
+    override val values: Sequence<VerifyUiState> =
+        sequenceOf(
+            PreviewFixtures.verifyNotScanned(),
+            PreviewFixtures.verifySuccessFull(),
+            PreviewFixtures.verifyModuleNotActive(),
+        )
+}
+
 @Composable
 private fun DiagnosticsPreviewContent(
     state: VerifyUiState,
-    sections: List<eu.hxreborn.discoveradsfilter.ui.state.SymbolSection>,
+    sections: List<SymbolSection>,
 ) {
     PreviewSurface {
         DiagnosticsContent(
@@ -52,69 +64,20 @@ private fun DashboardPreviewContent(state: HomeUiState) {
     PreviewSurface { DashboardScreenContent(state = state, actions = NoOpActions, onNavigate = {}) }
 }
 
-@Preview(name = "Not Configured", group = "Status Card", showBackground = true)
+@Preview(name = "Status Card", group = "Status Card", showBackground = true)
 @Composable
-private fun StatusCardNotConfiguredPreview() {
-    StatusCardPreviewContent(PreviewFixtures.verifyNotScanned())
+private fun StatusCardPreview(
+    @PreviewParameter(StatusCardStateProvider::class) state: VerifyUiState,
+) {
+    StatusCardPreviewContent(state)
 }
 
-@Preview(name = "Active", group = "Status Card", showBackground = true)
+@Preview(name = "Diagnostics", group = "Diagnostics", showBackground = true)
 @Composable
-private fun StatusCardActivePreview() {
-    StatusCardPreviewContent(PreviewFixtures.verifySuccessFull())
-}
-
-@Preview(name = "Stale Scan", group = "Status Card", showBackground = true)
-@Composable
-private fun StatusCardStalePreview() {
-    StatusCardPreviewContent(PreviewFixtures.verifyStaleModuleUpdated())
-}
-
-@Preview(name = "Scan Failed", group = "Status Card", showBackground = true)
-@Composable
-private fun StatusCardScanFailedPreview() {
-    StatusCardPreviewContent(PreviewFixtures.verifyFailureDexKitNoMatches())
-}
-
-@Preview(name = "Module Inactive", group = "Status Card", showBackground = true)
-@Composable
-private fun StatusCardModuleInactivePreview() {
-    StatusCardPreviewContent(PreviewFixtures.verifyModuleNotActive())
-}
-
-@Preview(name = "All Targets Mapped", group = "Diagnostics", showBackground = true)
-@Composable
-private fun DiagnosticsAllMappedPreview() {
-    DiagnosticsPreviewContent(
-        state = PreviewFixtures.verifySuccessFull(),
-        sections = PreviewFixtures.allMappedSections(),
-    )
-}
-
-@Preview(name = "Mixed Issues", group = "Diagnostics", showBackground = true)
-@Composable
-private fun DiagnosticsMixedIssuesPreview() {
+private fun DiagnosticsPreview() {
     DiagnosticsPreviewContent(
         state = PreviewFixtures.verifySuccessFull(),
         sections = PreviewFixtures.mixedSections(),
-    )
-}
-
-@Preview(name = "Long Values", group = "Diagnostics", showBackground = true)
-@Composable
-private fun DiagnosticsLongValuesPreview() {
-    DiagnosticsPreviewContent(
-        state = PreviewFixtures.verifySuccessFull(),
-        sections = PreviewFixtures.longValueSections(),
-    )
-}
-
-@Preview(name = "No Targets Resolved", group = "Diagnostics", showBackground = true)
-@Composable
-private fun DiagnosticsNoTargetsResolvedPreview() {
-    DiagnosticsPreviewContent(
-        state = PreviewFixtures.verifyNoTargetsResolved(),
-        sections = PreviewFixtures.zeroResolvedSections(),
     )
 }
 
@@ -124,26 +87,19 @@ private fun AboutScreenPreview() {
     PreviewSurface { AboutScreen(onBack = {}) }
 }
 
-@Preview(name = "Ready", group = "Dashboard", showBackground = true)
-@Composable
-private fun DashboardReadyPreview() {
-    DashboardPreviewContent(HomeUiState.Ready(verify = PreviewFixtures.verifySuccessFull()))
+private class DashboardStateProvider : PreviewParameterProvider<HomeUiState> {
+    override val values: Sequence<HomeUiState> =
+        sequenceOf(
+            HomeUiState.Ready(verify = PreviewFixtures.verifySuccessFull()),
+            HomeUiState.Ready(verify = PreviewFixtures.verifyRunning()),
+            HomeUiState.Ready(verify = PreviewFixtures.verifyFailureDexKitNoMatches()),
+        )
 }
 
-@Preview(name = "Scanning", group = "Dashboard", showBackground = true)
+@Preview(name = "Dashboard", group = "Dashboard", showBackground = true)
 @Composable
-private fun DashboardScanningPreview() {
-    DashboardPreviewContent(HomeUiState.Ready(verify = PreviewFixtures.verifyRunning()))
-}
-
-@Preview(name = "Scan Failed", group = "Dashboard", showBackground = true)
-@Composable
-private fun DashboardScanFailedPreview() {
-    DashboardPreviewContent(HomeUiState.Ready(verify = PreviewFixtures.verifyFailureDexKitNoMatches()))
-}
-
-@Preview(name = "Module Inactive", group = "Dashboard", showBackground = true)
-@Composable
-private fun DashboardModuleInactivePreview() {
-    DashboardPreviewContent(HomeUiState.Ready(verify = PreviewFixtures.verifyModuleNotActive()))
+private fun DashboardPreview(
+    @PreviewParameter(DashboardStateProvider::class) state: HomeUiState,
+) {
+    DashboardPreviewContent(state)
 }
