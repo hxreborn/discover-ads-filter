@@ -2,10 +2,11 @@
 
 package eu.hxreborn.discoveradsfilter.ui.screen
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +15,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,14 +31,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
@@ -86,6 +94,11 @@ internal fun DiagnosticsScreenContent(
     var showManualProgressThisVisit by rememberSaveable { mutableStateOf(false) }
     val anyRunning = state.phase == VerifyPhase.Running
     val manualRunning = anyRunning && state.scanOrigin == ScanOrigin.Manual
+
+    LaunchedEffect(manualRunning) {
+        if (manualRunning) showManualProgressThisVisit = true
+    }
+
     val showProgress = showManualProgressThisVisit && (manualRunning || state.scanProgress.isNotEmpty())
 
     SettingsDetailScaffold(
@@ -100,13 +113,10 @@ internal fun DiagnosticsScreenContent(
             }
         },
         floatingActionButton = {
-            DiagnosticsFab(
+            DiagnosticsFabHost(
                 anyRunning = anyRunning,
                 hasCachedScan = state.lastResult != null,
-                onTap = {
-                    showManualProgressThisVisit = true
-                    onVerify()
-                },
+                onTap = onVerify,
             )
         },
     ) {
@@ -139,40 +149,73 @@ internal fun DiagnosticsScreenContent(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun DiagnosticsFab(
+private fun DiagnosticsFabHost(
     anyRunning: Boolean,
     hasCachedScan: Boolean,
     onTap: () -> Unit,
 ) {
     val fabEnabled = !anyRunning
+    val onTapState by rememberUpdatedState(onTap)
+    val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val pressedScale by
+        animateFloatAsState(
+            targetValue = if (fabEnabled && isPressed) 0.98f else 1f,
+            animationSpec = tween(durationMillis = 70),
+            label = "diagnostics_fab_press_scale",
+        )
+
+    DiagnosticsFab(
+        anyRunning = anyRunning,
+        hasCachedScan = hasCachedScan,
+        onTap = {
+            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+            onTapState()
+        },
+        fabEnabled = fabEnabled,
+        interactionSource = interactionSource,
+        modifier =
+            Modifier.graphicsLayer {
+                scaleX = pressedScale
+                scaleY = pressedScale
+            },
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun DiagnosticsFab(
+    anyRunning: Boolean,
+    hasCachedScan: Boolean,
+    onTap: () -> Unit,
+    fabEnabled: Boolean,
+    interactionSource: MutableInteractionSource,
+    modifier: Modifier = Modifier,
+) {
     val scheme = MaterialTheme.colorScheme
     val fabContainerColor = if (fabEnabled) scheme.primaryContainer else scheme.surfaceVariant
     val fabContentColor = if (fabEnabled) scheme.onPrimaryContainer else scheme.onSurfaceVariant
-    val fabModifier = if (fabEnabled) Modifier else Modifier.alpha(0.7f).semantics { disabled() }
+    val baseModifier = modifier.animateContentSize(animationSpec = tween(durationMillis = 140))
+    val fabModifier = if (fabEnabled) baseModifier else baseModifier.alpha(0.7f).semantics { disabled() }
     val idleFabLabel = stringResource(if (hasCachedScan) R.string.button_rescan else R.string.button_scan)
+    val runningFabLabel = stringResource(R.string.fab_resolving)
 
     ExtendedFloatingActionButton(
         onClick = { if (fabEnabled) onTap() },
         modifier = fabModifier,
         containerColor = fabContainerColor,
         contentColor = fabContentColor,
+        interactionSource = interactionSource,
     ) {
-        AnimatedContent(
-            targetState = anyRunning,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "fab_content",
-        ) { running ->
-            if (running) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LoadingIndicator(modifier = Modifier.size(24.dp))
-                    Text(text = stringResource(R.string.fab_resolving))
-                }
-            } else {
-                Text(text = idleFabLabel)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (anyRunning) {
+                LoadingIndicator(modifier = Modifier.size(24.dp))
             }
+            Text(text = if (anyRunning) runningFabLabel else idleFabLabel)
         }
     }
 }
@@ -195,6 +238,13 @@ internal fun DiagnosticsContent(
             modifier = Modifier.fillMaxWidth(),
         )
     } else {
+        if (state.lastResult != null) {
+            ScanSummaryRow(
+                foundCount = state.resolvedTargetCount,
+                totalCount = state.totalTargetCount,
+            )
+            Spacer(Modifier.height(Spacing.md))
+        }
         SymbolSections(sections)
     }
 
@@ -208,6 +258,42 @@ internal fun DiagnosticsContent(
     }
 
     Spacer(Modifier.height(96.dp))
+}
+
+@Composable
+private fun ScanSummaryRow(
+    foundCount: Int,
+    totalCount: Int,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = scheme.surfaceVariant,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.CheckCircle,
+                contentDescription = null,
+                tint = scheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.scan_complete),
+                style = MaterialTheme.typography.labelLarge,
+                color = scheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = stringResource(R.string.diag_found_summary, foundCount, totalCount),
+                style = MaterialTheme.typography.labelLarge,
+                color = scheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 @Composable

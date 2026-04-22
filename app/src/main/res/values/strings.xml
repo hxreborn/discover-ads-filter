@@ -3,8 +3,8 @@
     <string name="app_name">Discover Ads Filter</string>
     <string name="app_description">Removes sponsored cards from the Google Discover feed by fingerprinting obfuscated hook targets. Targets Google App (AGSA).</string>
 
-    <string name="button_scan">Scan</string>
-    <string name="button_rescan">Rescan</string>
+    <string name="button_scan">Scan App</string>
+    <string name="button_rescan">Re-Scan App</string>
     <string name="button_ok">OK</string>
     <string name="fab_resolving">Resolving\u2026</string>
 
@@ -38,9 +38,9 @@
     <string name="toggle_verbose">Debug logging</string>
     <string name="toggle_verbose_summary">Verbose logging for troubleshooting</string>
     <string name="pref_clear_cache">Clear scan cache</string>
-    <string name="pref_clear_cache_summary">Delete cached symbols</string>
+    <string name="pref_clear_cache_summary">Clear cached hook target scan results for the current Google App build</string>
     <string name="pref_reset_counter">Reset ad counter</string>
-    <string name="pref_reset_counter_summary">Set blocked count to zero</string>
+    <string name="pref_reset_counter_summary">Reset only the persisted blocked ads count to zero</string>
 
     <!-- Diagnostics category -->
     <string name="pref_category_diagnostics">Advanced</string>
@@ -75,12 +75,13 @@
     <string name="diag_mapped_module_versioned">v%1$s (%2$d)</string>
     <string name="diag_mapped_module_code_only">(%1$d)</string>
     <string name="diag_summary_resolved">%1$d/%2$d symbols mapped</string>
+    <string name="diag_found_summary">Found %1$d/%2$d</string>
     <string name="diag_symbols_title">Mapped symbols</string>
     <string name="diag_section_summary">%1$s · %2$d/%3$d</string>
     <string name="diag_last_refresh_failed">Last background refresh failed: %1$s</string>
     <string name="badge_partial">partial</string>
-    <string name="badge_not_found">not found</string>
-    <string name="badge_not_mapped">not mapped</string>
+    <string name="badge_not_found">Missing</string>
+    <string name="badge_not_mapped">Missing</string>
     <string name="diag_info_title">How symbol scanning works</string>
     <string name="diag_info_body_1">DexKit opens the installed Google App APK and uses structural fingerprints (field types, extension numbers, inheritance) to locate the obfuscated classes, fields, and methods this module hooks. Results are cached by longVersionCode.</string>
     <string name="diag_info_body_2">When Google App updates, rescan to rebuild the cache. A missing symbol means the obfuscation shifted and the fingerprint needs updating.</string>
@@ -99,7 +100,7 @@
     <string name="scan_step_generic">Step %1$d</string>
     <string name="scan_step_found">Found</string>
     <string name="scan_step_scanning">Scanning\u2026</string>
-    <string name="scan_step_not_found">Not found</string>
+    <string name="scan_step_not_found">Missing</string>
     <string name="scan_failed_title">Verification failed</string>
     <string name="scan_failed_body">Couldn\'t resolve symbols for this Google App version.</string>
     <string name="scan_open_diagnostics">Open diagnostics</string>
@@ -111,4 +112,12 @@
     <string name="about_report_issue">Report issue</string>
     <string name="about_report_issue_summary">Open an issue on GitHub</string>
     <string name="about_libraries">Libraries</string>
+
+    <!-- Confirmations -->
+    <string name="clear_cache_dialog_title">Clear scan cache?</string>
+    <string name="clear_cache_dialog_body">This clears cached hook target results for the current Google App build only. The next scan will run again and may take a few seconds. Use this after a Google App update or when diagnostics look wrong.</string>
+    <string name="clear_cache_dialog_confirm">Clear cache</string>
+    <string name="reset_counter_dialog_title">Reset blocked ads count?</string>
+    <string name="reset_counter_dialog_body">This resets the persisted blocked ads count to zero. Filtering state, scan cache, and hook target mappings are not changed.</string>
+    <string name="reset_counter_dialog_confirm">Reset count</string>
 </resources>

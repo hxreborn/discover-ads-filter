@@ -35,12 +35,12 @@ fun VerifyUiState.toSymbolSections(): List<SymbolSection> {
             "Classes",
             listOf(
                 SymbolRow(
-                    name = "AdMetadata",
+                    name = "Ad metadata",
                     value = targets?.adMetadataClass?.substringAfterLast('.'),
                     status = targets?.adMetadataClass.toSymbolStatus(),
                 ),
                 SymbolRow(
-                    name = "FeedCard",
+                    name = "Feed card",
                     value = targets?.feedCardClass?.substringAfterLast('.'),
                     status = targets?.feedCardClass.toSymbolStatus(),
                 ),
@@ -49,9 +49,9 @@ fun VerifyUiState.toSymbolSections(): List<SymbolSection> {
         SymbolSection(
             "Fields",
             listOf(
-                SymbolRow("isAd", targets?.adFlagFieldName, targets?.adFlagFieldName.toSymbolStatus()),
-                SymbolRow("adLabel", targets?.adLabelFieldName, targets?.adLabelFieldName.toSymbolStatus()),
-                SymbolRow("adMetadata", targets?.adMetadataFieldName, targets?.adMetadataFieldName.toSymbolStatus()),
+                SymbolRow("Ad flag", targets?.adFlagFieldName, targets?.adFlagFieldName.toSymbolStatus()),
+                SymbolRow("Ad label", targets?.adLabelFieldName, targets?.adLabelFieldName.toSymbolStatus()),
+                SymbolRow("Ad metadata ref", targets?.adMetadataFieldName, targets?.adMetadataFieldName.toSymbolStatus()),
             ),
         ),
         SymbolSection(

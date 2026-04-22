@@ -97,6 +97,7 @@ internal fun DashboardScreenContent(
 ) {
     val ready = state as? HomeUiState.Ready
     var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
+    var showResetCounterDialog by rememberSaveable { mutableStateOf(false) }
     var startupDismissed by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
@@ -157,6 +158,7 @@ internal fun DashboardScreenContent(
                         onNavigate = onNavigate,
                         surface = surface,
                         onClearCacheClick = { showClearCacheDialog = true },
+                        onResetCounterClick = { showResetCounterDialog = true },
                     )
                 } else {
                     DashboardLoadingCard(surface = surface)
@@ -189,6 +191,16 @@ internal fun DashboardScreenContent(
             },
         )
     }
+
+    if (showResetCounterDialog) {
+        ResetCounterDialog(
+            onDismiss = { showResetCounterDialog = false },
+            onConfirm = {
+                showResetCounterDialog = false
+                actions.onResetAdsCounter()
+            },
+        )
+    }
 }
 
 private fun LazyListScope.DashboardReadyItems(
@@ -197,6 +209,7 @@ private fun LazyListScope.DashboardReadyItems(
     onNavigate: (Destination) -> Unit,
     surface: Color,
     onClearCacheClick: () -> Unit,
+    onResetCounterClick: () -> Unit,
 ) {
     item(key = "status") {
         StatusCard(state = ready.verify)
@@ -315,7 +328,7 @@ private fun LazyListScope.DashboardReadyItems(
         summary = {
             Text(stringResource(R.string.pref_reset_counter_summary))
         },
-        onClick = { actions.onResetAdsCounter() },
+        onClick = onResetCounterClick,
     )
 
     item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
@@ -386,11 +399,33 @@ private fun ClearCacheDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.pref_clear_cache)) },
-        text = { Text(stringResource(R.string.pref_clear_cache_summary)) },
+        title = { Text(stringResource(R.string.clear_cache_dialog_title)) },
+        text = { Text(stringResource(R.string.clear_cache_dialog_body)) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.button_ok))
+                Text(stringResource(R.string.clear_cache_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun ResetCounterDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.reset_counter_dialog_title)) },
+        text = { Text(stringResource(R.string.reset_counter_dialog_body)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.reset_counter_dialog_confirm))
             }
         },
         dismissButton = {
