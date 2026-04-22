@@ -20,14 +20,17 @@ import java.util.concurrent.ConcurrentHashMap
 object StreamSliceFilterHook {
     private const val TAG = "DiscoverAdsFilter/StreamSlice"
     private const val TARGET_PACKAGE = "com.google.android.googlequicksearchbox"
-    private const val NULL_KEY_PREFIX = "__null__#"
+    private const val CONTENT_ID_FIELD = "f122746b"
 
     private val adClusterTokens = setOf("feedads")
 
     private val decisionCache = ConcurrentHashMap<String, Boolean>()
     private val countedAdKeys = ConcurrentHashMap.newKeySet<String>()
-    private val fieldCache = ConcurrentHashMap<String, Field>()
-    private val classFieldCache = ConcurrentHashMap<String, List<Field>>()
+
+    private val contentIdFieldCache = ConcurrentHashMap<Class<*>, Field>()
+    private val noContentIdClasses = ConcurrentHashMap.newKeySet<Class<*>>()
+    private val stringFieldsCache = ConcurrentHashMap<Class<*>, List<Field>>()
+    private val nonSliceClasses = ConcurrentHashMap.newKeySet<Class<*>>()
 
     @Volatile
     private var resolvedStreamMethod: MethodRef? = null
@@ -84,7 +87,6 @@ object StreamSliceFilterHook {
 
     private fun resolveFallbackTargets(processName: String): ResolvedTargets.Resolved? {
         fallbackTargets?.let { return it }
-        // Only the main feed processes carry the Discover RecyclerView.
         if ("googleapp" !in processName && "search" !in processName) {
             return null
         }
@@ -119,10 +121,8 @@ object StreamSliceFilterHook {
         }.getOrNull()
     }
 
-    private fun classCacheKey(c: Class<*>): String {
-        val id = Integer.toHexString(System.identityHashCode(c))
-        return "${c.simpleName}@$id"
-    }
+    @Volatile
+    private var keysDumped = false
 
     private class StreamListHook : XposedInterface.Hooker {
         override fun intercept(chain: XposedInterface.Chain): Any? {
@@ -136,17 +136,28 @@ object StreamSliceFilterHook {
             val fp = fastFingerprint(items)
             if (fp == lastFingerprint) return lastFilteredSnapshot ?: result
 
-            val keys =
-                items.mapIndexed { i, item ->
-                    item?.let(::stableItemKey) ?: "$NULL_KEY_PREFIX$i"
+            if (!keysDumped) {
+                keysDumped = true
+                Logger.v {
+                    items
+                        .mapIndexed { i, item ->
+                            val cls = item?.javaClass?.simpleName ?: "null"
+                            val key = item?.let(::stableItemKey) ?: "<no-key>"
+                            "  [$i] $cls → $key"
+                        }.joinToString("\n", prefix = "item key dump (${items.size} items):\n")
                 }
+            }
+
             var removed = 0
             var newAds = 0
             val filtered = ArrayList<Any?>(items.size)
-            items.forEachIndexed { i, item ->
-                val key = keys[i].takeIf { !it.startsWith(NULL_KEY_PREFIX) }
-                val drop = item != null && key != null && isAdItem(key)
-                if (drop) {
+            for (item in items) {
+                if (item == null) {
+                    filtered += null
+                    continue
+                }
+                val key = stableItemKey(item)
+                if (key != null && isAdItem(key)) {
                     removed++
                     if (countedAdKeys.add(key)) {
                         newAds++
@@ -178,65 +189,96 @@ object StreamSliceFilterHook {
         return isAd
     }
 
-    @Suppress("kotlin:S6518") // Field.get() is reflection, not a collection accessor
     private fun stableItemKey(item: Any): String? {
-        contentId(item)?.let { return it }
-        return instanceFields(item)
-            .asSequence()
-            .mapNotNull { f -> runCatching { f.get(item) as? String }.getOrNull() }
-            .firstOrNull { it.isNotBlank() }
-            // Skip fully-qualified names so keys stay readable.
-            ?.let { "${item.javaClass.simpleName}#$it" }
+        val cls = item.javaClass
+
+        // Fast path: known non-slice class
+        if (cls in nonSliceClasses) return null
+
+        contentId(item, cls)?.let { return it }
+
+        // Fallback: first non-blank String field
+        val fields = stringFieldsCache.computeIfAbsent(cls) { resolveStringFields(cls) }
+        for (f in fields) {
+            val value =
+                try {
+                    f.get(item) as? String
+                } catch (_: Exception) {
+                    null
+                }
+            if (value != null && value.isNotBlank()) {
+                return "${cls.simpleName}#$value"
+            }
+        }
+
+        // No usable key — remember this class
+        nonSliceClasses.add(cls)
+        return null
     }
 
-    private fun contentId(item: Any): String? {
-        // f122746b is the obfuscated content-ID field on ContentRenderableSlice.
-        val value = readField(item, "f122746b") as? String
+    private fun contentId(
+        item: Any,
+        cls: Class<*>,
+    ): String? {
+        if (cls in noContentIdClasses) return null
+
+        val field =
+            contentIdFieldCache[cls] ?: run {
+                val found = findFieldInHierarchy(cls, CONTENT_ID_FIELD)
+                if (found == null) {
+                    noContentIdClasses.add(cls)
+                    return null
+                }
+                contentIdFieldCache[cls] = found
+                found
+            }
+
+        val value =
+            try {
+                field.get(item) as? String
+            } catch (_: Exception) {
+                null
+            }
         return value?.takeIf { it.isNotBlank() }
     }
 
-    @Suppress("kotlin:S6518") // Field.get() is reflection, not a collection accessor
-    private fun readField(
-        instance: Any,
+    private fun findFieldInHierarchy(
+        start: Class<*>,
         name: String,
-    ): Any? {
-        val cacheKey = "${classCacheKey(instance.javaClass)}#$name"
-        val field =
-            fieldCache[cacheKey] ?: run {
-                var c: Class<*>? = instance.javaClass
-                while (c != null && c != Any::class.java) {
-                    val f = runCatching { c.getDeclaredField(name) }.getOrNull()
-                    if (f != null) {
-                        f.isAccessible = true
-                        fieldCache[cacheKey] = f
-                        return@run f
-                    }
-                    c = c.superclass
-                }
-                null
-            } ?: return null
-
-        return runCatching { field.get(instance) }.getOrNull()
+    ): Field? {
+        var c: Class<*>? = start
+        while (c != null && c != Any::class.java) {
+            try {
+                val f = c.getDeclaredField(name)
+                f.isAccessible = true
+                return f
+            } catch (_: NoSuchFieldException) {
+                // expected — walk up
+            }
+            c = c.superclass
+        }
+        return null
     }
 
-    private fun instanceFields(obj: Any): List<Field> =
-        classFieldCache.computeIfAbsent(classCacheKey(obj.javaClass)) {
-            buildList {
-                var c: Class<*>? = obj.javaClass
-                while (c != null && c != Any::class.java) {
-                    c.declaredFields.forEach { f ->
-                        if (!Modifier.isStatic(f.modifiers) && !f.isSynthetic) {
-                            runCatching { f.isAccessible = true }
-                            add(f)
+    private fun resolveStringFields(cls: Class<*>): List<Field> =
+        buildList {
+            var c: Class<*>? = cls
+            while (c != null && c != Any::class.java) {
+                for (f in c.declaredFields) {
+                    if (!Modifier.isStatic(f.modifiers) && !f.isSynthetic) {
+                        try {
+                            f.isAccessible = true
+                        } catch (_: Exception) {
+                            continue
                         }
+                        add(f)
                     }
-                    c = c.superclass
                 }
+                c = c.superclass
             }
         }
 
     private fun fastFingerprint(items: List<*>): Long {
-        // skip re-filtering when list identity hasn't changed
         var hash = items.size.toLong()
         val step = (items.size / 3).coerceAtLeast(1)
         var i = 0
