@@ -102,7 +102,12 @@ class HomeViewModel(
                     lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
             val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
 
-            val serviceAlreadyBound = App.boundService != null
+            val moduleStatus =
+                when {
+                    App.boundService != null -> ModuleStatus.Active
+                    hookStatusRaw != null -> ModuleStatus.Active
+                    else -> ModuleStatus.Unknown
+                }
             verifyFlow.value =
                 VerifyUiState(
                     phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
@@ -115,7 +120,7 @@ class HomeViewModel(
                     hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw),
                     hookProcess = hookProcess,
                     adsHidden = adsHidden,
-                    moduleStatus = if (serviceAlreadyBound) ModuleStatus.Active else ModuleStatus.Inactive,
+                    moduleStatus = moduleStatus,
                 )
 
             if (needsScan) {
