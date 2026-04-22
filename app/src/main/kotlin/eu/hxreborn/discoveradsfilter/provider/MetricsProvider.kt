@@ -18,6 +18,8 @@ class MetricsProvider : ContentProvider() {
         const val KEY_TOTAL = "total"
     }
 
+    private val lock = Any()
+
     private val prefs by lazy {
         requireNotNull(context).getSharedPreferences(SettingsPrefs.GROUP, Context.MODE_PRIVATE)
     }
@@ -31,15 +33,13 @@ class MetricsProvider : ContentProvider() {
         return when (method) {
             METHOD_INCREMENT -> {
                 val delta = extras?.getInt(KEY_COUNT, 0) ?: 0
-                if (delta > 0) {
-                    val current = SettingsPrefs.adsHidden.read(prefs)
-                    val updated = current + delta
+                if (delta <= 0) return null
+                synchronized(lock) {
+                    val updated = SettingsPrefs.adsHidden.read(prefs) + delta
                     prefs.edit(commit = true) {
                         SettingsPrefs.adsHidden.write(this, updated)
                     }
                     Bundle().apply { putLong(KEY_TOTAL, updated) }
-                } else {
-                    null
                 }
             }
 

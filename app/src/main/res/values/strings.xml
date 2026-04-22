@@ -5,19 +5,15 @@
 
     <string name="button_rescan">Rescan</string>
     <string name="button_reverify">Verify Signatures</string>
-    <string name="button_clear_cache_reverify">Clear cache + re-verify</string>
     <string name="button_ok">OK</string>
     <string name="fab_resolving">Resolving\u2026</string>
 
     <!-- Hero status -->
     <string name="hero_module_active">Module Active</string>
-    <string name="hero_hooks_active">Hooks Active</string>
-    <string name="hero_hooks_active_verified">Hooks Active</string>
-    <string name="hero_fallback_only">Fallback only</string>
     <string name="hero_not_configured">Not configured</string>
     <string name="hero_scan_failed">Scan failed</string>
     <string name="hero_stale">Stale signatures</string>
-    <string name="hero_no_targets">No symbols mapped</string>
+    <string name="hero_hooks_line">[%1$d/%2$d] hooks active</string>
     <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_module_not_active">Module not active</string>
     <string name="hero_module_not_active_detail">Enable in LSPosed and add Google App to scope</string>
@@ -29,7 +25,6 @@
     <string name="diag_module">Module</string>
     <string name="diag_runtime_hooks">Runtime Hooks</string>
     <string name="diag_dexkit_mapping">Symbol Scan</string>
-    <string name="hero_hooks_line">[%1$d/%2$d] hooks active</string>
     <string name="diag_hooks_unknown">Awaiting hook process</string>
     <!-- %1$d = AGSA version code at scan time, %2$d = resolved, %3$d = total -->
     <string name="diag_mapping_ratio">AGSA %1$d · %2$d/%3$d symbols resolved</string>
@@ -42,7 +37,7 @@
     <string name="toggle_verbose">Debug logging</string>
     <string name="toggle_verbose_summary">Verbose logging for troubleshooting</string>
     <string name="pref_clear_cache">Clear scan cache</string>
-    <string name="pref_clear_cache_summary">Delete cached symbols and rescan</string>
+    <string name="pref_clear_cache_summary">Delete cached symbols</string>
 
     <!-- Diagnostics category -->
     <string name="pref_category_diagnostics">Advanced</string>

@@ -1,5 +1,6 @@
 package eu.hxreborn.discoveradsfilter.hook
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import eu.hxreborn.discoveradsfilter.provider.MetricsProvider
@@ -19,7 +20,7 @@ object HookMetrics {
     private var metricsFile: File? = null
 
     @Volatile
-    private var appContext: android.content.Context? = null
+    private var appContext: Context? = null
 
     fun init() {
         val dir = File(AGSA_CACHE)
@@ -36,7 +37,7 @@ object HookMetrics {
         }
     }
 
-    private fun context(): android.content.Context? {
+    private fun context(): Context? {
         appContext?.let { return it }
         @Suppress("PrivateApi")
         val ctx =
@@ -44,30 +45,30 @@ object HookMetrics {
                 Class
                     .forName("android.app.ActivityThread")
                     .getMethod("currentApplication")
-                    .invoke(null) as? android.content.Context
+                    .invoke(null) as? Context
             }.getOrNull()
-        appContext = ctx
+        ctx?.let { appContext = it }
         return ctx
     }
 
     fun addAdsHidden(count: Int) {
+        if (count <= 0) return
         val total = adsHidden.addAndGet(count.toLong())
         runCatching {
             metricsFile?.writeText("ads=$total\n")
         }.onFailure {
             Logger.w("metrics file write failed: ${it.message}")
         }
-        if (count > 0) Logger.i("ads filtered: +$count (total=$total)")
+        Logger.i("ads filtered: +$count (total=$total)")
         reportToProvider(count)
     }
 
     private fun reportToProvider(delta: Int) {
-        val ctx = context()
-        if (ctx == null) {
-            Logger.w("reportToProvider: no app context")
-            return
-        }
-        if (delta <= 0) return
+        val ctx =
+            context() ?: run {
+                Logger.w("reportToProvider: no app context")
+                return
+            }
         runCatching {
             ctx.contentResolver.call(
                 PROVIDER_URI,
