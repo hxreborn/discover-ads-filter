@@ -39,6 +39,8 @@
     <string name="toggle_verbose_summary">Verbose logging for troubleshooting</string>
     <string name="pref_clear_cache">Clear scan cache</string>
     <string name="pref_clear_cache_summary">Delete cached symbols</string>
+    <string name="pref_reset_counter">Reset ad counter</string>
+    <string name="pref_reset_counter_summary">Set blocked count to zero</string>
 
     <!-- Diagnostics category -->
     <string name="pref_category_diagnostics">Advanced</string>

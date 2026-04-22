@@ -44,6 +44,8 @@ class HomeViewModel(
     private val filterEnabledFlow = MutableStateFlow(true)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
 
+    val isReady: Boolean get() = verifyFlow.value != null
+
     val uiState: StateFlow<HomeUiState> =
         combine(verboseFlow, filterEnabledFlow, verifyFlow) { verbose, filterEnabled, verify ->
             if (verify == null) {
@@ -65,6 +67,12 @@ class HomeViewModel(
             },
             onVerify = ::verify,
             onClearCacheOnly = ::clearCacheOnly,
+            onResetAdsCounter = {
+                viewModelScope.launch(Dispatchers.IO) {
+                    repo.resetAdsCounter()
+                    verifyFlow.update { it?.copy(adsHidden = 0) }
+                }
+            },
             onDismissStartupScan = {
                 verifyFlow.update { it?.copy(scanOrigin = null) }
             },

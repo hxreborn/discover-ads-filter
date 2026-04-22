@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import eu.hxreborn.discoveradsfilter.BuildConfig
+import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import java.io.File
 
 class SettingsRepository(
     private val context: Context,
@@ -66,12 +68,25 @@ class SettingsRepository(
         return CachedScan(version, resolved, moduleVersion)
     }
 
-    fun readHookStatus(): String? = readPrefRemoteFirst(SettingsPrefs.hookStatus)
+    fun readHookStatus(): String? =
+        readPrefRemoteFirst(SettingsPrefs.hookStatus) ?: readMetricsField("hook_status")
 
-    fun readHookProcess(): String? = readPrefRemoteFirst(SettingsPrefs.hookProcess)
+    fun readHookProcess(): String? =
+        readPrefRemoteFirst(SettingsPrefs.hookProcess) ?: readMetricsField("hook_process")
 
     private fun readPrefRemoteFirst(spec: PrefSpec<String?>): String? =
         remotePrefsProvider()?.let { spec.read(it) } ?: spec.read(localPrefs)
+
+    private fun readMetricsField(key: String): String? =
+        runCatching {
+            val agsaInfo = context.packageManager.getApplicationInfo(AGSA_PKG, 0)
+            val file = File(File(agsaInfo.dataDir, "cache"), METRICS_FILENAME)
+            if (!file.exists()) return@runCatching null
+            file
+                .readLines()
+                .firstOrNull { it.startsWith("$key=") }
+                ?.substringAfter('=')
+        }.getOrNull()
 
     fun readAdsHidden(): Long {
         val localAds = SettingsPrefs.adsHidden.read(localPrefs)
@@ -81,6 +96,10 @@ class SettingsRepository(
             localPrefs.edit { SettingsPrefs.adsHidden.write(this, ads) }
         }
         return ads
+    }
+
+    fun resetAdsCounter() {
+        save { SettingsPrefs.adsHidden.write(this, 0L) }
     }
 
     fun clearScanCache() {
@@ -114,6 +133,9 @@ class SettingsRepository(
     }
 
     private companion object {
+        private const val AGSA_PKG = DiscoverAdsFilterModule.AGSA_PKG
+        private const val METRICS_FILENAME = "discover_adsfilter_metrics.txt"
+
         private val HOOK_OWNED_KEYS: Set<String> =
             setOf(
                 SettingsPrefs.hookStatus.key,

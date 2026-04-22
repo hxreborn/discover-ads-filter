@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
@@ -187,7 +188,7 @@ internal fun DashboardScreenContent(
                         title = { Text(stringResource(R.string.pref_category_diagnostics)) },
                     )
 
-                    val advancedCount = 3
+                    val advancedCount = 4
                     val advancedTopShape = shapeForPosition(advancedCount, 0)
                     preference(
                         key = "diagnostics",
@@ -244,14 +245,14 @@ internal fun DashboardScreenContent(
                     item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
                     val scanning = ready.verify.phase == VerifyPhase.Running
-                    val advancedBottomShape = shapeForPosition(advancedCount, 2)
+                    val advancedMid2Shape = shapeForPosition(advancedCount, 2)
                     preference(
                         key = "clear_cache",
                         modifier =
                             Modifier
                                 .padding(horizontal = 8.dp)
-                                .background(color = surface, shape = advancedBottomShape)
-                                .clip(advancedBottomShape),
+                                .background(color = surface, shape = advancedMid2Shape)
+                                .clip(advancedMid2Shape),
                         icon = {
                             Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
                         },
@@ -266,6 +267,31 @@ internal fun DashboardScreenContent(
                         },
                         enabled = !scanning,
                         onClick = { showClearCacheDialog = true },
+                    )
+
+                    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+                    val advancedBottomShape = shapeForPosition(advancedCount, 3)
+                    preference(
+                        key = "reset_counter",
+                        modifier =
+                            Modifier
+                                .padding(horizontal = 8.dp)
+                                .background(color = surface, shape = advancedBottomShape)
+                                .clip(advancedBottomShape),
+                        icon = {
+                            Icon(imageVector = Icons.Outlined.RestartAlt, contentDescription = null)
+                        },
+                        title = {
+                            Text(
+                                stringResource(R.string.pref_reset_counter),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        },
+                        summary = {
+                            Text(stringResource(R.string.pref_reset_counter_summary))
+                        },
+                        onClick = { actions.onResetAdsCounter() },
                     )
 
                     item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }

@@ -76,19 +76,10 @@ fun StatusCard(
                         text = targetLine(state),
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    val hookLine = hookStatusLine(state)
-                    if (hookLine != null) {
-                        Text(
-                            text = hookLine,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
-                    if (state.adsHidden > 0) {
-                        Text(
-                            text = stringResource(R.string.hero_blocked_since_install, state.adsHidden),
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.hero_blocked_since_install, state.adsHidden),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
         }
@@ -105,12 +96,6 @@ private fun targetLine(state: VerifyUiState): String {
         code != null -> stringResource(R.string.hero_target_agsa, "v$code")
         else -> stringResource(R.string.hero_target_missing)
     }
-}
-
-@Composable
-private fun hookStatusLine(state: VerifyUiState): String? {
-    if (state.hookInstalled == 0 && state.hookTotal == 0) return null
-    return stringResource(R.string.hero_hooks_line, state.hookInstalled, state.hookTotal)
 }
 
 private data class StatusVisual(

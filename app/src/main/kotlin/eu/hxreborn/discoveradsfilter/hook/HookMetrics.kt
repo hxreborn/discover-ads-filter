@@ -17,6 +17,12 @@ object HookMetrics {
     private val adsHidden = AtomicLong(0)
 
     @Volatile
+    private var lastHookStatus: String? = null
+
+    @Volatile
+    private var lastHookProcess: String? = null
+
+    @Volatile
     private var metricsFile: File? = null
 
     @Volatile
@@ -30,8 +36,12 @@ object HookMetrics {
         runCatching {
             metricsFile?.takeIf { it.exists() }?.readLines()?.forEach { line ->
                 val parts = line.split("=", limit = 2)
-                if (parts.size == 2 && parts[0] == "ads") {
-                    adsHidden.set(parts[1].toLongOrNull() ?: 0)
+                if (parts.size == 2) {
+                    when (parts[0]) {
+                        "ads" -> adsHidden.set(parts[1].toLongOrNull() ?: 0)
+                        "hook_status" -> lastHookStatus = parts[1]
+                        "hook_process" -> lastHookProcess = parts[1]
+                    }
                 }
             }
         }
@@ -55,28 +65,45 @@ object HookMetrics {
         status: String,
         process: String,
     ) {
-        callProvider(
-            MetricsProvider.METHOD_REPORT_HOOK_STATUS,
-            Bundle().apply {
-                putString(MetricsProvider.KEY_STATUS, status)
-                putString(MetricsProvider.KEY_PROCESS, process)
-            },
-        )
+        lastHookStatus = status
+        lastHookProcess = process
+        writeMetricsFile()
+        // TODO: Remove when i decide if i use root or another way to write counter
+        Thread {
+            runCatching { Thread.sleep(3_000) }
+            callProvider(
+                MetricsProvider.METHOD_REPORT_HOOK_STATUS,
+                Bundle().apply {
+                    putString(MetricsProvider.KEY_STATUS, status)
+                    putString(MetricsProvider.KEY_PROCESS, process)
+                },
+            )
+        }.start()
     }
 
     fun addAdsHidden(count: Int) {
         if (count <= 0) return
         val total = adsHidden.addAndGet(count.toLong())
-        runCatching {
-            metricsFile?.writeText("ads=$total\n")
-        }.onFailure {
-            Logger.w("metrics file write failed: ${it.message}")
-        }
+        writeMetricsFile()
         Logger.v { "ads filtered: +$count (total=$total)" }
         callProvider(
             MetricsProvider.METHOD_INCREMENT,
             Bundle().apply { putInt(MetricsProvider.KEY_COUNT, count) },
         )
+    }
+
+    private fun writeMetricsFile() {
+        runCatching {
+            metricsFile?.writeText(
+                buildString {
+                    append("ads=${adsHidden.get()}\n")
+                    lastHookStatus?.let { append("hook_status=$it\n") }
+                    lastHookProcess?.let { append("hook_process=$it\n") }
+                },
+            )
+        }.onFailure {
+            Logger.w("metrics file write failed: ${it.message}")
+        }
     }
 
     private fun callProvider(
