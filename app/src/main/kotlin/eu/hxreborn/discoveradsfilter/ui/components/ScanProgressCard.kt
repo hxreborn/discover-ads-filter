@@ -263,13 +263,9 @@ private fun ActiveStepRow(
             contentColor = scheme.onPrimaryContainer,
             shape = RoundedCornerShape(999.dp),
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                CircularWavyProgressIndicator(modifier = Modifier.size(14.dp))
-            }
+            CircularWavyProgressIndicator(
+                modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp).size(14.dp),
+            )
         }
     }
 }

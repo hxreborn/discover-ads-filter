@@ -69,6 +69,7 @@ class DiscoverAdsFilterModule : XposedModule() {
             }.isSuccess
 
         val status = if (ok) "1/1" else "0/1 failed:StreamSliceFilterHook"
+        HookMetrics.reportHookStatus(status, proc)
         log(
             Log.INFO,
             TAG,

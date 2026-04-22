@@ -14,8 +14,11 @@ class MetricsProvider : ContentProvider() {
         const val AUTHORITY = "eu.hxreborn.discoveradsfilter.metrics"
         const val METHOD_INCREMENT = "increment_ads"
         const val METHOD_READ = "read_ads"
+        const val METHOD_REPORT_HOOK_STATUS = "report_hook_status"
         const val KEY_COUNT = "count"
         const val KEY_TOTAL = "total"
+        const val KEY_STATUS = "status"
+        const val KEY_PROCESS = "process"
     }
 
     private val lock = Any()
@@ -47,6 +50,18 @@ class MetricsProvider : ContentProvider() {
                 Bundle().apply {
                     putLong(KEY_TOTAL, SettingsPrefs.adsHidden.read(prefs))
                 }
+            }
+
+            METHOD_REPORT_HOOK_STATUS -> {
+                val status = extras?.getString(KEY_STATUS)
+                val process = extras?.getString(KEY_PROCESS)
+                if (status != null) {
+                    prefs.edit(commit = true) {
+                        SettingsPrefs.hookStatus.write(this, status)
+                        if (process != null) SettingsPrefs.hookProcess.write(this, process)
+                    }
+                }
+                null
             }
 
             else -> {

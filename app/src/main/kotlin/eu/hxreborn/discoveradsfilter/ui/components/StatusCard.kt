@@ -123,8 +123,6 @@ private data class StatusVisual(
 @Composable
 private fun statusVisual(state: VerifyUiState): StatusVisual {
     val scheme = MaterialTheme.colorScheme
-    val stale = state.agsaUpdatedSinceScan() || state.moduleUpdatedSinceScan(BuildConfig.VERSION_CODE)
-    val refreshing = state.phase == VerifyPhase.Running
 
     if (state.moduleActiveChecked && !state.moduleActive) {
         return StatusVisual(
@@ -135,7 +133,18 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    if (stale && !refreshing && state.lastResult is VerifyResult.Success) {
+    if (state.phase == VerifyPhase.Running) {
+        return StatusVisual(
+            icon = Icons.Filled.CheckCircle,
+            titleRes = R.string.hero_module_active,
+            container = scheme.primaryContainer,
+            content = scheme.onPrimaryContainer,
+        )
+    }
+
+    val stale = state.agsaUpdatedSinceScan() || state.moduleUpdatedSinceScan(BuildConfig.VERSION_CODE)
+
+    if (stale && state.lastResult is VerifyResult.Success) {
         return StatusVisual(
             icon = Icons.Outlined.Warning,
             titleRes = R.string.hero_stale,
@@ -144,7 +153,7 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    if (state.lastResult == null && !refreshing) {
+    if (state.lastResult == null) {
         return StatusVisual(
             icon = Icons.AutoMirrored.Outlined.HelpOutline,
             titleRes = R.string.hero_not_configured,
@@ -153,7 +162,7 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    if (state.lastResult is VerifyResult.Failure && !refreshing) {
+    if (state.lastResult is VerifyResult.Failure) {
         return StatusVisual(
             icon = Icons.Outlined.ErrorOutline,
             titleRes = R.string.hero_scan_failed,
@@ -162,9 +171,7 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    if (state.hookInstalled == 0 && state.hookTotal == 0 && !refreshing &&
-        state.lastResult is VerifyResult.Success
-    ) {
+    if (state.hookInstalled == 0 && state.hookTotal == 0 && state.adsHidden == 0L) {
         return StatusVisual(
             icon = Icons.AutoMirrored.Outlined.HelpOutline,
             titleRes = R.string.hero_hooks_pending,

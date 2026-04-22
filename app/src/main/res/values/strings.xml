@@ -3,8 +3,8 @@
     <string name="app_name">Discover Ads Filter</string>
     <string name="app_description">Removes sponsored cards from the Google Discover feed by fingerprinting obfuscated hook targets. Targets Google App (AGSA).</string>
 
+    <string name="button_scan">Scan</string>
     <string name="button_rescan">Rescan</string>
-    <string name="button_reverify">Verify Signatures</string>
     <string name="button_ok">OK</string>
     <string name="fab_resolving">Resolving\u2026</string>
 
@@ -15,11 +15,6 @@
     <string name="hero_stale">Stale signatures</string>
     <string name="hero_hooks_line">[%1$d/%2$d] hooks active</string>
     <string name="hero_hooks_pending">Awaiting hook process</string>
-    <string name="diag_summary_all_mapped">All symbols mapped</string>
-    <string name="diag_summary_partial">%1$d/%2$d symbols mapped</string>
-    <string name="diag_summary_none">No symbols mapped</string>
-    <string name="diag_summary_stale">Stale signatures</string>
-    <string name="diag_summary_no_scan">No scan yet</string>
     <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_module_not_active">Module not active</string>
     <string name="hero_module_not_active_detail">Enable in LSPosed and add Google App to scope</string>

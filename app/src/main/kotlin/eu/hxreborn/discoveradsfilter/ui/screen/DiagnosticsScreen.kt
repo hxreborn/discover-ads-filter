@@ -15,11 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -37,10 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -57,8 +50,6 @@ import eu.hxreborn.discoveradsfilter.ui.state.SymbolSection
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
-import eu.hxreborn.discoveradsfilter.ui.state.agsaUpdatedSinceScan
-import eu.hxreborn.discoveradsfilter.ui.state.moduleUpdatedSinceScan
 import eu.hxreborn.discoveradsfilter.ui.state.toSymbolSections
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
@@ -105,6 +96,7 @@ internal fun DiagnosticsScreenContent(
             }
         },
         floatingActionButton = {
+            val hasCachedScan = state.lastResult != null
             ExtendedFloatingActionButton(
                 onClick = {
                     if (!anyRunning) {
@@ -121,7 +113,11 @@ internal fun DiagnosticsScreenContent(
                     if (isRunning) {
                         LoadingIndicator(modifier = Modifier.size(24.dp))
                     } else {
-                        Text(stringResource(R.string.button_reverify))
+                        Text(
+                            stringResource(
+                                if (hasCachedScan) R.string.button_rescan else R.string.button_scan,
+                            ),
+                        )
                     }
                 }
             }
@@ -159,9 +155,6 @@ internal fun DiagnosticsContent(
     sections: List<SymbolSection>,
     showProgress: Boolean = false,
 ) {
-    ScanSummaryCard(state = state, sections = sections)
-    Spacer(Modifier.height(Spacing.md))
-
     ComboCard(state = state)
     Spacer(Modifier.height(Spacing.lg))
 
@@ -190,107 +183,20 @@ internal fun DiagnosticsContent(
 }
 
 @Composable
-private fun ScanSummaryCard(
-    state: VerifyUiState,
-    sections: List<SymbolSection>,
-) {
-    val scheme = MaterialTheme.colorScheme
-    val stale = state.agsaUpdatedSinceScan() || state.moduleUpdatedSinceScan(BuildConfig.VERSION_CODE)
-    val resolved = sections.sumOf { it.resolvedCount }
-    val total = sections.sumOf { it.totalCount }
-
-    val (icon, label, container, content) =
-        when {
-            state.lastResult == null -> {
-                SummaryVisual(
-                    icon = Icons.AutoMirrored.Outlined.HelpOutline,
-                    label = stringResource(R.string.diag_summary_no_scan),
-                    container = scheme.surfaceContainerHighest,
-                    content = scheme.onSurfaceVariant,
-                )
-            }
-
-            stale -> {
-                SummaryVisual(
-                    icon = Icons.Outlined.Warning,
-                    label = stringResource(R.string.diag_summary_stale),
-                    container = scheme.secondaryContainer,
-                    content = scheme.onSecondaryContainer,
-                )
-            }
-
-            state.lastResult is VerifyResult.Failure -> {
-                SummaryVisual(
-                    icon = Icons.Outlined.ErrorOutline,
-                    label = stringResource(R.string.diag_summary_none),
-                    container = scheme.errorContainer,
-                    content = scheme.onErrorContainer,
-                )
-            }
-
-            resolved == total -> {
-                SummaryVisual(
-                    icon = Icons.Filled.CheckCircle,
-                    label = stringResource(R.string.diag_summary_all_mapped),
-                    container = scheme.primaryContainer,
-                    content = scheme.onPrimaryContainer,
-                )
-            }
-
-            else -> {
-                SummaryVisual(
-                    icon = Icons.Outlined.Warning,
-                    label = stringResource(R.string.diag_summary_partial, resolved, total),
-                    container = scheme.tertiaryContainer,
-                    content = scheme.onTertiaryContainer,
-                )
-            }
-        }
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
-        color = container,
-        contentColor = content,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(Spacing.md),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-            )
-        }
-    }
-}
-
-private data class SummaryVisual(
-    val icon: ImageVector,
-    val label: String,
-    val container: Color,
-    val content: Color,
-)
-
-@Composable
 private fun ComboCard(state: VerifyUiState) {
     val scheme = MaterialTheme.colorScheme
     val mappedVersionCode = (state.lastResult as? VerifyResult.Success)?.versionCode
     val mappedModuleVersion = state.scanModuleVersion
+    val name = state.installedAgsaVersionName
+    val code = state.installedAgsaVersion
     val agsaLine =
         when {
-            state.installedAgsaVersionName != null -> {
-                stringResource(
-                    R.string.diag_mapped_agsa_versioned,
-                    state.installedAgsaVersionName,
-                    state.installedAgsaVersion!!,
-                )
+            name != null && code != null -> {
+                stringResource(R.string.diag_mapped_agsa_versioned, name, code)
+            }
+
+            name != null -> {
+                stringResource(R.string.hero_target_agsa, "v$name")
             }
 
             mappedVersionCode != null -> {

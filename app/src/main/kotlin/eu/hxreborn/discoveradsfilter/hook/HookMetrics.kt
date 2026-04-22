@@ -51,6 +51,19 @@ object HookMetrics {
         return ctx
     }
 
+    fun reportHookStatus(
+        status: String,
+        process: String,
+    ) {
+        callProvider(
+            MetricsProvider.METHOD_REPORT_HOOK_STATUS,
+            Bundle().apply {
+                putString(MetricsProvider.KEY_STATUS, status)
+                putString(MetricsProvider.KEY_PROCESS, process)
+            },
+        )
+    }
+
     fun addAdsHidden(count: Int) {
         if (count <= 0) return
         val total = adsHidden.addAndGet(count.toLong())
@@ -60,25 +73,25 @@ object HookMetrics {
             Logger.w("metrics file write failed: ${it.message}")
         }
         Logger.i("ads filtered: +$count (total=$total)")
-        reportToProvider(count)
+        callProvider(
+            MetricsProvider.METHOD_INCREMENT,
+            Bundle().apply { putInt(MetricsProvider.KEY_COUNT, count) },
+        )
     }
 
-    private fun reportToProvider(delta: Int) {
+    private fun callProvider(
+        method: String,
+        extras: Bundle,
+    ) {
         val ctx =
             context() ?: run {
-                Logger.w("reportToProvider: no app context")
+                Logger.w("callProvider($method): no app context")
                 return
             }
         runCatching {
-            ctx.contentResolver.call(
-                PROVIDER_URI,
-                MetricsProvider.METHOD_INCREMENT,
-                null,
-                Bundle().apply { putInt(MetricsProvider.KEY_COUNT, delta) },
-            )
-            Logger.i("metrics provider incremented by $delta")
+            ctx.contentResolver.call(PROVIDER_URI, method, null, extras)
         }.onFailure {
-            Logger.w("metrics provider call failed: ${it.message}")
+            Logger.w("callProvider($method) failed: ${it.message}")
         }
     }
 }

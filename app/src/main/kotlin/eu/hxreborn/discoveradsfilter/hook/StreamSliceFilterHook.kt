@@ -145,7 +145,12 @@ object StreamSliceFilterHook {
             items.forEachIndexed { i, item ->
                 val key = keys[i].takeIf { !it.startsWith(NULL_KEY_PREFIX) }
                 val drop = item != null && key != null && isAdItem(key)
-                if (drop) removed++ else filtered += item
+                if (drop) {
+                    removed++
+                    Logger.v { "filtered ad #$removed key=$key" }
+                } else {
+                    filtered += item
+                }
             }
 
             lastFingerprint = fp
