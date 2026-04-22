@@ -68,11 +68,17 @@ class SettingsRepository(
         return CachedScan(version, resolved, moduleVersion)
     }
 
-    fun readHookStatus(): String? =
-        readPrefRemoteFirst(SettingsPrefs.hookStatus) ?: readMetricsField("hook_status")
-
-    fun readHookProcess(): String? =
-        readPrefRemoteFirst(SettingsPrefs.hookProcess) ?: readMetricsField("hook_process")
+    fun readHookMetrics(): HookMetrics {
+        val lines = readMetricsLines()
+        return HookMetrics(
+            status =
+                readPrefRemoteFirst(SettingsPrefs.hookStatus)
+                    ?: lines?.firstOrNull { it.startsWith("hook_status=") }?.substringAfter('='),
+            process =
+                readPrefRemoteFirst(SettingsPrefs.hookProcess)
+                    ?: lines?.firstOrNull { it.startsWith("hook_process=") }?.substringAfter('='),
+        )
+    }
 
     private fun readPrefRemoteFirst(spec: PrefSpec<String?>): String? =
         remotePrefsProvider()?.let { spec.read(it) } ?: spec.read(localPrefs)
@@ -83,13 +89,10 @@ class SettingsRepository(
         save { SettingsPrefs.adsHidden.write(this, 0L) }
     }
 
-    private fun readMetricsField(key: String): String? {
+    private fun readMetricsLines(): List<String>? {
         if (Shell.isAppGrantedRoot() != true) return null
         val result = Shell.cmd("cat $METRICS_FILE_PATH").exec()
-        if (!result.isSuccess) return null
-        return result.out
-            .firstOrNull { it.startsWith("$key=") }
-            ?.substringAfter('=')
+        return if (result.isSuccess) result.out else null
     }
 
     fun clearScanCache() {
@@ -144,4 +147,9 @@ data class CachedScan(
     val versionCode: Long,
     val targets: ResolvedTargets.Resolved,
     val moduleVersionCode: Int = 0,
+)
+
+data class HookMetrics(
+    val status: String?,
+    val process: String?,
 )

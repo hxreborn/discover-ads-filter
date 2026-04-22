@@ -67,64 +67,19 @@ class HomeViewModel(
             },
             onVerify = ::verify,
             onClearCacheOnly = ::clearCacheOnly,
-            onResetAdsCounter = {
-                viewModelScope.launch(Dispatchers.IO) {
-                    repo.resetAdsCounter()
-                    verifyFlow.update { it?.copy(adsHidden = 0) }
-                }
-            },
-            onDismissStartupScan = {
-                verifyFlow.update { it?.copy(scanOrigin = null) }
-            },
+            onResetAdsCounter = ::resetAdsCounter,
+            onDismissStartupScan = ::dismissStartupScan,
         )
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = repo.snapshot()
-            verboseFlow.value = snapshot.verbose
-            filterEnabledFlow.value = snapshot.filterEnabled
-            val lastScan = repo.readLastScan()
-            val agsaPkg = currentAgsaPackageInfo()
-            val hookStatusRaw = repo.readHookStatus()
-            val hookProcess = repo.readHookProcess()
-            val adsHidden = repo.readAdsHidden()
-
-            val result =
-                lastScan?.let {
-                    VerifyResult.Success(it.versionCode, it.targets)
-                }
-            val hasUsableResult = result is VerifyResult.Success
-            val needsScan =
-                result == null ||
-                    agsaPkg?.versionCode?.let {
-                        it != result.versionCode
-                    } == true ||
-                    lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
-            val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
-
-            val moduleStatus =
-                when {
-                    App.boundService != null -> ModuleStatus.Active
-                    hookStatusRaw != null -> ModuleStatus.Active
-                    else -> ModuleStatus.Unknown
-                }
-            verifyFlow.value =
-                VerifyUiState(
-                    phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
-                    scanOrigin = if (needsScan) origin else null,
-                    lastResult = result,
-                    installedAgsaVersion = agsaPkg?.versionCode,
-                    installedAgsaVersionName = agsaPkg?.versionName,
-                    installedAgsaLastUpdateTime = agsaPkg?.lastUpdateTime ?: 0L,
-                    scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
-                    hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw),
-                    hookProcess = hookProcess,
-                    adsHidden = adsHidden,
-                    moduleStatus = moduleStatus,
-                )
-
-            if (needsScan) {
-                runScanAndUpdate()
+            runCatching { initialize() }.onFailure { t ->
+                Log.e(TAG, "initialization failed", t)
+                verifyFlow.value =
+                    VerifyUiState(
+                        phase = VerifyPhase.Idle,
+                        moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Unknown,
+                    )
             }
         }
     }
@@ -132,8 +87,7 @@ class HomeViewModel(
     fun onServiceBound() {
         viewModelScope.launch(Dispatchers.IO) {
             repo.syncLocalToRemote()
-            val hookStatusRaw = repo.readHookStatus()
-            val hookProcess = repo.readHookProcess()
+            val (hookStatusRaw, hookProcess) = repo.readHookMetrics()
             val adsHidden = repo.readAdsHidden()
             verifyFlow.update { current ->
                 current?.copy(
@@ -144,6 +98,56 @@ class HomeViewModel(
                 )
             }
         }
+    }
+
+    private suspend fun initialize() {
+        val snapshot = repo.snapshot()
+        verboseFlow.value = snapshot.verbose
+        filterEnabledFlow.value = snapshot.filterEnabled
+        val lastScan = repo.readLastScan()
+        val agsaPkg = currentAgsaPackageInfo()
+        val (hookStatusRaw, hookProcess) = repo.readHookMetrics()
+        val adsHidden = repo.readAdsHidden()
+
+        val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
+        val hasUsableResult = result is VerifyResult.Success
+        val needsScan =
+            result == null ||
+                agsaPkg?.versionCode?.let { it != result.versionCode } == true ||
+                lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
+        val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
+        val moduleStatus =
+            when {
+                App.boundService != null -> ModuleStatus.Active
+                hookStatusRaw != null -> ModuleStatus.Active
+                else -> ModuleStatus.Unknown
+            }
+        verifyFlow.value =
+            VerifyUiState(
+                phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
+                scanOrigin = if (needsScan) origin else null,
+                lastResult = result,
+                installedAgsaVersion = agsaPkg?.versionCode,
+                installedAgsaVersionName = agsaPkg?.versionName,
+                installedAgsaLastUpdateTime = agsaPkg?.lastUpdateTime ?: 0L,
+                scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
+                hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw),
+                hookProcess = hookProcess,
+                adsHidden = adsHidden,
+                moduleStatus = moduleStatus,
+            )
+        if (needsScan) runScanAndUpdate()
+    }
+
+    private fun resetAdsCounter() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repo.resetAdsCounter()
+            verifyFlow.update { it?.copy(adsHidden = 0) }
+        }
+    }
+
+    private fun dismissStartupScan() {
+        verifyFlow.update { it?.copy(scanOrigin = null) }
     }
 
     private fun clearCacheOnly() {
