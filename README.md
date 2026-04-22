@@ -27,13 +27,12 @@ Hide sponsored cards in Google Discover.
 
 ## How It Works
 
-The app scans the installed Google App, caches the hook data for that AGSA build by version, and uses that cache in the hooked AGSA process to filter ad items out of the Discover feed list before the UI renders them.
+The app scans the installed Google App, resolves the hook targets for that AGSA build, and stores the result in a versioned cache. The hooked process uses the cached targets to filter ad items from the Discover feed.
 
 ## Notes
 
-- The module resolves the AGSA classes and methods it hooks with DexKit against the installed Google App build, using protobuf extension field numbers and type signatures.
-- Google App updates can invalidate resolved targets. Run Verify again after each update.
-- DexKit resolves targets against the installed Google App build from protobuf field numbers and type signatures instead of relying on stable symbol names.
+- Target resolution is done with DexKit against the installed Google App build using protobuf extension field numbers and type signatures.
+- Google App updates can invalidate previously resolved targets. Verify again after each update.
 
 ## License
 
