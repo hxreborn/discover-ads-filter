@@ -109,7 +109,7 @@ private fun targetLine(state: VerifyUiState): String {
 @Composable
 private fun hookStatusLine(state: VerifyUiState): String? {
     if (state.hookInstalled == 0 && state.hookTotal == 0) return null
-    return stringResource(R.string.diag_hooks_ratio, state.hookInstalled, state.hookTotal)
+    return stringResource(R.string.hero_hooks_line, state.hookInstalled, state.hookTotal)
 }
 
 private data class StatusVisual(

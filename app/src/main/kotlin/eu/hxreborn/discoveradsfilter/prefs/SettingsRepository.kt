@@ -6,7 +6,6 @@ import androidx.core.content.edit
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
-import java.io.File
 
 class SettingsRepository(
     private val context: Context,
@@ -81,26 +80,8 @@ class SettingsRepository(
         if (remoteAds > localAds) {
             localPrefs.edit { SettingsPrefs.adsHidden.write(this, ads) }
         }
-        return if (ads > 0L) ads else readAdsFromAgsa()
+        return ads
     }
-
-    private fun readAdsFromAgsa(): Long =
-        runCatching {
-            val agsaInfo =
-                context.packageManager.getApplicationInfo(
-                    "com.google.android.googlequicksearchbox",
-                    0,
-                )
-            val metricsFile =
-                File(File(agsaInfo.dataDir, "cache"), "discover_adsfilter_metrics.txt")
-            if (!metricsFile.exists()) return@runCatching 0L
-            metricsFile
-                .readLines()
-                .firstOrNull { it.startsWith("ads=") }
-                ?.substringAfter('=')
-                ?.toLongOrNull()
-                ?: 0L
-        }.getOrDefault(0L)
 
     fun clearScanCache() {
         val keysToRemove =

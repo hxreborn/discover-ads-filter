@@ -29,7 +29,7 @@
     <string name="diag_module">Module</string>
     <string name="diag_runtime_hooks">Runtime Hooks</string>
     <string name="diag_dexkit_mapping">Symbol Scan</string>
-    <string name="diag_hooks_ratio">%1$d/%2$d installed</string>
+    <string name="hero_hooks_line">[%1$d/%2$d] hooks active</string>
     <string name="diag_hooks_unknown">Awaiting hook process</string>
     <!-- %1$d = AGSA version code at scan time, %2$d = resolved, %3$d = total -->
     <string name="diag_mapping_ratio">AGSA %1$d · %2$d/%3$d symbols resolved</string>

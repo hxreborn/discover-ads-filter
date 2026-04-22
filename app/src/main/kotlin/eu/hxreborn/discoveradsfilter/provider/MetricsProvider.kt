@@ -26,8 +26,9 @@ class MetricsProvider : ContentProvider() {
         method: String,
         arg: String?,
         extras: Bundle?,
-    ): Bundle? =
-        when (method) {
+    ): Bundle? {
+        if (callingPackage != "com.google.android.googlequicksearchbox") return null
+        return when (method) {
             METHOD_INCREMENT -> {
                 val delta = extras?.getInt(KEY_COUNT, 0) ?: 0
                 if (delta > 0) {
@@ -52,6 +53,7 @@ class MetricsProvider : ContentProvider() {
                 null
             }
         }
+    }
 
     override fun onCreate(): Boolean = true
 
