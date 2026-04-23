@@ -38,6 +38,7 @@ import eu.hxreborn.discoveradsfilter.App
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
+import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 
 private const val GITHUB_URL = "https://github.com/hxreborn/discover-ads-filter"
@@ -49,9 +50,9 @@ fun AboutScreen(onBack: () -> Unit) {
 
     SettingsDetailScaffold(title = stringResource(R.string.pref_category_about), onBack = onBack) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.md),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             Box(
                 modifier =
@@ -88,7 +89,7 @@ fun AboutScreen(onBack: () -> Unit) {
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(Spacing.sm))
 
         AboutCard(
             icon = Icons.Outlined.Code,
@@ -106,14 +107,14 @@ fun AboutScreen(onBack: () -> Unit) {
             onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, GITHUB_ISSUES_URL.toUri())) },
         )
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(Spacing.lg))
         Text(
             text = stringResource(R.string.about_libraries),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
         )
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(Spacing.xs))
 
         val libs =
             listOf(
@@ -150,14 +151,14 @@ private fun AboutCard(
         color = MaterialTheme.colorScheme.surfaceVariant,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(imageVector = icon, contentDescription = null)
-            Spacer(Modifier.width(16.dp))
+            Spacer(Modifier.width(Spacing.md))
             Column {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(Spacing.xs))
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

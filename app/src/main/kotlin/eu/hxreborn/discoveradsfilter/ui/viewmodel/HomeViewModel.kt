@@ -87,7 +87,7 @@ class HomeViewModel(
     fun onServiceBound() {
         viewModelScope.launch(Dispatchers.IO) {
             repo.syncLocalToRemote()
-            val (hookStatusRaw, hookProcess) = repo.readHookMetrics()
+            val (hookStatusRaw, hookProcess) = repo.readHookDiagnostics()
             val adsHidden = repo.readAdsHidden()
             verifyFlow.update { current ->
                 current?.copy(
@@ -106,7 +106,7 @@ class HomeViewModel(
         filterEnabledFlow.value = snapshot.filterEnabled
         val lastScan = repo.readLastScan()
         val agsaPkg = currentAgsaPackageInfo()
-        val (hookStatusRaw, hookProcess) = repo.readHookMetrics()
+        val (hookStatusRaw, hookProcess) = repo.readHookDiagnostics()
         val adsHidden = repo.readAdsHidden()
 
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }

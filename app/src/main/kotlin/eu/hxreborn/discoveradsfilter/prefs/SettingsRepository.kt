@@ -68,9 +68,9 @@ class SettingsRepository(
         return CachedScan(version, resolved, moduleVersion)
     }
 
-    fun readHookMetrics(): HookMetrics {
+    fun readHookDiagnostics(): HookDiagnostics {
         val lines = readMetricsLines()
-        return HookMetrics(
+        return HookDiagnostics(
             status =
                 readPrefRemoteFirst(SettingsPrefs.hookStatus)
                     ?: lines?.firstOrNull { it.startsWith("hook_status=") }?.substringAfter('='),
@@ -149,7 +149,7 @@ data class CachedScan(
     val moduleVersionCode: Int = 0,
 )
 
-data class HookMetrics(
+data class HookDiagnostics(
     val status: String?,
     val process: String?,
 )
