@@ -1,6 +1,3 @@
-import java.text.SimpleDateFormat
-import java.util.Date
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -16,14 +13,18 @@ android {
         minSdk = 30
         targetSdk = 36
 
-        versionName = project.property("version.name").toString()
+        val semver = project.property("version.name").toString()
         versionCode = project.property("version.code").toString().toInt()
 
-        buildConfigField(
-            "String",
-            "BUILD_TIMESTAMP",
-            "\"${SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date())}\"",
-        )
+        val commitCount = providers.exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+        }.standardOutput.asText.get().trim()
+        val shortHash = providers.exec {
+            commandLine("git", "rev-parse", "--short=7", "HEAD")
+        }.standardOutput.asText.get().trim()
+        versionName = "$semver+$commitCount-$shortHash"
+
+        buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
 
         ndk {
             abiFilters += listOf("arm64-v8a")
