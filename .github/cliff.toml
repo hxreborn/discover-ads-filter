@@ -3,7 +3,7 @@
 
 [remote.github]
 owner = "hxreborn"
-repo = "discover-adblock"
+repo = "discover-ads-filter"
 
 [changelog]
 header = ""
@@ -13,9 +13,9 @@ https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
 {%- endmacro -%}
 
 {%- macro commit(commit) -%}
-- [`{{ commit.id | truncate(length=7, end="") }}`]({{ self::remote_url() }}/commit/{{ commit.id }}) - \
-  {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-  {{ commit.message | upper_first | trim }}\
+- {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
+  {{ commit.message | upper_first | trim }} - \
+  [`{{ commit.id | truncate(length=7, end="") }}`]({{ self::remote_url() }}/commit/{{ commit.id }})\
   {% if commit.breaking %} [**breaking**]{% endif %}\
   {% if commit.remote.username %} by @{{ commit.remote.username }}\
   {%- if commit.remote.pr_number %} in [#{{ commit.remote.pr_number }}]({{ self::remote_url() }}/pull/{{ commit.remote.pr_number }}){% endif %}{% endif %}
@@ -70,12 +70,12 @@ commit_preprocessors = [
   { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" },
 ]
 commit_parsers = [
-  { message = "^feat", group = "<!-- 00 -->🚀 Added" },
-  { message = "^[fF]ix", group = "<!-- 01 -->🐛 Fixed" },
-  { message = "^perf", group = "<!-- 02 -->⚡ Performance Improvements" },
-  { body = ".*[Ss]ecurity", group = "<!-- 03 -->🔒 Security" },
-  { message = "^refactor", group = "<!-- 04 -->♻️ Changed" },
-  { message = "^revert", group = "<!-- 05 -->⏪ Reverted" },
+  { message = "^feat", group = "<!-- 00 -->Added" },
+  { message = "^[fF]ix", group = "<!-- 01 -->Fixed" },
+  { message = "^perf", group = "<!-- 02 -->Performance Improvements" },
+  { body = ".*[Ss]ecurity", group = "<!-- 03 -->Security" },
+  { message = "^refactor", group = "<!-- 04 -->Changed" },
+  { message = "^revert", group = "<!-- 05 -->Reverted" },
   # Skip dev-only
   { message = "^doc", skip = true },
   { message = "^test", skip = true },
@@ -88,7 +88,7 @@ commit_parsers = [
   { message = "^chore:.*[Dd]ependenc", skip = true },
   { message = "^chore\\(release\\)|^chore\\(deps\\)|^chore\\(changelog\\)", skip = true },
   # Catch-all
-  { message = ".*", group = "<!-- 99 -->📦 Other" },
+  { message = ".*", group = "<!-- 99 -->Other" },
 ]
 filter_commits = false
 tag_pattern = "v[0-9]*"

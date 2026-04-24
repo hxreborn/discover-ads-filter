@@ -15,8 +15,9 @@ android {
         applicationId = "eu.hxreborn.discoveradsfilter"
         minSdk = 30
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.1.1"
+
+        versionName = project.property("version.name").toString()
+        versionCode = project.property("version.code").toString().toInt()
 
         buildConfigField(
             "String",
@@ -34,8 +35,26 @@ android {
         compose = true
     }
 
+    signingConfigs {
+        create("release") {
+            fun secret(name: String): String? =
+                providers.gradleProperty(name).orElse(providers.environmentVariable(name)).orNull
+
+            val storeFilePath = secret("RELEASE_STORE_FILE")
+            if (!storeFilePath.isNullOrBlank()) {
+                storeFile = file(storeFilePath)
+                storePassword = secret("RELEASE_STORE_PASSWORD")
+                keyAlias = secret("RELEASE_KEY_ALIAS")
+                keyPassword = secret("RELEASE_KEY_PASSWORD")
+            } else {
+                logger.warn("RELEASE_STORE_FILE not found. Release signing is disabled.")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release").takeIf { it.storeFile != null }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
