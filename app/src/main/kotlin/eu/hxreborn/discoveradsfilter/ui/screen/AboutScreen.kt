@@ -2,9 +2,7 @@ package eu.hxreborn.discoveradsfilter.ui.screen
 
 import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Code
@@ -23,9 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -49,43 +46,62 @@ fun AboutScreen(onBack: () -> Unit) {
     val context = LocalContext.current
 
     SettingsDetailScaffold(title = stringResource(R.string.pref_category_about), onBack = onBack) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.md),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = shapeForPosition(1, 0),
+            color = MaterialTheme.colorScheme.surfaceVariant,
         ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                contentAlignment = Alignment.Center,
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.lg),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_about_discover),
                     contentDescription = null,
-                    modifier = Modifier.size(64.dp),
+                    modifier = Modifier.size(120.dp),
                 )
-            }
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-            )
-            App.boundService?.let { service ->
                 Text(
-                    text = "${service.frameworkName} v${service.frameworkVersion}",
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
+                Text(
+                    text =
+                        remember {
+                            val ts = BuildConfig.BUILD_TIMESTAMP
+                            if (ts == 0L) {
+                                "Built Apr 24, 2026, 10:30:00 PM"
+                            } else {
+                                val formatter =
+                                    java.time.format.DateTimeFormatter.ofLocalizedDateTime(
+                                        java.time.format.FormatStyle.MEDIUM,
+                                    )
+                                val zoned =
+                                    java.time.Instant
+                                        .ofEpochMilli(ts)
+                                        .atZone(java.time.ZoneId.systemDefault())
+                                "Built ${formatter.format(zoned)}"
+                            }
+                        },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                App.boundService?.let { service ->
+                    Text(
+                        text = "${service.frameworkName} v${service.frameworkVersion}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
 
