@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Discover Ads Filter</string>
-    <string name="app_description">Removes sponsored cards from the Google Discover feed by fingerprinting obfuscated hook targets. Targets Google App (AGSA).</string>
+    <string name="app_description">Filters sponsored cards from the Google Discover feed.</string>
 
     <string name="button_scan">Scan App</string>
     <string name="button_rescan">Re-Scan App</string>
