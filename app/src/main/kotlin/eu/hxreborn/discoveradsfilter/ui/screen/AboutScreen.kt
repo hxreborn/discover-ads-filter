@@ -22,8 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -110,9 +108,8 @@ fun AboutScreen(
         )
         Spacer(Modifier.height(Spacing.xs))
 
-        val githubIcon = painterResource(R.drawable.ic_github_24)
         AboutCard(
-            icon = githubIcon,
+            icon = { Icon(painter = painterResource(R.drawable.ic_github_24), contentDescription = null) },
             title = stringResource(R.string.about_source_code),
             subtitle = stringResource(R.string.about_source_code_summary),
             shape = shapeForPosition(3, 0),
@@ -120,7 +117,7 @@ fun AboutScreen(
         )
         Spacer(Modifier.height(2.dp))
         AboutCard(
-            icon = Icons.Outlined.Gavel,
+            icon = { Icon(imageVector = Icons.Outlined.Gavel, contentDescription = null) },
             title = stringResource(R.string.about_licenses),
             subtitle = stringResource(R.string.about_licenses_summary),
             shape = shapeForPosition(3, 1),
@@ -128,7 +125,7 @@ fun AboutScreen(
         )
         Spacer(Modifier.height(2.dp))
         AboutCard(
-            icon = Icons.Outlined.BugReport,
+            icon = { Icon(imageVector = Icons.Outlined.BugReport, contentDescription = null) },
             title = stringResource(R.string.about_report_issue),
             subtitle = stringResource(R.string.about_report_issue_summary),
             shape = shapeForPosition(3, 2),
@@ -139,41 +136,7 @@ fun AboutScreen(
 
 @Composable
 private fun AboutCard(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    shape: Shape,
-    onClick: (() -> Unit)? = null,
-) {
-    AboutCard(
-        iconContent = { Icon(imageVector = icon, contentDescription = null) },
-        title = title,
-        subtitle = subtitle,
-        shape = shape,
-        onClick = onClick,
-    )
-}
-
-@Composable
-private fun AboutCard(
-    icon: Painter,
-    title: String,
-    subtitle: String,
-    shape: Shape,
-    onClick: (() -> Unit)? = null,
-) {
-    AboutCard(
-        iconContent = { Icon(painter = icon, contentDescription = null) },
-        title = title,
-        subtitle = subtitle,
-        shape = shape,
-        onClick = onClick,
-    )
-}
-
-@Composable
-private fun AboutCard(
-    iconContent: @Composable () -> Unit,
+    icon: @Composable () -> Unit,
     title: String,
     subtitle: String,
     shape: Shape,
@@ -190,7 +153,7 @@ private fun AboutCard(
             modifier = Modifier.padding(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            iconContent()
+            icon()
             Spacer(Modifier.width(Spacing.md))
             Column {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
