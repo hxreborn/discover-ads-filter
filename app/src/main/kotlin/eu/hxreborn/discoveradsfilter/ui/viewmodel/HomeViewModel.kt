@@ -112,8 +112,7 @@ class HomeViewModel(
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
         val hasUsableResult = result is VerifyResult.Success
         val needsScan =
-            result == null ||
-                agsaPkg?.versionCode?.let { it != result.versionCode } == true ||
+            result == null || agsaPkg?.versionCode?.let { it != result.versionCode } == true ||
                 lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
         val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
         val moduleStatus =
@@ -200,9 +199,7 @@ class HomeViewModel(
                     is VerifyResult.Failure -> current?.lastResult ?: result
                 }
             val refreshError =
-                if (
-                    origin == ScanOrigin.Background && result is VerifyResult.Failure
-                ) {
+                if (origin == ScanOrigin.Background && result is VerifyResult.Failure) {
                     result.reason
                 } else {
                     null
@@ -241,16 +238,13 @@ class HomeViewModel(
                     )
                 }
             val apkPath =
-                agsaInfo.sourceDir
-                    ?: return@withContext VerifyResult.Failure(
-                        "AGSA ApplicationInfo.sourceDir was null",
-                    )
+                agsaInfo.sourceDir ?: return@withContext VerifyResult.Failure(
+                    "AGSA ApplicationInfo.sourceDir was null",
+                )
 
             val versionCode =
                 runCatching {
-                    app.packageManager
-                        .getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
-                        .longVersionCode
+                    app.packageManager.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0).longVersionCode
                 }.getOrNull() ?: 0L
 
             if (verboseFlow.value) {
