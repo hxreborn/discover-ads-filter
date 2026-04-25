@@ -2,7 +2,6 @@ package eu.hxreborn.discoveradsfilter.ui.screen
 
 import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,6 +36,10 @@ import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 private const val GITHUB_URL = "https://github.com/hxreborn/discover-ads-filter"
 private const val GITHUB_ISSUES_URL = "https://github.com/hxreborn/discover-ads-filter/issues"
@@ -49,52 +52,49 @@ fun AboutScreen(onBack: () -> Unit) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = shapeForPosition(1, 0),
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 2.dp,
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.lg),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
                 Image(
                     painter = painterResource(R.drawable.ic_about_discover),
                     contentDescription = null,
-                    modifier = Modifier.size(120.dp),
+                    modifier = Modifier.size(80.dp),
                 )
+                Spacer(Modifier.height(Spacing.md))
                 Text(
                     text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                     textAlign = TextAlign.Center,
                 )
-                Text(
-                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
+                Spacer(Modifier.height(Spacing.xs))
                 Text(
                     text =
                         remember {
                             val ts = BuildConfig.BUILD_TIMESTAMP
-                            if (ts == 0L) {
-                                "Built Apr 24, 2026, 10:30:00 PM"
-                            } else {
-                                val formatter =
-                                    java.time.format.DateTimeFormatter.ofLocalizedDateTime(
-                                        java.time.format.FormatStyle.MEDIUM,
-                                    )
-                                val zoned =
-                                    java.time.Instant
-                                        .ofEpochMilli(ts)
-                                        .atZone(java.time.ZoneId.systemDefault())
-                                "Built ${formatter.format(zoned)}"
-                            }
+                            val date =
+                                if (ts == 0L) {
+                                    "Apr 24, 2026"
+                                } else {
+                                    val formatter =
+                                        DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
+                                    val zoned =
+                                        Instant
+                                            .ofEpochMilli(ts)
+                                            .atZone(ZoneId.systemDefault())
+                                    formatter.format(zoned)
+                                }
+                            "v${BuildConfig.VERSION_NAME} · $date"
                         },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
                 App.boundService?.let { service ->
+                    Spacer(Modifier.height(Spacing.xs))
                     Text(
                         text = "${service.frameworkName} v${service.frameworkVersion}",
                         style = MaterialTheme.typography.bodySmall,
@@ -105,7 +105,7 @@ fun AboutScreen(onBack: () -> Unit) {
             }
         }
 
-        Spacer(Modifier.height(Spacing.sm))
+        Spacer(Modifier.height(Spacing.md))
 
         AboutCard(
             icon = Icons.Outlined.Code,
