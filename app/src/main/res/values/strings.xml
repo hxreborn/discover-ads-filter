@@ -18,6 +18,10 @@
     <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_module_not_active">Module not active</string>
     <string name="hero_module_not_active_detail">Enable in LSPosed and add Google App to scope</string>
+    <string name="hero_scan_required">Scan required</string>
+    <string name="hero_scan_required_detail">No saved signatures for this build</string>
+    <string name="hero_signatures_missing">Signatures missing</string>
+    <string name="hero_module_active_line">Module is active</string>
     <string name="hero_target_missing">Target app not detected</string>
     <string name="hero_blocked_since_install">%1$s ads blocked since install</string>
 
@@ -53,14 +57,14 @@
     <string name="pref_github_summary">View source on GitHub</string>
 
     <!-- Hook targets -->
-    <string name="pref_dexkit_title">Hook Targets</string>
+    <string name="pref_dexkit_title">Symbol Map</string>
     <string name="pref_dexkit_summary_ready">View resolved symbols</string>
     <string name="pref_dexkit_summary_none">View resolved symbols</string>
     <string name="dexkit_dialog_title">Resolved Symbols</string>
     <string name="dexkit_no_results">Run a scan first</string>
 
     <!-- Navigation -->
-    <string name="nav_diagnostics">Hook Targets</string>
+    <string name="nav_diagnostics">Symbol Map</string>
     <string name="nav_back">Back</string>
     <string name="nav_info">Info</string>
 
@@ -117,9 +121,9 @@
 
     <!-- Confirmations -->
     <string name="clear_cache_dialog_title">Clear scan cache?</string>
-    <string name="clear_cache_dialog_body">This clears cached hook target results for the current Google App build only. The next scan will run again and may take a few seconds. Use this after a Google App update or when diagnostics look wrong.</string>
+    <string name="clear_cache_dialog_body">This clears cached scan results for the current Google App build only. The next scan will run again and may take a few seconds. Use this after a Google App update or when diagnostics look wrong.</string>
     <string name="clear_cache_dialog_confirm">Clear cache</string>
     <string name="reset_counter_dialog_title">Reset blocked ads count?</string>
-    <string name="reset_counter_dialog_body">This resets the persisted blocked ads count to zero. Filtering state, scan cache, and hook target mappings are not changed.</string>
+    <string name="reset_counter_dialog_body">This resets the persisted blocked ads count to zero. Filtering state, scan cache, and symbol mappings are not changed.</string>
     <string name="reset_counter_dialog_confirm">Reset count</string>
 </resources>

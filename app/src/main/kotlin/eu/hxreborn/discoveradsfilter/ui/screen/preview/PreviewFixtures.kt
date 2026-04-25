@@ -188,6 +188,16 @@ internal object PreviewFixtures {
                     reason = "Signatures not resolved",
                     detail = "DexKit found 0 matches for 7 queries",
                 ),
+            moduleStatus = ModuleStatus.Active,
+            installedAgsaVersion = AGSA_VERSION_CODE_AT_SCAN,
+            installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
+        )
+
+    fun verifyNeedsScan(): VerifyUiState =
+        VerifyUiState(
+            moduleStatus = ModuleStatus.Active,
+            installedAgsaVersion = AGSA_VERSION_CODE_AT_SCAN,
+            installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
         )
 
     fun verifyStaleModuleUpdated(): VerifyUiState =
