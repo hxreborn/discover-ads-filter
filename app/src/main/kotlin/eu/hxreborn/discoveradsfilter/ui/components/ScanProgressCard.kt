@@ -208,10 +208,7 @@ private fun StepRow(
 ) {
     val scheme = MaterialTheme.colorScheme
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(paddingValues),
+        modifier = Modifier.fillMaxWidth().padding(paddingValues),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
@@ -244,10 +241,7 @@ private fun ActiveStepRow(
 ) {
     val scheme = MaterialTheme.colorScheme
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(paddingValues),
+        modifier = Modifier.fillMaxWidth().padding(paddingValues),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {

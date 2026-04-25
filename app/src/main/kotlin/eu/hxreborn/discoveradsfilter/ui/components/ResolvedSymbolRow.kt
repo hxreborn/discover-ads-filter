@@ -143,10 +143,7 @@ private fun LoudStatus(
     contentColor: Color,
 ) {
     Row(
-        modifier =
-            Modifier
-                .background(background, RoundedCornerShape(4.dp))
-                .padding(horizontal = 6.dp, vertical = 2.dp),
+        modifier = Modifier.background(background, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
