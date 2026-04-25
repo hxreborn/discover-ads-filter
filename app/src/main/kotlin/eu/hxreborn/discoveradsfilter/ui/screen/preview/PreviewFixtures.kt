@@ -1,4 +1,4 @@
-package eu.hxreborn.discoveradsfilter.ui.preview
+package eu.hxreborn.discoveradsfilter.ui.screen.preview
 
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.MethodRef
