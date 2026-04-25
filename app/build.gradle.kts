@@ -18,6 +18,7 @@ android {
         versionCode = project.property("version.code").toString().toInt()
 
         versionName = semver
+        base.archivesName.set("discover-ads-filter-v$semver")
 
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
 
