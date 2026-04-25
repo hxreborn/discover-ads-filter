@@ -2,8 +2,6 @@
 
 package eu.hxreborn.discoveradsfilter.ui.components
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,22 +53,12 @@ fun StatusCard(
 ) {
     val visual = statusVisual(state)
     val scanning = state.phase == VerifyPhase.Running && state.lastResult == null
-    val containerColor by animateColorAsState(
-        targetValue = visual.container,
-        animationSpec = tween(durationMillis = 400),
-        label = "container",
-    )
-    val contentColor by animateColorAsState(
-        targetValue = visual.content,
-        animationSpec = tween(durationMillis = 400),
-        label = "content",
-    )
 
     Surface(
         modifier = modifier.fillMaxWidth().padding(horizontal = Spacing.sm, vertical = Spacing.xs),
         shape = MaterialTheme.shapes.large,
-        color = containerColor,
-        contentColor = contentColor,
+        color = visual.container,
+        contentColor = visual.content,
         tonalElevation = visual.tonalElevation,
     ) {
         Row(
