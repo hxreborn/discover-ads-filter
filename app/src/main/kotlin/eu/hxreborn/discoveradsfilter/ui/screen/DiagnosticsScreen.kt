@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -47,6 +48,7 @@ import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.hxreborn.discoveradsfilter.BuildConfig
@@ -54,6 +56,7 @@ import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.ResolvedSymbolRow
 import eu.hxreborn.discoveradsfilter.ui.components.ScanProgressCard
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
+import eu.hxreborn.discoveradsfilter.ui.screen.preview.PreviewFixtures
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.ScanOrigin
 import eu.hxreborn.discoveradsfilter.ui.state.SymbolSection
@@ -61,6 +64,7 @@ import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
 import eu.hxreborn.discoveradsfilter.ui.state.toSymbolSections
+import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
@@ -157,12 +161,11 @@ private fun DiagnosticsFabHost(
     val haptic = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val pressedScale by
-        animateFloatAsState(
-            targetValue = if (fabEnabled && isPressed) 0.98f else 1f,
-            animationSpec = tween(durationMillis = 70),
-            label = "diagnostics_fab_press_scale",
-        )
+    val pressedScale by animateFloatAsState(
+        targetValue = if (fabEnabled && isPressed) 0.98f else 1f,
+        animationSpec = tween(durationMillis = 70),
+        label = "diagnostics_fab_press_scale",
+    )
 
     DiagnosticsFab(
         anyRunning = anyRunning,
@@ -207,13 +210,22 @@ private fun DiagnosticsFab(
         interactionSource = interactionSource,
     ) {
         Row(
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (anyRunning) {
                 LoadingIndicator(modifier = Modifier.size(24.dp))
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = null,
+                )
             }
-            Text(text = if (anyRunning) runningFabLabel else idleFabLabel)
+            Text(
+                text = if (anyRunning) runningFabLabel else idleFabLabel,
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
     }
 }
@@ -388,3 +400,31 @@ private fun SymbolSections(sections: List<SymbolSection>) {
         }
     }
 }
+
+// region Previews
+
+@Preview(name = "Diagnostics - All mapped", showSystemUi = true)
+@Composable
+private fun DiagnosticsAllMappedPreview() {
+    DiscoverAdsFilterTheme(dynamicColor = false) {
+        DiagnosticsScreenContent(
+            state = PreviewFixtures.verifySuccessFull(),
+            onVerify = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview(name = "Diagnostics - Needs scan", showSystemUi = true)
+@Composable
+private fun DiagnosticsNeedsScanPreview() {
+    DiscoverAdsFilterTheme(dynamicColor = false) {
+        DiagnosticsScreenContent(
+            state = PreviewFixtures.verifyNeedsScan(),
+            onVerify = {},
+            onBack = {},
+        )
+    }
+}
+
+// endregion
