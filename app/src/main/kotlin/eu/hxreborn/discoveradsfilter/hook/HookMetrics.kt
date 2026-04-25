@@ -11,7 +11,12 @@ import java.io.File
 object HookMetrics {
     private const val AGSA_CACHE = "/data/data/com.google.android.googlequicksearchbox/cache"
     private const val METRICS_FILENAME = "discover_adsfilter_metrics.txt"
-    private val PROVIDER_URI = Uri.parse("content://${MetricsProvider.AUTHORITY}")
+
+    private const val KEY_HOOK_STATUS = "hook_status"
+    private const val KEY_HOOK_PROCESS = "hook_process"
+
+    private val providerUri = Uri.parse("content://${MetricsProvider.AUTHORITY}")
+    private val metricsFile = File(AGSA_CACHE, METRICS_FILENAME)
 
     @Volatile
     private var lastHookStatus: String? = null
@@ -20,26 +25,25 @@ object HookMetrics {
     private var lastHookProcess: String? = null
 
     @Volatile
-    private var metricsFile: File? = null
-
-    @Volatile
     private var appContext: Context? = null
 
     fun init() {
-        val dir = File(AGSA_CACHE)
-        dir.mkdirs()
-        metricsFile = File(dir, METRICS_FILENAME)
+        metricsFile.parentFile?.mkdirs()
 
         runCatching {
-            metricsFile?.takeIf { it.exists() }?.readLines()?.forEach { line ->
-                val parts = line.split("=", limit = 2)
-                if (parts.size == 2) {
-                    when (parts[0]) {
-                        "hook_status" -> lastHookStatus = parts[1]
-                        "hook_process" -> lastHookProcess = parts[1]
-                    }
+            if (!metricsFile.exists()) return
+
+            metricsFile.forEachLine { line ->
+                val key = line.substringBefore("=", missingDelimiterValue = "")
+                val value = line.substringAfter("=", missingDelimiterValue = "")
+
+                when (key) {
+                    KEY_HOOK_STATUS -> lastHookStatus = value
+                    KEY_HOOK_PROCESS -> lastHookProcess = value
                 }
             }
+        }.onFailure {
+            Logger.w("metrics file read failed: ${it.message}")
         }
     }
 
@@ -49,18 +53,22 @@ object HookMetrics {
     ) {
         lastHookStatus = status
         lastHookProcess = process
-        writeMetricsFile()
+        writeMetricsFile(status, process)
     }
 
     fun addAdsHidden(count: Int) {
         if (count <= 0) return
+
         val ctx = context() ?: return
+
         runCatching {
             ctx.contentResolver.call(
-                PROVIDER_URI,
+                providerUri,
                 MetricsProvider.METHOD_INCREMENT,
                 null,
-                Bundle().apply { putInt(MetricsProvider.KEY_COUNT, count) },
+                Bundle().apply {
+                    putInt(MetricsProvider.KEY_COUNT, count)
+                },
             )
         }.onFailure {
             Logger.w("provider increment failed: ${it.message}")
@@ -69,24 +77,27 @@ object HookMetrics {
 
     private fun context(): Context? {
         appContext?.let { return it }
+
         @Suppress("PrivateApi")
-        val ctx =
-            runCatching {
-                Class
-                    .forName("android.app.ActivityThread")
-                    .getMethod("currentApplication")
-                    .invoke(null) as? Context
-            }.getOrNull()
-        ctx?.let { appContext = it }
-        return ctx
+        return runCatching {
+            Class
+                .forName("android.app.ActivityThread")
+                .getMethod("currentApplication")
+                .invoke(null) as? Context
+        }.getOrNull()
+            ?.let { it.applicationContext ?: it }
+            ?.also { appContext = it }
     }
 
-    private fun writeMetricsFile() {
+    private fun writeMetricsFile(
+        status: String,
+        process: String,
+    ) {
         runCatching {
-            metricsFile?.writeText(
+            metricsFile.writeText(
                 buildString {
-                    lastHookStatus?.let { append("hook_status=$it\n") }
-                    lastHookProcess?.let { append("hook_process=$it\n") }
+                    append(KEY_HOOK_STATUS).append('=').append(status).append('\n')
+                    append(KEY_HOOK_PROCESS).append('=').append(process).append('\n')
                 },
             )
         }.onFailure {
