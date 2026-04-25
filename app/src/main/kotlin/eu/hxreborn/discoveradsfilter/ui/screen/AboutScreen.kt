@@ -28,12 +28,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import eu.hxreborn.discoveradsfilter.App
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
+import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import java.time.Instant
@@ -70,12 +71,12 @@ fun AboutScreen(
                 Spacer(Modifier.height(Spacing.md))
                 Text(
                     text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                     textAlign = TextAlign.Center,
                 )
                 Spacer(Modifier.height(Spacing.xs))
                 Text(
-                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) – ${BuildConfig.BUILD_TYPE} build",
+                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) - ${BuildConfig.BUILD_TYPE} build",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -87,28 +88,16 @@ fun AboutScreen(
                             if (ts == 0L) {
                                 "Built Apr 25, 2026"
                             } else {
-                                val formatter =
-                                    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                                val zoned =
-                                    Instant
-                                        .ofEpochMilli(ts)
-                                        .atZone(ZoneId.systemDefault())
-                                "Built ${formatter.format(zoned)}"
+                                val zoned = Instant.ofEpochMilli(ts).atZone(ZoneId.systemDefault())
+                                val dateTime = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).format(zoned)
+                                val tz = zoned.zone.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
+                                "Built $dateTime ($tz)"
                             }
                         },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-                App.boundService?.let { service ->
-                    Spacer(Modifier.height(Spacing.xs))
-                    Text(
-                        text = "${service.frameworkName} v${service.frameworkVersion}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
             }
         }
 
@@ -211,3 +200,15 @@ private fun AboutCard(
         }
     }
 }
+
+// region Previews
+
+@Preview(name = "About", showSystemUi = true)
+@Composable
+private fun AboutScreenPreview() {
+    DiscoverAdsFilterTheme(dynamicColor = false) {
+        AboutScreen(onBack = {})
+    }
+}
+
+// endregion
