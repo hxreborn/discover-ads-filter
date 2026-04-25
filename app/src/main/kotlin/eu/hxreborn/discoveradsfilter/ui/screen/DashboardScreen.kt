@@ -105,10 +105,7 @@ internal fun DashboardScreenContent(
     val listState = rememberLazyListState()
 
     Scaffold(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier.fillMaxSize(),
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -140,7 +137,11 @@ internal fun DashboardScreenContent(
             val surface = MaterialTheme.colorScheme.surfaceVariant
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize().drawVerticalScrollbar(listState),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .drawVerticalScrollbar(listState),
                 contentPadding =
                     PaddingValues(
                         top = innerPadding.calculateTopPadding(),
