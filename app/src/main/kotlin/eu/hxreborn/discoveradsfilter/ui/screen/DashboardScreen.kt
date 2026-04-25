@@ -20,7 +20,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.rounded.Info
@@ -253,7 +253,7 @@ private fun LazyListScope.DashboardReadyItems(
         key = "diagnostics",
         modifier = Modifier.preferenceCard(shape = shapeForPosition(advancedCount, 0), surface = surface),
         icon = {
-            Icon(imageVector = Icons.Outlined.Map, contentDescription = null)
+            Icon(imageVector = Icons.Outlined.AccountTree, contentDescription = null)
         },
         title = {
             Text(
