@@ -107,11 +107,13 @@
     <string name="scan_retry">Retry</string>
 
     <!-- About screen -->
+    <string name="about_links">Links</string>
     <string name="about_source_code">Source code</string>
     <string name="about_source_code_summary">View on GitHub</string>
     <string name="about_report_issue">Report issue</string>
     <string name="about_report_issue_summary">Open an issue on GitHub</string>
-    <string name="about_libraries">Libraries</string>
+    <string name="about_licenses">Third-party licenses</string>
+    <string name="about_licenses_summary">Libraries used by this app and their licenses</string>
 
     <!-- Confirmations -->
     <string name="clear_cache_dialog_title">Clear scan cache?</string>
