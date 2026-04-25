@@ -27,10 +27,14 @@ object DexKitCache {
                 ?: return ResolvedTargets.Missing(missingReason(versionCode = versionCode))
 
         val decoded =
-            runCatching { json.decodeFromString(ResolvedTargets.serializer(), exactRaw) }
-                .onFailure {
-                    module.log(Log.ERROR, TAG, "failed to parse cached targets", it)
-                }.getOrNull()
+            runCatching {
+                json.decodeFromString(
+                    ResolvedTargets.serializer(),
+                    exactRaw,
+                )
+            }.onFailure {
+                module.log(Log.ERROR, TAG, "failed to parse cached targets", it)
+            }.getOrNull()
 
         if (decoded != null && decoded.isUsableHookCache()) return decoded
 

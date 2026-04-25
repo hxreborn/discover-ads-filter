@@ -76,10 +76,7 @@ object DexKitResolver {
         }
 
         val processors = findCardProcessorMethods(bridge, feedCardName, adMetaName, adMetaField)
-        val processorValue =
-            processors
-                .takeIf { it.isNotEmpty() }
-                ?.let { "${it.size} methods" }
+        val processorValue = processors.takeIf { it.isNotEmpty() }?.let { "${it.size} methods" }
         onStep?.invoke("Card processors", processorValue)
 
         val streamRenderableListMethod = findStreamRenderableListMethod(bridge)
