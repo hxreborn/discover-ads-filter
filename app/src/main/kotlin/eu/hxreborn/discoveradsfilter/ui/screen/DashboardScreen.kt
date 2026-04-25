@@ -50,6 +50,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,11 +61,13 @@ import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.ScanProgressCard
 import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
 import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
+import eu.hxreborn.discoveradsfilter.ui.screen.preview.PreviewFixtures
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
@@ -114,9 +119,7 @@ internal fun DashboardScreenContent(
         topBar = {
             LargeTopAppBar(
                 title = {
-                    val isExpanded =
-                        LocalTextStyle.current.fontSize >=
-                            MaterialTheme.typography.headlineMedium.fontSize
+                    val isExpanded = LocalTextStyle.current.fontSize >= MaterialTheme.typography.headlineMedium.fontSize
                     Text(
                         text = stringResource(R.string.app_name),
                         style =
@@ -167,7 +170,7 @@ internal fun DashboardScreenContent(
         }
     }
 
-    if (showStartupOverlay && verify != null) {
+    if (showStartupOverlay) {
         StartupScanOverlay(
             verify = verify,
             onDismiss =
@@ -353,6 +356,8 @@ private fun LazyListScope.DashboardReadyItems(
         summary = { Text("v${BuildConfig.VERSION_NAME}") },
         onClick = { onNavigate(Destination.About) },
     )
+
+    item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -439,8 +444,37 @@ private fun ResetCounterDialog(
 private fun Modifier.preferenceCard(
     shape: Shape,
     surface: Color,
-): Modifier =
-    this
-        .padding(horizontal = 8.dp)
-        .background(color = surface, shape = shape)
-        .clip(shape)
+): Modifier = this.padding(horizontal = 8.dp).background(color = surface, shape = shape).clip(shape)
+
+// region Previews
+
+private val NoOpActions =
+    HomeActions(
+        onVerboseChange = {},
+        onFilterEnabledChange = {},
+        onVerify = {},
+        onClearCacheOnly = {},
+        onResetAdsCounter = {},
+        onDismissStartupScan = {},
+    )
+
+private class DashboardStateProvider : PreviewParameterProvider<HomeUiState> {
+    override val values: Sequence<HomeUiState> =
+        sequenceOf(
+            HomeUiState.Ready(verify = PreviewFixtures.verifySuccessFull()),
+            HomeUiState.Ready(verify = PreviewFixtures.verifyNeedsScan()),
+            HomeUiState.Ready(verify = PreviewFixtures.verifyFailureDexKitNoMatches()),
+        )
+}
+
+@Preview(name = "Dashboard", showSystemUi = true)
+@Composable
+private fun DashboardPreview(
+    @PreviewParameter(DashboardStateProvider::class) state: HomeUiState,
+) {
+    DiscoverAdsFilterTheme(dynamicColor = false) {
+        DashboardScreenContent(state = state, actions = NoOpActions, onNavigate = {})
+    }
+}
+
+// endregion
