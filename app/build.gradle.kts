@@ -16,13 +16,7 @@ android {
         val semver = project.property("version.name").toString()
         versionCode = project.property("version.code").toString().toInt()
 
-        val commitCount = providers.exec {
-            commandLine("git", "rev-list", "--count", "HEAD")
-        }.standardOutput.asText.get().trim()
-        val shortHash = providers.exec {
-            commandLine("git", "rev-parse", "--short=7", "HEAD")
-        }.standardOutput.asText.get().trim()
-        versionName = "$semver+$commitCount-$shortHash"
+        versionName = semver
 
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
 
