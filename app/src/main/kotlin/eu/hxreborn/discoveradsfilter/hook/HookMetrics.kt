@@ -1,5 +1,6 @@
 package eu.hxreborn.discoveradsfilter.hook
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
@@ -15,6 +16,7 @@ object HookMetrics {
     private const val KEY_HOOK_STATUS = "hook_status"
     private const val KEY_HOOK_PROCESS = "hook_process"
 
+    @SuppressLint("UseKtx")
     private val providerUri = Uri.parse("content://${MetricsProvider.AUTHORITY}")
     private val metricsFile = File(AGSA_CACHE, METRICS_FILENAME)
 
