@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.aboutlibraries)
 }
 
 android {
@@ -131,6 +132,9 @@ dependencies {
     implementation(libs.navigation3.runtime)
     implementation(libs.navigation3.ui)
 
+    implementation(libs.aboutlibraries.core)
+    implementation(libs.aboutlibraries.compose)
+
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
 }
@@ -151,8 +155,18 @@ val ktlintFormat by tasks.registering(JavaExec::class) {
     args("-F", "src/**/*.kt")
 }
 
+val copyAboutLibraries by tasks.registering(Copy::class) {
+    dependsOn("exportLibraryDefinitions")
+    from("build/generated/aboutLibraries/aboutlibraries.json")
+    into("build/generated/aboutLibrariesRes/raw")
+}
+
+android.sourceSets["main"]
+    .res.directories
+    .add("build/generated/aboutLibrariesRes")
+
 tasks.named("preBuild").configure {
-    dependsOn(ktlintFormat)
+    dependsOn(ktlintFormat, copyAboutLibraries)
 }
 
 tasks.named("check").configure {
