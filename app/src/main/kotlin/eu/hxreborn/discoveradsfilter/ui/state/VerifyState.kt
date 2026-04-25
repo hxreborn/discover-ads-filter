@@ -23,11 +23,6 @@ data class VerifyUiState(
     val hookInstalled: Int get() = hookStatus?.installed ?: 0
     val hookTotal: Int get() = hookStatus?.total ?: 0
 
-    val showStartupOverlay: Boolean
-        get() =
-            scanOrigin == ScanOrigin.Startup &&
-                (phase == VerifyPhase.Running || (phase == VerifyPhase.Idle && scanProgress.isNotEmpty()))
-
     val resolvedTargetCount: Int
         get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedCount() ?: 0
 
@@ -46,17 +41,11 @@ data class VerifyUiState(
     }
 }
 
-internal fun ResolvedTargets.Resolved.resolvedCount(): Int {
-    var n = 0
-    if (!adMetadataClass.isNullOrBlank()) n++
-    if (!feedCardClass.isNullOrBlank()) n++
-    if (!adFlagFieldName.isNullOrBlank()) n++
-    if (!adLabelFieldName.isNullOrBlank()) n++
-    if (!adMetadataFieldName.isNullOrBlank()) n++
-    if (cardProcessorMethods.isNotEmpty()) n++
-    if (streamRenderableListMethod != null) n++
-    return n
-}
+internal fun ResolvedTargets.Resolved.resolvedCount(): Int =
+    listOf(adMetadataClass, feedCardClass, adFlagFieldName, adLabelFieldName, adMetadataFieldName)
+        .count { !it.isNullOrBlank() } +
+        listOf(cardProcessorMethods.isNotEmpty(), streamRenderableListMethod != null)
+            .count { it }
 
 enum class VerifyPhase { Idle, Running }
 

@@ -44,8 +44,6 @@ class HomeViewModel(
     private val filterEnabledFlow = MutableStateFlow(true)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
 
-    val isReady: Boolean get() = verifyFlow.value != null
-
     val uiState: StateFlow<HomeUiState> =
         combine(verboseFlow, filterEnabledFlow, verifyFlow) { verbose, filterEnabled, verify ->
             if (verify == null) {
@@ -68,7 +66,6 @@ class HomeViewModel(
             onVerify = ::verify,
             onClearCacheOnly = ::clearCacheOnly,
             onResetAdsCounter = ::resetAdsCounter,
-            onDismissStartupScan = ::dismissStartupScan,
         )
 
     init {
@@ -106,7 +103,6 @@ class HomeViewModel(
         filterEnabledFlow.value = snapshot.filterEnabled
         val lastScan = repo.readLastScan()
         val agsaPkg = currentAgsaPackageInfo()
-        val (hookStatusRaw, hookProcess) = repo.readHookDiagnostics()
         val adsHidden = repo.readAdsHidden()
 
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
@@ -116,11 +112,9 @@ class HomeViewModel(
                 lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
         val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
         val moduleStatus =
-            when {
-                App.boundService != null -> ModuleStatus.Active
-                hookStatusRaw != null -> ModuleStatus.Active
-                else -> ModuleStatus.Unknown
-            }
+            if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Unknown
+
+        // Dismiss splash fast — shell-based diagnostics load after.
         verifyFlow.value =
             VerifyUiState(
                 phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
@@ -130,11 +124,19 @@ class HomeViewModel(
                 installedAgsaVersionName = agsaPkg?.versionName,
                 installedAgsaLastUpdateTime = agsaPkg?.lastUpdateTime ?: 0L,
                 scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
-                hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw),
-                hookProcess = hookProcess,
                 adsHidden = adsHidden,
                 moduleStatus = moduleStatus,
             )
+
+        val (hookStatusRaw, hookProcess) = repo.readHookDiagnostics()
+        verifyFlow.update {
+            it?.copy(
+                hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw) ?: it.hookStatus,
+                hookProcess = hookProcess ?: it.hookProcess,
+                moduleStatus = if (hookStatusRaw != null) ModuleStatus.Active else it.moduleStatus,
+            )
+        }
+
         if (needsScan) runScanAndUpdate()
     }
 
@@ -143,10 +145,6 @@ class HomeViewModel(
             repo.resetAdsCounter()
             verifyFlow.update { it?.copy(adsHidden = 0) }
         }
-    }
-
-    private fun dismissStartupScan() {
-        verifyFlow.update { it?.copy(scanOrigin = null) }
     }
 
     private fun clearCacheOnly() {

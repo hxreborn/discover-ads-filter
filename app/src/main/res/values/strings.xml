@@ -18,6 +18,8 @@
     <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_module_not_active">Module not active</string>
     <string name="hero_module_not_active_detail">Enable in LSPosed and add Google App to scope</string>
+    <string name="hero_scanning">Scanning\u2026</string>
+    <string name="hero_scanning_detail">Resolving symbols for this build</string>
     <string name="hero_scan_required">Scan required</string>
     <string name="hero_scan_required_detail">No saved signatures for this build</string>
     <string name="hero_signatures_missing">Signatures missing</string>

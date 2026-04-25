@@ -44,7 +44,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -58,7 +57,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
-import eu.hxreborn.discoveradsfilter.ui.components.ScanProgressCard
 import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
 import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
 import eu.hxreborn.discoveradsfilter.ui.screen.preview.PreviewFixtures
@@ -103,19 +101,14 @@ internal fun DashboardScreenContent(
     val ready = state as? HomeUiState.Ready
     var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
     var showResetCounterDialog by rememberSaveable { mutableStateOf(false) }
-    var startupDismissed by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
-
-    val verify = ready?.verify
-    val showStartupOverlay = verify?.showStartupOverlay == true && !startupDismissed
 
     Scaffold(
         modifier =
             modifier
                 .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .then(if (showStartupOverlay) Modifier.blur(20.dp) else Modifier),
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -168,21 +161,6 @@ internal fun DashboardScreenContent(
                 }
             }
         }
-    }
-
-    if (showStartupOverlay) {
-        StartupScanOverlay(
-            verify = verify,
-            onDismiss =
-                if (verify.phase == VerifyPhase.Idle) {
-                    {
-                        startupDismissed = true
-                        actions.onDismissStartupScan()
-                    }
-                } else {
-                    null
-                },
-        )
     }
 
     if (showClearCacheDialog) {
@@ -379,25 +357,6 @@ private fun LazyListScope.DashboardLoadingCard(surface: Color) {
 }
 
 @Composable
-private fun StartupScanOverlay(
-    verify: VerifyUiState,
-    onDismiss: (() -> Unit)?,
-) {
-    Box(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f)),
-        contentAlignment = Alignment.Center,
-    ) {
-        ScanProgressCard(
-            progress = verify.scanProgress,
-            phase = verify.phase,
-            durationMs = verify.scanDurationMs,
-            onDismiss = onDismiss,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
-        )
-    }
-}
-
-@Composable
 private fun ClearCacheDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
@@ -455,7 +414,6 @@ private val NoOpActions =
         onVerify = {},
         onClearCacheOnly = {},
         onResetAdsCounter = {},
-        onDismissStartupScan = {},
     )
 
 private class DashboardStateProvider : PreviewParameterProvider<HomeUiState> {

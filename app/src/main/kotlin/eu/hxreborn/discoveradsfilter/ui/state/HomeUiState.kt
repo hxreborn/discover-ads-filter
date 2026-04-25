@@ -20,7 +20,6 @@ data class HomeActions(
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,
     val onResetAdsCounter: () -> Unit,
-    val onDismissStartupScan: () -> Unit,
 )
 
 enum class ModuleStatus { Unknown, Active, Inactive }

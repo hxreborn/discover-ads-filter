@@ -2,7 +2,10 @@
 
 package eu.hxreborn.discoveradsfilter.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,11 +16,14 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,18 +48,30 @@ import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun StatusCard(
     state: VerifyUiState,
     modifier: Modifier = Modifier,
 ) {
     val visual = statusVisual(state)
+    val scanning = state.phase == VerifyPhase.Running && state.lastResult == null
+    val containerColor by animateColorAsState(
+        targetValue = visual.container,
+        animationSpec = tween(durationMillis = 400),
+        label = "container",
+    )
+    val contentColor by animateColorAsState(
+        targetValue = visual.content,
+        animationSpec = tween(durationMillis = 400),
+        label = "content",
+    )
 
     Surface(
         modifier = modifier.fillMaxWidth().padding(horizontal = Spacing.sm, vertical = Spacing.xs),
         shape = MaterialTheme.shapes.large,
-        color = visual.container,
-        contentColor = visual.content,
+        color = containerColor,
+        contentColor = contentColor,
         tonalElevation = visual.tonalElevation,
     ) {
         Row(
@@ -61,11 +79,17 @@ fun StatusCard(
             horizontalArrangement = Arrangement.spacedBy(Spacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = visual.icon,
-                contentDescription = null,
-                modifier = Modifier.size(IconSize.lg),
-            )
+            Box(modifier = Modifier.size(IconSize.lg), contentAlignment = Alignment.Center) {
+                if (scanning) {
+                    LoadingIndicator(modifier = Modifier.size(IconSize.lg))
+                } else {
+                    Icon(
+                        imageVector = visual.icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(IconSize.lg),
+                    )
+                }
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(Spacing.xs),
@@ -103,7 +127,12 @@ private fun StatusCardBody(state: VerifyUiState) {
                 text = targetLine(state),
                 style = MaterialTheme.typography.bodyMedium,
             )
-            if (state.lastResult == null && state.moduleStatus == ModuleStatus.Active) {
+            if (state.phase == VerifyPhase.Running && state.lastResult == null) {
+                Text(
+                    text = stringResource(R.string.hero_scanning_detail),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            } else if (state.lastResult == null && state.moduleStatus == ModuleStatus.Active) {
                 Text(
                     text = stringResource(R.string.hero_scan_required_detail),
                     style = MaterialTheme.typography.bodyMedium,
@@ -162,7 +191,7 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    if (state.phase == VerifyPhase.Running) {
+    if (state.phase == VerifyPhase.Running && state.lastResult != null) {
         return StatusVisual(
             icon = Icons.Filled.CheckCircle,
             titleRes = R.string.hero_module_active,
@@ -179,6 +208,15 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
             titleRes = R.string.hero_stale,
             container = scheme.secondaryContainer,
             content = scheme.onSecondaryContainer,
+        )
+    }
+
+    if (state.phase == VerifyPhase.Running && state.lastResult == null) {
+        return StatusVisual(
+            icon = Icons.Filled.CheckCircle,
+            titleRes = R.string.hero_scanning,
+            container = scheme.primaryContainer,
+            content = scheme.onPrimaryContainer,
         )
     }
 
