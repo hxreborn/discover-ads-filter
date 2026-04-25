@@ -18,6 +18,7 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import eu.hxreborn.discoveradsfilter.ui.screen.AboutScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.DashboardScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.DiagnosticsScreen
+import eu.hxreborn.discoveradsfilter.ui.screen.LicensesScreen
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 
 private val slideTransitionMetadata =
@@ -62,7 +63,16 @@ fun AppNavHost(viewModel: HomeViewModel) {
 
                 Destination.About -> {
                     NavEntry(destination, metadata = slideTransitionMetadata) {
-                        AboutScreen(onBack = navigateUp)
+                        AboutScreen(
+                            onBack = navigateUp,
+                            onNavigateToLicenses = { backStack.add(Destination.Licenses) },
+                        )
+                    }
+                }
+
+                Destination.Licenses -> {
+                    NavEntry(destination, metadata = slideTransitionMetadata) {
+                        LicensesScreen(onBack = navigateUp)
                     }
                 }
 

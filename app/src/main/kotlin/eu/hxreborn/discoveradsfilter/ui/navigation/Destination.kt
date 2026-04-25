@@ -9,4 +9,6 @@ sealed interface Destination : NavKey {
     @Serializable data object Diagnostics : Destination
 
     @Serializable data object About : Destination
+
+    @Serializable data object Licenses : Destination
 }
