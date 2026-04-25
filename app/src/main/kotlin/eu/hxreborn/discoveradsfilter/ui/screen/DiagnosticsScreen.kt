@@ -15,9 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -238,13 +236,6 @@ internal fun DiagnosticsContent(
             modifier = Modifier.fillMaxWidth(),
         )
     } else {
-        if (state.lastResult != null) {
-            ScanSummaryRow(
-                foundCount = state.resolvedTargetCount,
-                totalCount = state.totalTargetCount,
-            )
-            Spacer(Modifier.height(Spacing.md))
-        }
         SymbolSections(sections)
     }
 
@@ -258,42 +249,6 @@ internal fun DiagnosticsContent(
     }
 
     Spacer(Modifier.height(96.dp))
-}
-
-@Composable
-private fun ScanSummaryRow(
-    foundCount: Int,
-    totalCount: Int,
-) {
-    val scheme = MaterialTheme.colorScheme
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = scheme.surfaceVariant,
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.sm),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.CheckCircle,
-                contentDescription = null,
-                tint = scheme.onSurfaceVariant,
-            )
-            Text(
-                text = stringResource(R.string.scan_complete),
-                style = MaterialTheme.typography.labelLarge,
-                color = scheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = stringResource(R.string.diag_found_summary, foundCount, totalCount),
-                style = MaterialTheme.typography.labelLarge,
-                color = scheme.onSurfaceVariant,
-            )
-        }
-    }
 }
 
 @Composable
