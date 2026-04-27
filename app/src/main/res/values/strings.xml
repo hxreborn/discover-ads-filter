@@ -13,7 +13,6 @@
     <string name="hero_not_configured">Not configured</string>
     <string name="hero_scan_failed">Scan failed</string>
     <string name="hero_stale">Stale signatures</string>
-    <string name="hero_hooks_line">[%1$d/%2$d] hooks active</string>
     <string name="hero_hooks_pending">Awaiting hook process</string>
     <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_module_not_active">Module not active</string>
@@ -26,16 +25,6 @@
     <string name="hero_module_active_line">Module is active</string>
     <string name="hero_target_missing">Target app not detected</string>
     <string name="hero_blocked_since_install">%1$s ads blocked since install</string>
-
-    <!-- Module status -->
-    <string name="diag_target_app">Target Application</string>
-    <string name="diag_module">Module</string>
-    <string name="diag_runtime_hooks">Runtime Hooks</string>
-    <string name="diag_dexkit_mapping">Symbol Scan</string>
-    <string name="diag_hooks_unknown">Awaiting hook process</string>
-    <!-- %1$d = AGSA version code at scan time, %2$d = resolved, %3$d = total -->
-    <string name="diag_mapping_ratio">AGSA %1$d · %2$d/%3$d symbols resolved</string>
-    <string name="diag_mapping_pending">No scan yet</string>
 
     <!-- Preferences -->
     <string name="pref_category_filter">Feed Filter</string>
@@ -53,17 +42,10 @@
 
     <!-- About -->
     <string name="pref_category_about">About</string>
-    <string name="pref_version_title">App version</string>
-    <string name="pref_version_easter_egg">v%1$s (%2$d) – %3$s build</string>
-    <string name="pref_github_title">Source code</string>
-    <string name="pref_github_summary">View source on GitHub</string>
 
     <!-- Hook targets -->
     <string name="pref_dexkit_title">Symbol Map</string>
     <string name="pref_dexkit_summary_ready">View resolved symbols</string>
-    <string name="pref_dexkit_summary_none">View resolved symbols</string>
-    <string name="dexkit_dialog_title">Resolved Symbols</string>
-    <string name="dexkit_no_results">Run a scan first</string>
 
     <!-- Navigation -->
     <string name="nav_diagnostics">Symbol Map</string>
@@ -79,12 +61,8 @@
     <string name="diag_mapped_agsa_empty">—</string>
     <string name="diag_mapped_agsa_versioned">v%1$s (%2$d)</string>
     <string name="diag_mapped_agsa_code_only">(%1$d)</string>
-    <string name="diag_mapped_module_empty">—</string>
     <string name="diag_mapped_module_versioned">v%1$s (%2$d)</string>
     <string name="diag_mapped_module_code_only">(%1$d)</string>
-    <string name="diag_summary_resolved">%1$d/%2$d symbols mapped</string>
-    <string name="diag_found_summary">Found %1$d/%2$d</string>
-    <string name="diag_symbols_title">Mapped symbols</string>
     <string name="diag_section_summary">%1$s · %2$d/%3$d</string>
     <string name="diag_last_refresh_failed">Last background refresh failed: %1$s</string>
     <string name="badge_partial">partial</string>
@@ -107,12 +85,7 @@
     <string name="scan_step_stream_list">Stream list</string>
     <string name="scan_step_generic">Step %1$d</string>
     <string name="scan_step_found">Found</string>
-    <string name="scan_step_scanning">Scanning\u2026</string>
     <string name="scan_step_not_found">Missing</string>
-    <string name="scan_failed_title">Verification failed</string>
-    <string name="scan_failed_body">Couldn\'t resolve symbols for this Google App version.</string>
-    <string name="scan_open_diagnostics">Open diagnostics</string>
-    <string name="scan_retry">Retry</string>
 
     <!-- About screen -->
     <string name="about_links">Links</string>
