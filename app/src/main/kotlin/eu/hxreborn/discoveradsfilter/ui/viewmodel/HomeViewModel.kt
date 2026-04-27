@@ -21,6 +21,7 @@ import eu.hxreborn.discoveradsfilter.ui.state.ScanStep
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,6 +34,7 @@ import kotlinx.coroutines.withContext
 
 class HomeViewModel(
     private val app: Application,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val repo =
         SettingsRepository(
@@ -69,7 +71,7 @@ class HomeViewModel(
         )
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             runCatching { initialize() }.onFailure { t ->
                 Log.e(TAG, "initialization failed", t)
                 verifyFlow.value =
@@ -82,7 +84,7 @@ class HomeViewModel(
     }
 
     fun onServiceBound() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repo.syncLocalToRemote()
             val adsHidden = repo.readAdsHidden()
             verifyFlow.update { current ->
@@ -127,14 +129,14 @@ class HomeViewModel(
     }
 
     private fun resetAdsCounter() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repo.resetAdsCounter()
             verifyFlow.update { it?.copy(adsHidden = 0) }
         }
     }
 
     private fun clearCacheOnly() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             repo.clearScanCache()
             verifyFlow.update {
                 it?.copy(
@@ -174,7 +176,7 @@ class HomeViewModel(
                 VerifyResult.Failure("Unexpected exception", t.message)
             }
         val elapsed = System.currentTimeMillis() - startTime
-        val installed = withContext(Dispatchers.IO) { currentAgsaPackageInfo() }
+        val installed = withContext(ioDispatcher) { currentAgsaPackageInfo() }
         val origin = verifyFlow.value?.scanOrigin
         verifyFlow.update { current ->
             val preserved =
@@ -202,7 +204,7 @@ class HomeViewModel(
     }
 
     private suspend fun scan(steps: MutableList<ScanStep>): VerifyResult =
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             val agsaInfo =
                 runCatching {
                     app.packageManager.getApplicationInfo(
