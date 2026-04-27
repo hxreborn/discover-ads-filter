@@ -25,7 +25,6 @@ import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
-import kotlinx.collections.immutable.toImmutableList
 
 private val DIRECT_DEPENDENCY_GROUPS =
     setOf(
@@ -60,7 +59,7 @@ fun LicensesScreen(onBack: () -> Unit) {
                         DIRECT_DEPENDENCY_GROUPS.any { lib.uniqueId.startsWith(it) }
                     }
                 Libs(
-                    libraries = directLibs.toImmutableList(),
+                    libraries = directLibs,
                     licenses = l.licenses,
                 )
             }
