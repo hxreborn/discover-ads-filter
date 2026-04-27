@@ -198,7 +198,7 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    if (state.phase == VerifyPhase.Running && state.lastResult == null) {
+    if (state.phase == VerifyPhase.Running) {
         return StatusVisual(
             icon = Icons.Filled.CheckCircle,
             titleRes = R.string.hero_scanning,

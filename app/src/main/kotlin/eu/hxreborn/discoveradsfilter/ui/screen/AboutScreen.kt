@@ -82,15 +82,10 @@ fun AboutScreen(
                 Text(
                     text =
                         remember {
-                            val ts = BuildConfig.BUILD_TIMESTAMP
-                            if (ts == 0L) {
-                                "Built Apr 25, 2026"
-                            } else {
-                                val zoned = Instant.ofEpochMilli(ts).atZone(ZoneId.systemDefault())
-                                val dateTime = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).format(zoned)
-                                val tz = zoned.zone.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
-                                "Built $dateTime ($tz)"
-                            }
+                            val zoned = Instant.ofEpochMilli(BuildConfig.BUILD_TIMESTAMP).atZone(ZoneId.systemDefault())
+                            val dateTime = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).format(zoned)
+                            val tz = zoned.zone.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
+                            "Built $dateTime ($tz)"
                         },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
