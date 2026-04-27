@@ -11,7 +11,6 @@ Hide sponsored cards in Google Discover.
 
 - Android 11+
 - LSPosed manager with libxposed API 101 support
-- Root (optional) - only needed to display the hook status indicator on the dashboard. Filtering and the blocked-ads counter both work without root.
 
 ## Installation
 
