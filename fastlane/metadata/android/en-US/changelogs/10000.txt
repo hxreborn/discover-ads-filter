@@ -1,0 +1,1 @@
+Major release: ad counter via ContentProvider, new diagnostics screen, score-based DexKit candidate selection, single-pass feed filter, and significant UI improvements including startup scan overlay and module activation detection.

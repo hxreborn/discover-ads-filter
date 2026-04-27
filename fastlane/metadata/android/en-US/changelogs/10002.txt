@@ -1,0 +1,1 @@
+Dropped root/libsu dependency. Ad counter now reads solely from app preferences via ContentProvider.

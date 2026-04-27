@@ -1,0 +1,1 @@
+Redesigned UI with new icon and about screen. Improved launcher icons and build metadata.

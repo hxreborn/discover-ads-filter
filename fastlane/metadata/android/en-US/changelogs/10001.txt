@@ -1,0 +1,1 @@
+Refactoring and bug fixes: tightened ProGuard rules, fixed unresponsive taps in LazyColumn, added fingerprint schema version to diagnostics, upgraded aboutlibraries to 14.

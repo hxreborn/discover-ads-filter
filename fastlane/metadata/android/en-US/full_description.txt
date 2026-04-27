@@ -1,0 +1,1 @@
+LSPosed module that removes ad cards from the Pixel Launcher Discover feed. Requires LSPosed.
