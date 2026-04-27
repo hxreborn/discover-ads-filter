@@ -47,7 +47,7 @@ jobs:
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease assembleDebug
+        run: ./gradlew assembleRelease
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -55,7 +55,6 @@ jobs:
           name: discover-ads-filter-v${{ steps.version.outputs.name }}
           path: |
             app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
 
       - name: Generate release notes
         id: changelog
@@ -76,7 +75,6 @@ jobs:
           body: ${{ steps.changelog.outputs.content || '' }}
           files: |
             app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
 
       - name: Clean up keystore
         if: always()
