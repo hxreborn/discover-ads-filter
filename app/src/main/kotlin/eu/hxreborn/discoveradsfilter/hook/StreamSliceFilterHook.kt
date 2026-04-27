@@ -206,7 +206,7 @@ object StreamSliceFilterHook {
                 } catch (_: Exception) {
                     null
                 }
-            if (value != null && value.isNotBlank()) {
+            if (!value.isNullOrBlank()) {
                 return "${cls.simpleName}#$value"
             }
         }
@@ -224,7 +224,7 @@ object StreamSliceFilterHook {
 
         val field =
             contentIdFieldCache[cls] ?: run {
-                val found = findFieldInHierarchy(cls, CONTENT_ID_FIELD)
+                val found = findContentIdField(cls)
                 if (found == null) {
                     noContentIdClasses.add(cls)
                     return null
@@ -242,14 +242,11 @@ object StreamSliceFilterHook {
         return value?.takeIf { it.isNotBlank() }
     }
 
-    private fun findFieldInHierarchy(
-        start: Class<*>,
-        name: String,
-    ): Field? {
+    private fun findContentIdField(start: Class<*>): Field? {
         var c: Class<*>? = start
         while (c != null && c != Any::class.java) {
             try {
-                val f = c.getDeclaredField(name)
+                val f = c.getDeclaredField(CONTENT_ID_FIELD)
                 f.isAccessible = true
                 return f
             } catch (_: NoSuchFieldException) {
