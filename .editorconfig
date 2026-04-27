@@ -37,7 +37,7 @@ indent_size = 2
 [*.{yml,yaml}]
 indent_size = 2
 
-[*.{xml}]
+[*.xml]
 indent_size = 2
 
 [*.md]
