@@ -86,9 +86,7 @@ object HookMetrics {
                 .forName("android.app.ActivityThread")
                 .getMethod("currentApplication")
                 .invoke(null) as? Context
-        }.getOrNull()
-            ?.let { it.applicationContext ?: it }
-            ?.also { appContext = it }
+        }.getOrNull()?.let { it.applicationContext ?: it }?.also { appContext = it }
     }
 
     private fun writeMetricsFile(

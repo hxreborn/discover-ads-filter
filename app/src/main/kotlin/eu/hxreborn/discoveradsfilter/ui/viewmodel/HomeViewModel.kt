@@ -111,8 +111,7 @@ class HomeViewModel(
             result == null || agsaPkg?.versionCode?.let { it != result.versionCode } == true ||
                 lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
         val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
-        val moduleStatus =
-            if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Unknown
+        val moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Unknown
 
         // Dismiss splash fast — shell-based diagnostics load after.
         verifyFlow.value =
