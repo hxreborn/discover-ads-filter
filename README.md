@@ -2,12 +2,12 @@
 
 <img src="https://socialify.git.ci/hxreborn/discover-ads-filter/image?custom_description=Filter+ads+and+sponsored+content+from+Google+Discover+via+Xposed+framework.&description=1&font=Inter&issues=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fhxreborn%2Fdiscover-ads-filter%2Frefs%2Fheads%2Fmain%2Fartwork%2Ficon.png&name=1&owner=1&pattern=Brick+Wall&stargazers=1&theme=Auto" alt="discover-ads-filter" width="640" height="320" />
 
-<p>An Xposed module that hides sponsored cards and ads from the Google Discover feed in the Pixel Launcher -1 screen and inside the Google app itself. Uses DexKit to dynamically resolve obfuscated targets.</p>
+<p>An Xposed module that hides sponsored cards and ads from the Google Discover feed in the Pixel Launcher -1 screen and inside the Google app itself.</p>
 
 
-![AGSA 17.14+](https://img.shields.io/badge/AGSA-17.14%2B-4285F4?style=flat&logo=google&logoColor=white)
-![libxposed API 101](https://img.shields.io/badge/libxposed-API_101-ff69b4?style=flat)
-![DexKit 2.2.0](https://img.shields.io/badge/DexKit-2.2.0-E65100?style=flat)
+![AGSA 17.14+](https://img.shields.io/badge/AGSA-17.14%2B-4285F4?style=flat-square&logo=google&logoColor=white)
+![libxposed API 101](https://img.shields.io/badge/libxposed-API_101-ff69b4?style=flat-square)
+![DexKit 2.2.0](https://img.shields.io/badge/DexKit-2.2.0-E65100?style=flat-square)
 
 </div>
 
