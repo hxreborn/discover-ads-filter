@@ -124,6 +124,44 @@ object StreamSliceFilterHook {
     @Volatile
     private var keysDumped = false
 
+    private fun dumpKeysOnce(items: List<*>) {
+        if (keysDumped) return
+        keysDumped = true
+        Logger.v {
+            items
+                .mapIndexed { i, item ->
+                    val cls = item?.javaClass?.simpleName ?: "null"
+                    val key = item?.let(::stableItemKey) ?: "<no-key>"
+                    "  [$i] $cls → $key"
+                }.joinToString("\n", prefix = "item key dump (${items.size} items):\n")
+        }
+    }
+
+    private fun buildFilteredList(items: List<*>): List<Any?>? {
+        var removed = 0
+        var newAds = 0
+        val filtered = ArrayList<Any?>(items.size)
+        for (item in items) {
+            if (item == null) {
+                filtered += null
+                continue
+            }
+            val key = stableItemKey(item)
+            if (key != null && isAdItem(key)) {
+                removed++
+                if (countedAdKeys.add(key)) {
+                    newAds++
+                    Logger.v { "blocked ad key=$key" }
+                }
+            } else {
+                filtered += item
+            }
+        }
+        if (removed == 0) return null
+        if (newAds > 0) HookMetrics.addAdsHidden(newAds)
+        return filtered
+    }
+
     private class StreamListHook : XposedInterface.Hooker {
         override fun intercept(chain: XposedInterface.Chain): Any? {
             val result = chain.proceed()
@@ -136,46 +174,14 @@ object StreamSliceFilterHook {
             val fp = fastFingerprint(items)
             if (fp == lastFingerprint) return lastFilteredSnapshot ?: result
 
-            if (!keysDumped) {
-                keysDumped = true
-                Logger.v {
-                    items
-                        .mapIndexed { i, item ->
-                            val cls = item?.javaClass?.simpleName ?: "null"
-                            val key = item?.let(::stableItemKey) ?: "<no-key>"
-                            "  [$i] $cls → $key"
-                        }.joinToString("\n", prefix = "item key dump (${items.size} items):\n")
-                }
-            }
-
-            var removed = 0
-            var newAds = 0
-            val filtered = ArrayList<Any?>(items.size)
-            for (item in items) {
-                if (item == null) {
-                    filtered += null
-                    continue
-                }
-                val key = stableItemKey(item)
-                if (key != null && isAdItem(key)) {
-                    removed++
-                    if (countedAdKeys.add(key)) {
-                        newAds++
-                        Logger.v { "blocked ad key=$key" }
-                    }
-                } else {
-                    filtered += item
-                }
-            }
-
+            dumpKeysOnce(items)
             lastFingerprint = fp
 
-            if (removed == 0) {
+            val filtered = buildFilteredList(items)
+            if (filtered == null) {
                 lastFilteredSnapshot = null
                 return result
             }
-
-            if (newAds > 0) HookMetrics.addAdsHidden(newAds)
             lastFilteredSnapshot = filtered
             return filtered
         }
@@ -257,20 +263,26 @@ object StreamSliceFilterHook {
         return null
     }
 
+    private fun collectAccessibleFields(
+        cls: Class<*>,
+        dest: MutableList<Field>,
+    ) {
+        for (f in cls.declaredFields) {
+            if (Modifier.isStatic(f.modifiers) || f.isSynthetic) continue
+            try {
+                f.isAccessible = true
+            } catch (_: Exception) {
+                continue
+            }
+            dest.add(f)
+        }
+    }
+
     private fun resolveStringFields(cls: Class<*>): List<Field> =
         buildList {
             var c: Class<*>? = cls
             while (c != null && c != Any::class.java) {
-                for (f in c.declaredFields) {
-                    if (!Modifier.isStatic(f.modifiers) && !f.isSynthetic) {
-                        try {
-                            f.isAccessible = true
-                        } catch (_: Exception) {
-                            continue
-                        }
-                        add(f)
-                    }
-                }
+                collectAccessibleFields(c, this)
                 c = c.superclass
             }
         }

@@ -32,7 +32,7 @@ class SettingsRepository(
         val encoded = DexKitCache.encode(targets)
 
         val keysToPrune =
-            localPrefs.all.keys.filterTo(mutableSetOf()) { key ->
+            localPrefs.all.keys.filter { key ->
                 key.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) && key !in
                     setOf(
                         SettingsPrefs.fingerprintCurrent.key,

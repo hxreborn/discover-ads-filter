@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
@@ -207,41 +208,8 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         )
     }
 
-    if (state.lastResult == null) {
-        return if (moduleActive) {
-            StatusVisual(
-                icon = Icons.Outlined.Warning,
-                titleRes = R.string.hero_scan_required,
-                container = scheme.secondaryContainer,
-                content = scheme.onSecondaryContainer,
-            )
-        } else {
-            StatusVisual(
-                icon = Icons.AutoMirrored.Outlined.HelpOutline,
-                titleRes = R.string.hero_not_configured,
-                container = scheme.surfaceContainerHighest,
-                content = scheme.onSurfaceVariant,
-            )
-        }
-    }
-
-    if (state.lastResult is VerifyResult.Failure) {
-        return if (moduleActive) {
-            StatusVisual(
-                icon = Icons.Outlined.Warning,
-                titleRes = R.string.hero_signatures_missing,
-                container = scheme.secondaryContainer,
-                content = scheme.onSecondaryContainer,
-            )
-        } else {
-            StatusVisual(
-                icon = Icons.Outlined.ErrorOutline,
-                titleRes = R.string.hero_scan_failed,
-                container = scheme.errorContainer,
-                content = scheme.onErrorContainer,
-            )
-        }
-    }
+    if (state.lastResult == null) return noResultVisual(scheme, moduleActive)
+    if (state.lastResult is VerifyResult.Failure) return failureVisual(scheme, moduleActive)
 
     val elevation = if (state.adsHidden > 0) 3.dp else 0.dp
     return StatusVisual(
@@ -252,6 +220,46 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         tonalElevation = elevation,
     )
 }
+
+private fun noResultVisual(
+    scheme: ColorScheme,
+    moduleActive: Boolean,
+): StatusVisual =
+    if (moduleActive) {
+        StatusVisual(
+            icon = Icons.Outlined.Warning,
+            titleRes = R.string.hero_scan_required,
+            container = scheme.secondaryContainer,
+            content = scheme.onSecondaryContainer,
+        )
+    } else {
+        StatusVisual(
+            icon = Icons.AutoMirrored.Outlined.HelpOutline,
+            titleRes = R.string.hero_not_configured,
+            container = scheme.surfaceContainerHighest,
+            content = scheme.onSurfaceVariant,
+        )
+    }
+
+private fun failureVisual(
+    scheme: ColorScheme,
+    moduleActive: Boolean,
+): StatusVisual =
+    if (moduleActive) {
+        StatusVisual(
+            icon = Icons.Outlined.Warning,
+            titleRes = R.string.hero_signatures_missing,
+            container = scheme.secondaryContainer,
+            content = scheme.onSecondaryContainer,
+        )
+    } else {
+        StatusVisual(
+            icon = Icons.Outlined.ErrorOutline,
+            titleRes = R.string.hero_scan_failed,
+            container = scheme.errorContainer,
+            content = scheme.onErrorContainer,
+        )
+    }
 
 // region Previews
 

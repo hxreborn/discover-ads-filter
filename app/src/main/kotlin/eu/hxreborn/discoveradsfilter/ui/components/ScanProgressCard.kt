@@ -81,25 +81,14 @@ internal fun ScanProgressCard(
             ) {
                 Column(modifier = Modifier.padding(horizontal = Spacing.md, vertical = 8.dp)) {
                     visibleCompleted.forEachIndexed { index, step ->
-                        val state =
-                            remember(step) {
-                                MutableTransitionState(false).apply {
-                                    targetState = true
-                                }
-                            }
-                        AnimatedVisibility(
-                            visibleState = state,
-                            enter = fadeIn() + slideInVertically { it / 2 },
-                        ) {
-                            StepRow(
-                                step = step,
-                                showRawValue = showRawValues,
-                                paddingValues = PaddingValues(vertical = 12.dp),
-                            )
-                        }
-                        if (index < visibleCompleted.lastIndex || (running && completed < totalSteps)) {
-                            HorizontalDivider(color = scheme.outlineVariant.copy(alpha = 0.5f))
-                        }
+                        StepListItem(
+                            step = step,
+                            showRawValues = showRawValues,
+                            isLast = index == visibleCompleted.lastIndex,
+                            running = running,
+                            completed = completed,
+                            totalSteps = totalSteps,
+                        )
                     }
 
                     if (running && completed < totalSteps) {
@@ -146,57 +135,61 @@ private fun Header(
     durationMs: Long,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val surfaceColor = if (done) scheme.secondaryContainer else scheme.primaryContainer
+    val surfaceContentColor = if (done) scheme.onSecondaryContainer else scheme.onPrimaryContainer
+    val titleText = if (done) stringResource(R.string.scan_complete) else stringResource(R.string.scan_verifying)
+    val subtitleText = if (done) "%.1fs".format(durationMs / 1000f) else stringResource(R.string.scan_progress, completed, totalSteps)
+    val subtitleFontFamily = if (done) FontFamily.Monospace else FontFamily.Default
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Surface(
-            shape = CircleShape,
-            color = if (done) scheme.secondaryContainer else scheme.primaryContainer,
-            contentColor = if (done) scheme.onSecondaryContainer else scheme.onPrimaryContainer,
-        ) {
+        Surface(shape = CircleShape, color = surfaceColor, contentColor = surfaceContentColor) {
             Row(modifier = Modifier.padding(10.dp)) {
-                if (done) {
-                    Icon(
-                        imageVector = Icons.Rounded.CheckCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                    )
-                } else {
-                    LoadingIndicator(modifier = Modifier.size(20.dp))
-                }
+                StatusIcon(done)
             }
         }
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-        ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Text(text = titleText, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(
-                text =
-                    if (done) {
-                        stringResource(R.string.scan_complete)
-                    } else {
-                        stringResource(R.string.scan_verifying)
-                    },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text =
-                    if (done) {
-                        "%.1fs".format(durationMs / 1000f)
-                    } else {
-                        stringResource(R.string.scan_progress, completed, totalSteps)
-                    },
-                style =
-                    MaterialTheme.typography.labelSmall.copy(
-                        fontFamily = if (done) FontFamily.Monospace else FontFamily.Default,
-                    ),
+                text = subtitleText,
+                style = MaterialTheme.typography.labelSmall.copy(fontFamily = subtitleFontFamily),
                 color = scheme.onSurfaceVariant,
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun StatusIcon(done: Boolean) {
+    if (done) {
+        Icon(imageVector = Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
+    } else {
+        LoadingIndicator(modifier = Modifier.size(20.dp))
+    }
+}
+
+@Composable
+private fun StepListItem(
+    step: ScanStep,
+    showRawValues: Boolean,
+    isLast: Boolean,
+    running: Boolean,
+    completed: Int,
+    totalSteps: Int,
+) {
+    val state = remember(step) { MutableTransitionState(false).apply { targetState = true } }
+    AnimatedVisibility(
+        visibleState = state,
+        enter = fadeIn() + slideInVertically { it / 2 },
+    ) {
+        StepRow(step = step, showRawValue = showRawValues, paddingValues = PaddingValues(vertical = 12.dp))
+    }
+    if (!isLast || (running && completed < totalSteps)) {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     }
 }
 
