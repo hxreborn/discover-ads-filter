@@ -15,7 +15,7 @@ splashscreen = "1.2.0"
 composePreferences = "2.2.0"
 navigation3 = "1.1.1"
 libsu = "6.0.0"
-aboutlibraries = "13.2.1"
+aboutlibraries = "14.0.1"
 ktlint = "1.8.0"
 
 [libraries]
