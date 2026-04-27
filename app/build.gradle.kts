@@ -168,6 +168,50 @@ android.sourceSets["main"]
     .res.directories
     .add("build/generated/aboutLibrariesRes")
 
+abstract class GenerateXposedModuleProp : DefaultTask() {
+    @get:Input abstract val moduleId: Property<String>
+
+    @get:Input abstract val moduleVersionName: Property<String>
+
+    @get:Input abstract val moduleVersionCode: Property<Int>
+
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun run() {
+        val target = outputDir.get().file("META-INF/xposed/module.prop").asFile
+        target.parentFile.mkdirs()
+        target.writeText(
+            """
+            id=${moduleId.get()}
+            name=Discover Ads Filter
+            version=${moduleVersionName.get()}
+            versionCode=${moduleVersionCode.get()}
+            author=hxreborn
+            description=Filters sponsored cards from the Google Discover feed.
+            minApiVersion=101
+            targetApiVersion=101
+            staticScope=true
+            """.trimIndent() + "\n",
+        )
+    }
+}
+
+val generateXposedModuleProp by tasks.registering(GenerateXposedModuleProp::class) {
+    moduleId.set("eu.hxreborn.discoveradsfilter")
+    moduleVersionName.set(project.property("version.name").toString())
+    moduleVersionCode.set(project.property("version.code").toString().toInt())
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.resources?.addGeneratedSourceDirectory(
+            generateXposedModuleProp,
+            GenerateXposedModuleProp::outputDir,
+        )
+    }
+}
+
 tasks.named("preBuild").configure {
     dependsOn(ktlintFormat, copyAboutLibraries)
 }
