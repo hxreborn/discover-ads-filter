@@ -23,11 +23,6 @@ data class VerifyUiState(
     val hookInstalled: Int get() = hookStatus?.installed ?: 0
     val hookTotal: Int get() = hookStatus?.total ?: 0
 
-    val resolvedTargetCount: Int
-        get() = (lastResult as? VerifyResult.Success)?.targets?.resolvedCount() ?: 0
-
-    val totalTargetCount: Int get() = TOTAL_TARGETS
-
     companion object {
         const val TOTAL_TARGETS = 7
 
@@ -40,12 +35,6 @@ data class VerifyUiState(
         }
     }
 }
-
-internal fun ResolvedTargets.Resolved.resolvedCount(): Int =
-    listOf(adMetadataClass, feedCardClass, adFlagFieldName, adLabelFieldName, adMetadataFieldName)
-        .count { !it.isNullOrBlank() } +
-        listOf(cardProcessorMethods.isNotEmpty(), streamRenderableListMethod != null)
-            .count { it }
 
 enum class VerifyPhase { Idle, Running }
 

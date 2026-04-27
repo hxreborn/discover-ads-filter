@@ -11,6 +11,5 @@ object Spacing {
 
 object IconSize {
     val sm = 16.dp
-    val md = 24.dp
     val lg = 32.dp
 }
