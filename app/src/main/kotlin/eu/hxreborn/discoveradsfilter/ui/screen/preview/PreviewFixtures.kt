@@ -3,7 +3,6 @@ package eu.hxreborn.discoveradsfilter.ui.screen.preview
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.MethodRef
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
-import eu.hxreborn.discoveradsfilter.ui.state.HookStatus
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
@@ -57,8 +56,6 @@ internal object PreviewFixtures {
             installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
             installedAgsaLastUpdateTime = AGSA_LAST_UPDATE_TIME,
             scanModuleVersion = BuildConfig.VERSION_CODE,
-            hookStatus = HookStatus(5, 5),
-            hookProcess = "com.google.android.googlequicksearchbox",
             adsHidden = 1_247L,
             moduleStatus = ModuleStatus.Active,
         )

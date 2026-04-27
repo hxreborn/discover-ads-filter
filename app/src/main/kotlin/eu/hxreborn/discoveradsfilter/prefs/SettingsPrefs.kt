@@ -6,9 +6,7 @@ object SettingsPrefs {
     val verbose = boolPref("verbose", false)
     val filterEnabled = boolPref("filter_enabled", true)
 
-    // The hook process writes these keys.
-    val hookStatus = nullableStringPref("hook_install_status")
-    val hookProcess = nullableStringPref("hook_process")
+    // The hook process writes this via MetricsProvider.
     val adsHidden = longPref("ads_hidden", 0L)
     val lastRemoteWrite = longPref("_last_remote_write", 0L)
 

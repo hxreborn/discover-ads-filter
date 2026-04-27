@@ -14,7 +14,6 @@ material3 = "1.5.0-alpha18"
 splashscreen = "1.2.0"
 composePreferences = "2.2.0"
 navigation3 = "1.1.1"
-libsu = "6.0.0"
 aboutlibraries = "14.0.1"
 ktlint = "1.8.0"
 
@@ -40,7 +39,6 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
 navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
-libsu-core = { module = "com.github.topjohnwu.libsu:core", version.ref = "libsu" }
 aboutlibraries-core = { group = "com.mikepenz", name = "aboutlibraries-core", version.ref = "aboutlibraries" }
 aboutlibraries-compose = { group = "com.mikepenz", name = "aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
 ktlint-cli = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" }

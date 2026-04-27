@@ -5,7 +5,6 @@ import android.app.Application
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
-import eu.hxreborn.discoveradsfilter.hook.HookMetrics
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.util.ProcessName
@@ -53,8 +52,6 @@ class DiscoverAdsFilterModule : XposedModule() {
             )
         }
 
-        HookMetrics.init()
-
         val ok =
             runCatching {
                 StreamSliceFilterHook.install(
@@ -69,7 +66,6 @@ class DiscoverAdsFilterModule : XposedModule() {
             }.isSuccess
 
         val status = if (ok) "1/1" else "0/1 failed:StreamSliceFilterHook"
-        HookMetrics.reportHookStatus(status, proc)
         log(
             Log.INFO,
             TAG,

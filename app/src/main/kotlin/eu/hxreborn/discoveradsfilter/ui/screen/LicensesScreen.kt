@@ -32,7 +32,6 @@ private val DIRECT_DEPENDENCY_GROUPS =
         "org.luckypray",
         "me.zhanghai.compose.preference",
         "org.jetbrains.kotlinx",
-        "com.github.topjohnwu.libsu",
         "com.mikepenz",
         "androidx.compose",
         "androidx.compose.material3",

@@ -84,12 +84,9 @@ class HomeViewModel(
     fun onServiceBound() {
         viewModelScope.launch(Dispatchers.IO) {
             repo.syncLocalToRemote()
-            val (hookStatusRaw, hookProcess) = repo.readHookDiagnostics()
             val adsHidden = repo.readAdsHidden()
             verifyFlow.update { current ->
                 current?.copy(
-                    hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw) ?: current.hookStatus,
-                    hookProcess = hookProcess ?: current.hookProcess,
                     adsHidden = adsHidden,
                     moduleStatus = ModuleStatus.Active,
                 )
@@ -113,7 +110,6 @@ class HomeViewModel(
         val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
         val moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Unknown
 
-        // Dismiss splash fast — shell-based diagnostics load after.
         verifyFlow.value =
             VerifyUiState(
                 phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
@@ -126,15 +122,6 @@ class HomeViewModel(
                 adsHidden = adsHidden,
                 moduleStatus = moduleStatus,
             )
-
-        val (hookStatusRaw, hookProcess) = repo.readHookDiagnostics()
-        verifyFlow.update {
-            it?.copy(
-                hookStatus = VerifyUiState.parseHookStatus(hookStatusRaw) ?: it.hookStatus,
-                hookProcess = hookProcess ?: it.hookProcess,
-                moduleStatus = if (hookStatusRaw != null) ModuleStatus.Active else it.moduleStatus,
-            )
-        }
 
         if (needsScan) runScanAndUpdate()
     }

@@ -11,8 +11,6 @@ data class VerifyUiState(
     val installedAgsaVersionName: String? = null,
     val installedAgsaLastUpdateTime: Long = 0,
     val scanModuleVersion: Int = 0,
-    val hookStatus: HookStatus? = null,
-    val hookProcess: String? = null,
     val adsHidden: Long = 0,
     val moduleStatus: ModuleStatus = ModuleStatus.Unknown,
     val scanOrigin: ScanOrigin? = null,
@@ -20,19 +18,8 @@ data class VerifyUiState(
     val scanDurationMs: Long = 0,
     val lastRefreshError: String? = null,
 ) {
-    val hookInstalled: Int get() = hookStatus?.installed ?: 0
-    val hookTotal: Int get() = hookStatus?.total ?: 0
-
     companion object {
         const val TOTAL_TARGETS = 7
-
-        fun parseHookStatus(raw: String?): HookStatus? {
-            val parts = raw?.substringBefore(' ')?.split('/') ?: return null
-            if (parts.size != 2) return null
-            val installed = parts[0].toIntOrNull() ?: return null
-            val total = parts[1].toIntOrNull() ?: return null
-            return HookStatus(installed, total)
-        }
     }
 }
 

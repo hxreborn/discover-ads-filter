@@ -23,9 +23,3 @@ data class HomeActions(
 )
 
 enum class ModuleStatus { Unknown, Active, Inactive }
-
-@Immutable
-data class HookStatus(
-    val installed: Int,
-    val total: Int,
-)

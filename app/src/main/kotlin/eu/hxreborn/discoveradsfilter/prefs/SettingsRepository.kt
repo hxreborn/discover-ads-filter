@@ -3,9 +3,7 @@ package eu.hxreborn.discoveradsfilter.prefs
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.topjohnwu.superuser.Shell
 import eu.hxreborn.discoveradsfilter.BuildConfig
-import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 
@@ -68,31 +66,10 @@ class SettingsRepository(
         return CachedScan(version, resolved, moduleVersion)
     }
 
-    fun readHookDiagnostics(): HookDiagnostics {
-        val lines = readMetricsLines()
-        return HookDiagnostics(
-            status =
-                readPrefRemoteFirst(SettingsPrefs.hookStatus)
-                    ?: lines?.firstOrNull { it.startsWith("hook_status=") }?.substringAfter('='),
-            process =
-                readPrefRemoteFirst(SettingsPrefs.hookProcess)
-                    ?: lines?.firstOrNull { it.startsWith("hook_process=") }?.substringAfter('='),
-        )
-    }
-
-    private fun readPrefRemoteFirst(spec: PrefSpec<String?>): String? =
-        remotePrefsProvider()?.let { spec.read(it) } ?: spec.read(localPrefs)
-
     fun readAdsHidden(): Long = SettingsPrefs.adsHidden.read(localPrefs)
 
     fun resetAdsCounter() {
         save { SettingsPrefs.adsHidden.write(this, 0L) }
-    }
-
-    private fun readMetricsLines(): List<String>? {
-        if (Shell.isAppGrantedRoot() != true) return null
-        val result = Shell.cmd("cat $METRICS_FILE_PATH").exec()
-        return if (result.isSuccess) result.out else null
     }
 
     fun clearScanCache() {
@@ -106,7 +83,7 @@ class SettingsRepository(
         remote.edit(commit = true) {
             SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
             localPrefs.all.forEach { (key, value) ->
-                if (key in HOOK_OWNED_KEYS) return@forEach
+                if (key == SettingsPrefs.adsHidden.key) return@forEach
                 when (value) {
                     is Boolean -> putBoolean(key, value)
                     is Int -> putInt(key, value)
@@ -124,19 +101,6 @@ class SettingsRepository(
             SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
         }
     }
-
-    private companion object {
-        @Suppress("SdCardPath")
-        private const val METRICS_FILE_PATH =
-            "/data/data/${DiscoverAdsFilterModule.AGSA_PKG}/cache/discover_adsfilter_metrics.txt"
-
-        private val HOOK_OWNED_KEYS: Set<String> =
-            setOf(
-                SettingsPrefs.hookStatus.key,
-                SettingsPrefs.hookProcess.key,
-                SettingsPrefs.adsHidden.key,
-            )
-    }
 }
 
 data class PersistedSettings(
@@ -148,9 +112,4 @@ data class CachedScan(
     val versionCode: Long,
     val targets: ResolvedTargets.Resolved,
     val moduleVersionCode: Int = 0,
-)
-
-data class HookDiagnostics(
-    val status: String?,
-    val process: String?,
 )

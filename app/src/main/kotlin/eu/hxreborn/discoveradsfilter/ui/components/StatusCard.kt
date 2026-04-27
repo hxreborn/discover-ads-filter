@@ -243,15 +243,6 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         }
     }
 
-    if (state.hookInstalled == 0 && state.hookTotal == 0 && state.adsHidden == 0L) {
-        return StatusVisual(
-            icon = Icons.AutoMirrored.Outlined.HelpOutline,
-            titleRes = R.string.hero_hooks_pending,
-            container = scheme.tertiaryContainer,
-            content = scheme.onTertiaryContainer,
-        )
-    }
-
     val elevation = if (state.adsHidden > 0) 3.dp else 0.dp
     return StatusVisual(
         icon = Icons.Filled.CheckCircle,

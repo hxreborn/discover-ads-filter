@@ -3,18 +3,12 @@ package eu.hxreborn.discoveradsfilter
 import android.app.Application
 import android.content.SharedPreferences
 import android.util.Log
-import com.topjohnwu.superuser.Shell
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 import java.util.concurrent.CopyOnWriteArrayList
 
 class App : Application() {
-    init {
-        Shell.enableVerboseLogging = BuildConfig.DEBUG
-        Shell.setDefaultBuilder(Shell.Builder.create().setTimeout(10))
-    }
-
     override fun onCreate() {
         super.onCreate()
         XposedServiceHelper.registerListener(

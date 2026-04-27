@@ -111,9 +111,6 @@ dependencies {
     // Verify scans AGSA with DexKit.
     implementation(libs.dexkit)
 
-    // Root shell for reading hook metrics from AGSA cache.
-    implementation(libs.libsu.core)
-
     implementation(libs.androidx.core)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.compose)

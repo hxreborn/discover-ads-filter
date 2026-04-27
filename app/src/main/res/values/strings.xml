@@ -13,7 +13,6 @@
     <string name="hero_not_configured">Not configured</string>
     <string name="hero_scan_failed">Scan failed</string>
     <string name="hero_stale">Stale signatures</string>
-    <string name="hero_hooks_pending">Awaiting hook process</string>
     <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_module_not_active">Module not active</string>
     <string name="hero_module_not_active_detail">Enable in LSPosed and add Google App to scope</string>
