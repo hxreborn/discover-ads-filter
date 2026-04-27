@@ -17,13 +17,7 @@ Hide sponsored cards in Google Discover.
 1. Download the APK from [Releases](../../releases)
 
 2. Enable the module in LSPosed.
-3. Scope it to Google App (`com.google.android.googlequicksearchbox`).
-
-## Usage
-
-1. Open the app and run a scan.
-2. Force stop Google App or reboot.
-3. Run the scan again after each Google App update.
+3. Scope it to Google App (`com.google.android.googlequicksearchbox`) and force stop it
 
 ## How It Works
 
