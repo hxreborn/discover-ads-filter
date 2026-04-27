@@ -46,12 +46,12 @@ import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 internal fun ScanProgressCard(
     progress: List<ScanStep>,
     phase: VerifyPhase,
+    modifier: Modifier = Modifier,
     totalSteps: Int = VerifyUiState.TOTAL_TARGETS,
     durationMs: Long = 0,
     showRawValues: Boolean = false,
     maxVisibleCompleted: Int = Int.MAX_VALUE,
     onDismiss: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
 ) {
     val running = phase == VerifyPhase.Running
     val scheme = MaterialTheme.colorScheme
