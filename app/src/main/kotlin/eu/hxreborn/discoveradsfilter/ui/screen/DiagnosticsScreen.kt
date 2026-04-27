@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
+import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.ui.components.ResolvedSymbolRow
 import eu.hxreborn.discoveradsfilter.ui.components.ScanProgressCard
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
@@ -310,6 +311,9 @@ private fun ComboCard(state: VerifyUiState) {
     )
     Spacer(Modifier.height(Spacing.sm))
 
+    val fpSchema = SettingsPrefs.KEY_FINGERPRINT_PREFIX.removePrefix("fp_v").removeSuffix("_")
+    val fpLine = stringResource(R.string.diag_mapped_fp_value, fpSchema)
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = shapeForPosition(3, 0),
@@ -323,12 +327,23 @@ private fun ComboCard(state: VerifyUiState) {
     Spacer(Modifier.height(2.dp))
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = shapeForPosition(2, 1),
+        shape = shapeForPosition(3, 1),
         color = scheme.surfaceVariant,
     ) {
         MappingRow(
             label = stringResource(R.string.diag_mapped_module_label),
             value = moduleLine,
+        )
+    }
+    Spacer(Modifier.height(2.dp))
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeForPosition(3, 2),
+        color = scheme.surfaceVariant,
+    ) {
+        MappingRow(
+            label = stringResource(R.string.diag_mapped_fp_label),
+            value = fpLine,
         )
     }
 }
