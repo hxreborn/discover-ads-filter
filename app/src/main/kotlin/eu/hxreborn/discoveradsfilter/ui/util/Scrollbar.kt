@@ -41,14 +41,11 @@ fun Modifier.drawVerticalScrollbar(
         LaunchedEffect(state, alpha) {
             snapshotFlow {
                 state.firstVisibleItemIndex to state.firstVisibleItemScrollOffset
-            }.distinctUntilChanged()
-                .drop(1)
-                .map { Unit }
-                .collectLatest {
-                    alpha.snapTo(1f)
-                    delay(ViewConfiguration.getScrollDefaultDelay().toLong())
-                    alpha.animateTo(0f, animationSpec = FADE_OUT_ANIMATION_SPEC)
-                }
+            }.distinctUntilChanged().drop(1).collectLatest {
+                alpha.snapTo(1f)
+                delay(ViewConfiguration.getScrollDefaultDelay().toLong())
+                alpha.animateTo(0f, animationSpec = FADE_OUT_ANIMATION_SPEC)
+            }
         }
 
         Modifier.drawWithContent {
