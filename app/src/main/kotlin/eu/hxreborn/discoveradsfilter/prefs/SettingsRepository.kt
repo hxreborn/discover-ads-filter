@@ -10,7 +10,7 @@ import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 
 class SettingsRepository(
-    private val context: Context,
+    context: Context,
     private val remotePrefsProvider: () -> SharedPreferences?,
 ) {
     private val localPrefs: SharedPreferences =
@@ -126,6 +126,7 @@ class SettingsRepository(
     }
 
     private companion object {
+        @Suppress("SdCardPath")
         private const val METRICS_FILE_PATH =
             "/data/data/${DiscoverAdsFilterModule.AGSA_PKG}/cache/discover_adsfilter_metrics.txt"
 
