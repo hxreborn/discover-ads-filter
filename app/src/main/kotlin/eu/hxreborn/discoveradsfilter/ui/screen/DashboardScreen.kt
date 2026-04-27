@@ -6,14 +6,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -64,9 +60,7 @@ import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
-import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
-import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -133,7 +127,7 @@ internal fun DashboardScreenContent(
                 contentPadding = PaddingValues(bottom = 32.dp),
             ) {
                 if (ready != null) {
-                    DashboardReadyItems(
+                    dashboardReadyItems(
                         ready = ready,
                         actions = actions,
                         onNavigate = onNavigate,
@@ -142,7 +136,7 @@ internal fun DashboardScreenContent(
                         onResetCounterClick = { showResetCounterDialog = true },
                     )
                 } else {
-                    DashboardLoadingCard(surface = surface)
+                    dashboardLoadingCard(surface = surface)
                 }
             }
         }
@@ -169,7 +163,7 @@ internal fun DashboardScreenContent(
     }
 }
 
-private fun LazyListScope.DashboardReadyItems(
+private fun LazyListScope.dashboardReadyItems(
     ready: HomeUiState.Ready,
     actions: HomeActions,
     onNavigate: (Destination) -> Unit,
@@ -324,7 +318,7 @@ private fun LazyListScope.DashboardReadyItems(
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private fun LazyListScope.DashboardLoadingCard(surface: Color) {
+private fun LazyListScope.dashboardLoadingCard(surface: Color) {
     item(key = "loading", contentType = "loading") {
         Surface(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
