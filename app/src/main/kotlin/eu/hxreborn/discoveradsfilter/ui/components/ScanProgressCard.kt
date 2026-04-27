@@ -25,7 +25,6 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -47,17 +46,14 @@ internal fun ScanProgressCard(
     progress: List<ScanStep>,
     phase: VerifyPhase,
     modifier: Modifier = Modifier,
-    totalSteps: Int = VerifyUiState.TOTAL_TARGETS,
     durationMs: Long = 0,
     showRawValues: Boolean = false,
-    maxVisibleCompleted: Int = Int.MAX_VALUE,
-    onDismiss: (() -> Unit)? = null,
 ) {
     val running = phase == VerifyPhase.Running
     val scheme = MaterialTheme.colorScheme
     val completed = progress.size
     val done = !running && completed > 0
-    val visibleCompleted = progress.takeLast(maxVisibleCompleted)
+    val totalSteps = VerifyUiState.TOTAL_TARGETS
 
     Surface(
         modifier = modifier,
@@ -80,11 +76,11 @@ internal fun ScanProgressCard(
                 color = scheme.surfaceContainer,
             ) {
                 Column(modifier = Modifier.padding(horizontal = Spacing.md, vertical = 8.dp)) {
-                    visibleCompleted.forEachIndexed { index, step ->
+                    progress.forEachIndexed { index, step ->
                         StepListItem(
                             step = step,
                             showRawValues = showRawValues,
-                            isLast = index == visibleCompleted.lastIndex,
+                            isLast = index == progress.lastIndex,
                             running = running,
                             completed = completed,
                             totalSteps = totalSteps,
@@ -92,21 +88,11 @@ internal fun ScanProgressCard(
                     }
 
                     if (running && completed < totalSteps) {
-                        val activeLabel = scanStepLabel(stepIndex = completed)
                         ActiveStepRow(
-                            label = activeLabel,
+                            label = scanStepLabel(stepIndex = completed),
                             paddingValues = PaddingValues(vertical = 12.dp),
                         )
                     }
-                }
-            }
-
-            if (done && onDismiss != null) {
-                TextButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.align(Alignment.End),
-                ) {
-                    Text(stringResource(R.string.button_ok))
                 }
             }
         }
