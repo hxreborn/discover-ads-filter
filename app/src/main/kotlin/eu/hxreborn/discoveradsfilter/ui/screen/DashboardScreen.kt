@@ -105,7 +105,7 @@ internal fun DashboardScreenContent(
     val listState = rememberLazyListState()
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = {
@@ -122,31 +122,15 @@ internal fun DashboardScreenContent(
                     )
                 },
                 scrollBehavior = scrollBehavior,
-                windowInsets =
-                    WindowInsets.safeDrawing.only(
-                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-                    ),
             )
         },
-        contentWindowInsets =
-            WindowInsets.safeDrawing.only(
-                WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom,
-            ),
     ) { innerPadding ->
         ProvidePreferenceLocals {
             val surface = MaterialTheme.colorScheme.surfaceVariant
             LazyColumn(
                 state = listState,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
-                        .drawVerticalScrollbar(listState),
-                contentPadding =
-                    PaddingValues(
-                        top = innerPadding.calculateTopPadding(),
-                        bottom = innerPadding.calculateBottomPadding() + 32.dp,
-                    ),
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentPadding = PaddingValues(bottom = 32.dp),
             ) {
                 if (ready != null) {
                     DashboardReadyItems(
