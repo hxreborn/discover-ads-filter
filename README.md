@@ -11,6 +11,7 @@ Hide sponsored cards in Google Discover.
 
 - Android 11+
 - LSPosed manager with libxposed API 101 support
+- Root (optional) - only needed to display the hook status indicator on the dashboard. Filtering and the blocked-ads counter both work without root.
 
 ## Installation
 
@@ -27,12 +28,7 @@ Hide sponsored cards in Google Discover.
 
 ## How It Works
 
-The app scans the installed Google App, resolves the hook targets for that AGSA build, and stores the result in a versioned cache. The hooked process uses the cached targets to filter ad items from the Discover feed.
-
-## Notes
-
-- Target resolution is done with DexKit against the installed Google App build using protobuf extension field numbers and type signatures.
-- Google App updates can invalidate previously resolved targets. Verify again after each update.
+The app scans the installed Google App with DexKit, resolving hook targets via protobuf extension field numbers and type signatures, and stores the result in a versioned cache. The hooked process uses the cached targets to filter ad items from the Discover feed.
 
 ## License
 
