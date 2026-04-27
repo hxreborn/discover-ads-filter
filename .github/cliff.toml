@@ -69,6 +69,7 @@ commit_parsers = [
   { body = ".*[Ss]ecurity", group = "<!-- 03 -->Security" },
   { message = "^refactor", group = "<!-- 04 -->Changed" },
   { message = "^revert", group = "<!-- 05 -->Reverted" },
+  { message = "^build\\(deps\\)", group = "<!-- 06 -->Dependencies" },
   # Skip dev-only
   { message = "^doc", skip = true },
   { message = "^test", skip = true },
@@ -79,7 +80,7 @@ commit_parsers = [
   { message = "^chore:.*[Cc]leanup|^misc:.*[Cc]leanup", skip = true },
   { message = "^chore:.*[Ii]mprovement", skip = true },
   { message = "^chore:.*[Dd]ependenc", skip = true },
-  { message = "^chore\\(release\\)|^chore\\(deps\\)|^chore\\(changelog\\)", skip = true },
+  { message = "^chore\\(release\\)|^chore\\(changelog\\)", skip = true },
   # Catch-all
   { message = ".*", group = "<!-- 99 -->Other" },
 ]
