@@ -24,6 +24,10 @@ android {
         }
     }
 
+    androidResources {
+        localeFilters += "en"
+    }
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
