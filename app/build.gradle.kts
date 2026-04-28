@@ -18,7 +18,6 @@ android {
         versionCode = project.property("version.code").toString().toInt()
 
         versionName = semver
-        base.archivesName.set("discover-ads-filter-v$semver")
 
         ndk {
             abiFilters += listOf("arm64-v8a")
