@@ -1,0 +1,1 @@
+Drop BUILD_TIMESTAMP for reproducible builds. Remove unused jitpack maven repo. Refresh launcher icon to full resolution. Expand About description with prerequisites.
