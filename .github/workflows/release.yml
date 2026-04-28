@@ -49,6 +49,11 @@ jobs:
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
+      - name: Rename APK to versioned name
+        run: |
+          cd app/build/outputs/apk/release
+          mv app-release.apk discover-ads-filter-v${{ steps.version.outputs.name }}-release.apk
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
