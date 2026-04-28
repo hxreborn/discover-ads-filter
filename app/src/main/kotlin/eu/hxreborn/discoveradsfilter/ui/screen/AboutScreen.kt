@@ -18,7 +18,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -35,10 +34,6 @@ import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 private const val GITHUB_URL = "https://github.com/hxreborn/discover-ads-filter"
 private const val GITHUB_ISSUES_URL = "https://github.com/hxreborn/discover-ads-filter/issues"
@@ -75,18 +70,6 @@ fun AboutScreen(
                 Spacer(Modifier.height(Spacing.xs))
                 Text(
                     text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) - ${BuildConfig.BUILD_TYPE} build",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text =
-                        remember {
-                            val zoned = Instant.ofEpochMilli(BuildConfig.BUILD_TIMESTAMP).atZone(ZoneId.systemDefault())
-                            val dateTime = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).format(zoned)
-                            val tz = zoned.zone.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault())
-                            "Built $dateTime ($tz)"
-                        },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,

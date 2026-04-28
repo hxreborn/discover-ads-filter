@@ -20,8 +20,6 @@ android {
         versionName = semver
         base.archivesName.set("discover-ads-filter-v$semver")
 
-        buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
-
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
