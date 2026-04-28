@@ -1,3 +1,3 @@
 Removes sponsored cards from the Pixel Launcher Discover feed by hooking the Google app. Uses DexKit at install time to resolve obfuscated symbols against the installed Google app build, then registers a single LSPosed hook that drops feed items whose cluster type is feedads.
 
-Prerequisites: the Google app (com.google.android.googlequicksearchbox), and a rooted device (Magisk or KernelSU) running an Xposed framework manager such as LSPosed. The module is non-functional without both.
+Prerequisites: the Google app (com.google.android.googlequicksearchbox), and a rooted device (KernelSU, APatch or Magisk) running an Xposed framework manager such as LSPosed. The module is non-functional without both.
