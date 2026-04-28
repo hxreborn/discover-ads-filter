@@ -1,1 +1,1 @@
-LSPosed module that removes sponsored cards from the Pixel Launcher Discover feed
+LSPosed module that hides sponsored cards in Google Discover feed
