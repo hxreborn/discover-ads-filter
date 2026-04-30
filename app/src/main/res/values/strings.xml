@@ -26,25 +26,29 @@
     <string name="hero_blocked_since_install">%1$s ads blocked since install</string>
 
     <!-- Preferences -->
-    <string name="pref_category_filter">Feed Filter</string>
+    <string name="pref_category_feed">Feed</string>
     <string name="pref_filter_sponsored">Filter sponsored posts</string>
     <string name="pref_filter_sponsored_summary">Hide ads from the Discover feed</string>
+    <string name="pref_hide_launcher_icon_title">Hide Launcher Icon</string>
+    <string name="pref_hide_launcher_icon_summary">Hides app from launcher. You can still open it from LSPosed manager</string>
     <string name="toggle_verbose">Debug logging</string>
     <string name="toggle_verbose_summary">Verbose logging for troubleshooting</string>
-    <string name="pref_clear_cache">Clear scan cache</string>
-    <string name="pref_clear_cache_summary">Clear cached scan results</string>
+    <string name="pref_clear_cache">Clear target cache</string>
+    <string name="pref_clear_cache_summary">Clear cached target data</string>
     <string name="pref_reset_counter">Reset ad counter</string>
     <string name="pref_reset_counter_summary">Reset blocked ads count</string>
 
-    <!-- Diagnostics category -->
-    <string name="pref_category_diagnostics">Advanced</string>
+    <!-- Category headers -->
+    <string name="pref_category_target_resolution">Target Resolution</string>
+    <string name="pref_category_diagnostics">Diagnostics</string>
+    <string name="pref_category_app">App</string>
 
     <!-- About -->
     <string name="pref_category_about">About</string>
 
     <!-- Hook targets -->
-    <string name="pref_dexkit_title">Symbol Map</string>
-    <string name="pref_dexkit_summary_ready">View resolved symbols</string>
+    <string name="pref_dexkit_title">Resolved targets</string>
+    <string name="pref_dexkit_summary_ready">View identified hook targets</string>
 
     <!-- Navigation -->
     <string name="nav_diagnostics">Symbol Map</string>
@@ -96,7 +100,7 @@
     <string name="about_licenses_summary">Libraries used by this app and their licenses</string>
 
     <!-- Confirmations -->
-    <string name="clear_cache_dialog_title">Clear scan cache?</string>
+    <string name="clear_cache_dialog_title">Clear target cache?</string>
     <string name="clear_cache_dialog_body">This clears cached scan results for the current Google App build only. The next scan will run again and may take a few seconds. Use this after a Google App update or when diagnostics look wrong.</string>
     <string name="clear_cache_dialog_confirm">Clear cache</string>
     <string name="reset_counter_dialog_title">Reset blocked ads count?</string>

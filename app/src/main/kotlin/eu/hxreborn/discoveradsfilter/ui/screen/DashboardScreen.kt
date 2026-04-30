@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Map
+import androidx.compose.material.icons.outlined.PhonelinkErase
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.rounded.Info
@@ -175,19 +176,19 @@ private fun LazyListScope.dashboardReadyItems(
         StatusCard(state = ready.verify)
     }
 
+    // Feed
     preferenceCategory(
-        key = "cat_filter",
-        title = { Text(stringResource(R.string.pref_category_filter)) },
+        key = "cat_feed",
+        title = { Text(stringResource(R.string.pref_category_feed)) },
     )
 
     val moduleActive = ready.verify.moduleStatus != ModuleStatus.Inactive
-    val filterShape = shapeForPosition(1, 0)
     item(key = "filter_enabled", contentType = "SwitchPreference") {
         SwitchPreference(
             value = ready.filterEnabled,
             onValueChange = actions.onFilterEnabledChange,
             enabled = moduleActive,
-            modifier = Modifier.preferenceCard(shape = filterShape, surface = surface),
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(1, 0), surface = surface),
             icon = {
                 Icon(imageVector = Icons.Outlined.VisibilityOff, contentDescription = null)
             },
@@ -203,15 +204,16 @@ private fun LazyListScope.dashboardReadyItems(
         )
     }
 
+    // Target Resolution
     preferenceCategory(
-        key = "cat_diagnostics",
-        title = { Text(stringResource(R.string.pref_category_diagnostics)) },
+        key = "cat_resolution",
+        title = { Text(stringResource(R.string.pref_category_target_resolution)) },
     )
 
-    val advancedCount = 4
+    val scanning = ready.verify.phase == VerifyPhase.Running
     preference(
         key = "diagnostics",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(advancedCount, 0), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 0), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.Map, contentDescription = null)
         },
@@ -229,11 +231,36 @@ private fun LazyListScope.dashboardReadyItems(
 
     item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
+    preference(
+        key = "clear_cache",
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
+        icon = {
+            Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
+        },
+        title = {
+            Text(
+                stringResource(R.string.pref_clear_cache),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        },
+        summary = {
+            Text(stringResource(R.string.pref_clear_cache_summary))
+        },
+        enabled = !scanning,
+        onClick = onClearCacheClick,
+    )
+
+    // Diagnostics
+    preferenceCategory(
+        key = "cat_diagnostics",
+        title = { Text(stringResource(R.string.pref_category_diagnostics)) },
+    )
+
     item(key = "verbose", contentType = "SwitchPreference") {
         SwitchPreference(
             value = ready.verbose,
             onValueChange = actions.onVerboseChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(advancedCount, 1), surface = surface),
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 0), surface = surface),
             icon = {
                 Icon(imageVector = Icons.Outlined.BugReport, contentDescription = null)
             },
@@ -251,31 +278,9 @@ private fun LazyListScope.dashboardReadyItems(
 
     item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
-    val scanning = ready.verify.phase == VerifyPhase.Running
-    preference(
-        key = "clear_cache",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(advancedCount, 2), surface = surface),
-        icon = {
-            Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(R.string.pref_clear_cache),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        summary = {
-            Text(stringResource(R.string.pref_clear_cache_summary))
-        },
-        enabled = !scanning,
-        onClick = onClearCacheClick,
-    )
-
-    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
     preference(
         key = "reset_counter",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(advancedCount, 3), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.RestartAlt, contentDescription = null)
         },
@@ -291,16 +296,37 @@ private fun LazyListScope.dashboardReadyItems(
         onClick = onResetCounterClick,
     )
 
-    item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
-
+    // App
     preferenceCategory(
-        key = "cat_about",
-        title = { Text(stringResource(R.string.pref_category_about)) },
+        key = "cat_app",
+        title = { Text(stringResource(R.string.pref_category_app)) },
     )
+
+    item(key = "hide_launcher_icon", contentType = "SwitchPreference") {
+        SwitchPreference(
+            value = ready.isLauncherIconHidden,
+            onValueChange = actions.onLauncherIconHiddenChange,
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 0), surface = surface),
+            icon = {
+                Icon(imageVector = Icons.Outlined.PhonelinkErase, contentDescription = null)
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.pref_hide_launcher_icon_title),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            },
+            summary = {
+                Text(stringResource(R.string.pref_hide_launcher_icon_summary))
+            },
+        )
+    }
+
+    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
     preference(
         key = "about",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(1, 0), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
         icon = {
             Icon(imageVector = Icons.Rounded.Info, contentDescription = null)
         },
@@ -390,6 +416,7 @@ private val NoOpActions =
     HomeActions(
         onVerboseChange = {},
         onFilterEnabledChange = {},
+        onLauncherIconHiddenChange = {},
         onVerify = {},
         onClearCacheOnly = {},
         onResetAdsCounter = {},
