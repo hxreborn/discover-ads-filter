@@ -1,0 +1,2 @@
+Add "Hide Launcher Icon" toggle in App settings
+Reorganize settings
