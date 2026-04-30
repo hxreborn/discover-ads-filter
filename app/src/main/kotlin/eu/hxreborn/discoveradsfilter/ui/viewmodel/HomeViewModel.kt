@@ -21,6 +21,8 @@ import eu.hxreborn.discoveradsfilter.ui.state.ScanStep
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import eu.hxreborn.discoveradsfilter.util.isLauncherIconVisible
+import eu.hxreborn.discoveradsfilter.util.setLauncherIconVisible
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,14 +46,20 @@ class HomeViewModel(
 
     private val verboseFlow = MutableStateFlow(false)
     private val filterEnabledFlow = MutableStateFlow(true)
+    private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
 
     val uiState: StateFlow<HomeUiState> =
-        combine(verboseFlow, filterEnabledFlow, verifyFlow) { verbose, filterEnabled, verify ->
+        combine(verboseFlow, filterEnabledFlow, launcherIconHiddenFlow, verifyFlow) { verbose, filterEnabled, launcherIconHidden, verify ->
             if (verify == null) {
                 HomeUiState.Loading
             } else {
-                HomeUiState.Ready(verbose = verbose, filterEnabled = filterEnabled, verify = verify)
+                HomeUiState.Ready(
+                    verbose = verbose,
+                    filterEnabled = filterEnabled,
+                    isLauncherIconHidden = launcherIconHidden,
+                    verify = verify,
+                )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
 
@@ -65,6 +73,10 @@ class HomeViewModel(
                 repo.setFilterEnabled(value)
                 filterEnabledFlow.value = value
             },
+            onLauncherIconHiddenChange = { hidden ->
+                setLauncherIconVisible(app, !hidden)
+                launcherIconHiddenFlow.value = hidden
+            },
             onVerify = ::verify,
             onClearCacheOnly = ::clearCacheOnly,
             onResetAdsCounter = ::resetAdsCounter,
@@ -72,6 +84,7 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch(ioDispatcher) {
+            launcherIconHiddenFlow.value = !isLauncherIconVisible(app)
             runCatching { initialize() }.onFailure { t ->
                 Log.e(TAG, "initialization failed", t)
                 verifyFlow.value =

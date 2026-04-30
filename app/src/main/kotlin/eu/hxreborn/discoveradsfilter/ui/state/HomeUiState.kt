@@ -9,6 +9,7 @@ sealed interface HomeUiState {
     data class Ready(
         val verbose: Boolean = false,
         val filterEnabled: Boolean = true,
+        val isLauncherIconHidden: Boolean = false,
         val verify: VerifyUiState = VerifyUiState(),
     ) : HomeUiState
 }
@@ -17,6 +18,7 @@ sealed interface HomeUiState {
 data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
     val onFilterEnabledChange: (Boolean) -> Unit,
+    val onLauncherIconHiddenChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,
     val onResetAdsCounter: () -> Unit,
