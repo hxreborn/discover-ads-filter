@@ -21,7 +21,7 @@
 1. Grab the APK:
 
     <a href="../../releases"><img src="https://github.com/user-attachments/assets/d18f850c-e4d2-4e00-8b03-3b0e87e90954" height="60" alt="GitHub Releases" /></a>
-    <a href="http://apps.obtainium.imranr.dev/redirect.html?r=obtainium://app/%7B%22id%22%3A%22eu.hxreborn.discoveradsfilter%22%2C%22url%22%3A%22https%3A%2F%2Fgithub.com%2Fhxreborn%2Fdiscover-ads-filter%22%2C%22author%22%3A%22rafareborn%22%2C%22name%22%3A%22Discover%20Ads%20Filter%22%2C%22additionalSettings%22%3A%22%7B%5C%22includePrereleases%5C%22%3Afalse%7D%22%7D"><img src="https://github.com/user-attachments/assets/dffe8fb9-c0d1-470b-8d69-6d5b38a8aa2d" height="60" alt="Obtainium" /></a>
+    <a href="https://f-droid.org/es/packages/eu.hxreborn.discoveradsfilter/"><img src=".github/assets/badge_fdroid.png" height="60" alt="Get it on F-Droid" /></a>
 
 2. Enable the module in LSPosed and scope it to `com.google.android.googlequicksearchbox`.
 3. Open the Discover Ads Filter app and tap Scan to resolve hook targets.
