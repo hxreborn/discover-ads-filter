@@ -1,1 +1,1 @@
-LSPosed module that hides sponsored cards in Google Discover feed
+Xposed module that hides sponsored cards in Google Discover feed
