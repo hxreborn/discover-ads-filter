@@ -178,12 +178,8 @@ object StreamSliceFilterHook {
             lastFingerprint = fp
 
             val filtered = buildFilteredList(items)
-            if (filtered == null) {
-                lastFilteredSnapshot = null
-                return result
-            }
             lastFilteredSnapshot = filtered
-            return filtered
+            return filtered ?: result
         }
     }
 

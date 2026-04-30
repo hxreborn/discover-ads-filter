@@ -59,9 +59,8 @@ object DexKitCache {
         this is ResolvedTargets.Resolved && adMetadataClass != null && feedCardClass != null
 
     private fun missingReason(versionCode: Long): String =
-        if (versionCode == 0L) {
-            "AGSA version unavailable and no cache exists"
-        } else {
-            "no cache for AGSA v$versionCode; run Verify from module app"
-        }
+        versionCode
+            .takeIf { it != 0L }
+            ?.let { "no cache for AGSA v$it; run Verify from module app" }
+            ?: "AGSA version unavailable and no cache exists"
 }

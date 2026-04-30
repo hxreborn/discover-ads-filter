@@ -263,10 +263,7 @@ object DexKitResolver {
     ): Boolean {
         if (method.name == "<init>" || method.name == CLINIT) return false
         if (method.declaredClassName == feedCardName) return false
-        if (RUNTIME_PACKAGES.any(method.declaredClassName::startsWith)) {
-            return false
-        }
-        return true
+        return !RUNTIME_PACKAGES.any(method.declaredClassName::startsWith)
     }
 
     private fun toMethodRef(method: MethodData): MethodRef =
