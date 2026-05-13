@@ -24,4 +24,4 @@ data class HomeActions(
     val onResetAdsCounter: () -> Unit,
 )
 
-enum class ModuleStatus { Unknown, Active, Inactive }
+enum class ModuleStatus { Active, Inactive }

@@ -9,19 +9,18 @@
     <string name="fab_resolving">Resolving\u2026</string>
 
     <!-- Hero status -->
-    <string name="hero_module_active">Module Active</string>
+    <string name="hero_module_active">Module Enabled</string>
     <string name="hero_not_configured">Not configured</string>
     <string name="hero_scan_failed">Scan failed</string>
     <string name="hero_stale">Stale signatures</string>
     <string name="hero_target_agsa">Google %1$s</string>
-    <string name="hero_module_not_active">Module not active</string>
-    <string name="hero_module_not_active_detail">Enable in LSPosed and add Google App to scope</string>
+    <string name="hero_module_not_active">Module Not Enabled</string>
+    <string name="hero_module_not_active_detail">Enable this module in your Xposed manager, then tap here to restart the app</string>
     <string name="hero_scanning">Scanning\u2026</string>
     <string name="hero_scanning_detail">Resolving symbols for this build</string>
     <string name="hero_scan_required">Scan required</string>
     <string name="hero_scan_required_detail">No saved signatures for this build</string>
     <string name="hero_signatures_missing">Signatures missing</string>
-    <string name="hero_module_active_line">Module is active</string>
     <string name="hero_target_missing">Target app not detected</string>
     <string name="hero_blocked_since_install">%1$s ads blocked since install</string>
 

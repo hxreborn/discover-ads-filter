@@ -12,7 +12,7 @@ data class VerifyUiState(
     val installedAgsaLastUpdateTime: Long = 0,
     val scanModuleVersion: Int = 0,
     val adsHidden: Long = 0,
-    val moduleStatus: ModuleStatus = ModuleStatus.Unknown,
+    val moduleStatus: ModuleStatus = ModuleStatus.Inactive,
     val scanOrigin: ScanOrigin? = null,
     val scanProgress: List<ScanStep> = emptyList(),
     val scanDurationMs: Long = 0,

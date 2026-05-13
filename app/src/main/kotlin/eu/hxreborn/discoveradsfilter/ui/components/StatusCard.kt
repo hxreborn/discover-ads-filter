@@ -2,6 +2,9 @@
 
 package eu.hxreborn.discoveradsfilter.ui.components
 
+import android.content.Intent
+import android.os.Process
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Warning
@@ -26,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,9 +59,28 @@ fun StatusCard(
 ) {
     val visual = statusVisual(state)
     val scanning = state.phase == VerifyPhase.Running && state.lastResult == null
+    val isInactive = state.moduleStatus == ModuleStatus.Inactive
+    val context = LocalContext.current
 
     Surface(
-        modifier = modifier.fillMaxWidth().padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
+                .let { base ->
+                    if (isInactive) {
+                        base.clickable {
+                            val intent =
+                                context.packageManager
+                                    .getLaunchIntentForPackage(context.packageName)
+                                    ?.apply { addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK) }
+                            intent?.let { context.startActivity(it) }
+                            Process.killProcess(Process.myPid())
+                        }
+                    } else {
+                        base
+                    }
+                },
         shape = MaterialTheme.shapes.large,
         color = visual.container,
         contentColor = visual.content,
@@ -89,6 +113,13 @@ fun StatusCard(
                 )
                 StatusCardBody(state)
             }
+            if (isInactive) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(IconSize.sm),
+                )
+            }
         }
     }
 }
@@ -99,13 +130,6 @@ private fun StatusCardBody(state: VerifyUiState) {
         state.moduleStatus == ModuleStatus.Inactive -> {
             Text(
                 text = stringResource(R.string.hero_module_not_active_detail),
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-
-        state.installedAgsaVersion == null && state.moduleStatus == ModuleStatus.Active -> {
-            Text(
-                text = stringResource(R.string.hero_module_active_line),
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

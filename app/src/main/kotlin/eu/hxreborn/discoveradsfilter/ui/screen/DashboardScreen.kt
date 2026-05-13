@@ -182,7 +182,7 @@ private fun LazyListScope.dashboardReadyItems(
         title = { Text(stringResource(R.string.pref_category_feed)) },
     )
 
-    val moduleActive = ready.verify.moduleStatus != ModuleStatus.Inactive
+    val moduleActive = ready.verify.moduleStatus == ModuleStatus.Active
     item(key = "filter_enabled", contentType = "SwitchPreference") {
         SwitchPreference(
             value = ready.filterEnabled,

@@ -42,5 +42,13 @@
             android:authorities="eu.hxreborn.discoveradsfilter.metrics"
             android:exported="true" />
 
+        <receiver
+            android:name=".receiver.PackageReplacedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 </manifest>

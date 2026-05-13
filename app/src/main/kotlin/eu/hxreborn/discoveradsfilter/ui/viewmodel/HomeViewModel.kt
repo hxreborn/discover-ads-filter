@@ -90,7 +90,7 @@ class HomeViewModel(
                 verifyFlow.value =
                     VerifyUiState(
                         phase = VerifyPhase.Idle,
-                        moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Unknown,
+                        moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive,
                     )
             }
         }
@@ -123,7 +123,7 @@ class HomeViewModel(
             result == null || agsaPkg?.versionCode?.let { it != result.versionCode } == true ||
                 lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
         val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
-        val moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Unknown
+        val moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive
 
         verifyFlow.value =
             VerifyUiState(
