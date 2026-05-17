@@ -46,15 +46,21 @@ class DiscoverAdsFilterModule : XposedModule() {
             Logger.log(Log.DEBUG, "[resolved] processors=${targets.cardProcessorMethods.size}")
         }
         if (targets is ResolvedTargets.Missing) {
-            val allKeys = runCatching { prefs.all.keys.sorted() }.getOrDefault(emptyList())
             val lastRemoteWrite =
                 runCatching {
                     SettingsPrefs.lastRemoteWrite.read(prefs)
                 }.getOrDefault(0L)
+            val keysSuffix =
+                if (SettingsPrefs.verbose.read(prefs)) {
+                    val allKeys = runCatching { prefs.all.keys.sorted() }.getOrDefault(emptyList())
+                    " allKeys=$allKeys"
+                } else {
+                    ""
+                }
             Logger.log(
                 Log.WARN,
                 "skipped proc=$proc v=$versionCode reason=${targets.reason} " +
-                    "lastRemoteWrite=$lastRemoteWrite allKeys=$allKeys",
+                    "lastRemoteWrite=$lastRemoteWrite$keysSuffix",
             )
         }
 
