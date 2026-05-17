@@ -11,7 +11,9 @@
 }
 
 # Hook implementations are dispatched reflectively by libxposed via Chain.
--keep class * implements io.github.libxposed.api.XposedInterface$Hooker { *; }
+-keep class * implements io.github.libxposed.api.XposedInterface$Hooker {
+    public java.lang.Object intercept(io.github.libxposed.api.XposedInterface$Chain);
+}
 
 -dontwarn io.github.libxposed.api.**
 
