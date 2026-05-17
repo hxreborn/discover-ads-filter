@@ -17,19 +17,9 @@
 
 -dontwarn io.github.libxposed.api.**
 
-# kotlinx-serialization: $$serializer companions are discovered reflectively from
-# ResolvedTargets.serializer(). Without these, the hook process throws when
-# decoding the cached fingerprint JSON.
--keepattributes RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations,InnerClasses,EnclosingMethod,Signature
--keepclasseswithmembers class eu.hxreborn.discoveradsfilter.discovery.** {
-    kotlinx.serialization.KSerializer serializer(...);
-}
--keep class eu.hxreborn.discoveradsfilter.discovery.**$$serializer { *; }
--if class eu.hxreborn.discoveradsfilter.discovery.**
--keepclassmembers class <1> {
-    public static <1>$Companion Companion;
-    kotlinx.serialization.KSerializer serializer(...);
-}
+# kotlinx-serialization plugin ships consumer rules for $$serializer classes and
+# Companion.serializer(); these attributes are still needed at runtime.
+-keepattributes RuntimeVisibleAnnotations,InnerClasses,EnclosingMethod,Signature
 
 # AGP 9.x's proguard-android-optimize.txt no longer keeps these.
 -keepattributes SourceFile,LineNumberTable
