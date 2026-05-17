@@ -1,27 +1,18 @@
 package eu.hxreborn.discoveradsfilter.util
 
 import android.util.Log
-import eu.hxreborn.discoveradsfilter.module
 
 object Safe {
     inline fun run(
-        tag: String,
-        what: String,
+        op: String,
         block: () -> Unit,
     ) {
-        runCatching(block).onFailure { t -> logFailure(tag, what, t) }
+        runCatching(block).onFailure { t -> logFailure(op, t) }
     }
 
     @PublishedApi
     internal fun logFailure(
-        tag: String,
-        what: String,
+        op: String,
         t: Throwable,
-    ) {
-        try {
-            module.log(Log.ERROR, tag, "failed: $what", t)
-        } catch (_: UninitializedPropertyAccessException) {
-            Log.e(tag, "failed before module init: $what", t)
-        }
-    }
+    ) = Logger.log(Log.ERROR, "failed: $op", t)
 }

@@ -7,6 +7,7 @@ import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
+import eu.hxreborn.discoveradsfilter.util.Logger
 import eu.hxreborn.discoveradsfilter.util.ProcessName
 import eu.hxreborn.discoveradsfilter.util.Safe
 import io.github.libxposed.api.XposedModule
@@ -20,17 +21,16 @@ internal lateinit var module: DiscoverAdsFilterModule
 class DiscoverAdsFilterModule : XposedModule() {
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         module = this
-        log(Log.INFO, TAG, "v${BuildConfig.VERSION_NAME} loaded in ${param.processName}")
+        Logger.log(Log.INFO, "v${BuildConfig.VERSION_NAME} loaded in ${param.processName}")
     }
 
     @SuppressLint("PrivateApi")
     override fun onPackageReady(param: PackageReadyParam) {
-        if (!param.isFirstPackage) return
-        if (param.packageName != AGSA_PKG) return
+        if (!param.isFirstPackage && param.packageName != AGSA_PKG) return
 
         val proc =
             ProcessName.current() ?: run {
-                log(Log.WARN, TAG, "could not read /proc/self/cmdline; aborting")
+                Logger.log(Log.WARN, "could not read /proc/self/cmdline; aborting")
                 return
             }
 
@@ -38,15 +38,23 @@ class DiscoverAdsFilterModule : XposedModule() {
 
         val versionCode = currentAgsaVersionCode()
         val targets = DexKitCache.load(versionCode, BuildConfig.VERSION_CODE, prefs)
+        if (targets is ResolvedTargets.Resolved && SettingsPrefs.verbose.read(prefs)) {
+            Logger.log(Log.DEBUG, "[resolved] adMeta=${targets.adMetadataClass}")
+            Logger.log(Log.DEBUG, "[resolved] card=${targets.feedCardClass}")
+            Logger.log(Log.DEBUG, "[resolved] adFlagField=${targets.adFlagFieldName}")
+            Logger.log(Log.DEBUG, "[resolved] adLabelField=${targets.adLabelFieldName}")
+            Logger.log(Log.DEBUG, "[resolved] adMetaField=${targets.adMetadataFieldName}")
+            Logger.log(Log.DEBUG, "[resolved] stream=${targets.streamRenderableListMethod}")
+            Logger.log(Log.DEBUG, "[resolved] processors=${targets.cardProcessorMethods.size}")
+        }
         if (targets is ResolvedTargets.Missing) {
             val allKeys = runCatching { prefs.all.keys.sorted() }.getOrDefault(emptyList())
             val lastRemoteWrite =
                 runCatching {
                     SettingsPrefs.lastRemoteWrite.read(prefs)
                 }.getOrDefault(0L)
-            log(
+            Logger.log(
                 Log.WARN,
-                TAG,
                 "skipped proc=$proc v=$versionCode reason=${targets.reason} " +
                     "lastRemoteWrite=$lastRemoteWrite allKeys=$allKeys",
             )
@@ -62,13 +70,12 @@ class DiscoverAdsFilterModule : XposedModule() {
                 )
                 true
             }.onFailure { t ->
-                Safe.logFailure(TAG, "install StreamSliceFilterHook", t)
+                Safe.logFailure("install StreamSliceFilterHook", t)
             }.isSuccess
 
         val status = if (ok) "1/1" else "0/1 failed:StreamSliceFilterHook"
-        log(
+        Logger.log(
             Log.INFO,
-            TAG,
             "installed proc=$proc agsaV=$versionCode hooks=$status ${targets.summary()}",
         )
     }

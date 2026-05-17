@@ -1,25 +1,19 @@
 package eu.hxreborn.discoveradsfilter.hook
 
-import android.app.Application
-import android.content.Context
 import android.content.SharedPreferences
-import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
-import eu.hxreborn.discoveradsfilter.discovery.MethodRef
+import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.module
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.util.Logger
 import eu.hxreborn.discoveradsfilter.util.Safe
 import io.github.libxposed.api.XposedInterface
-import kotlinx.coroutines.runBlocking
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 
 object StreamSliceFilterHook {
-    private const val TAG = "DiscoverAdsFilter/StreamSlice"
-    private const val TARGET_PACKAGE = "com.google.android.googlequicksearchbox"
     private const val CONTENT_ID_FIELD = "f122746b"
 
     private val adClusterTokens = setOf("feedads")
@@ -31,12 +25,6 @@ object StreamSliceFilterHook {
     private val noContentIdClasses = ConcurrentHashMap.newKeySet<Class<*>>()
     private val stringFieldsCache = ConcurrentHashMap<Class<*>, List<Field>>()
     private val nonSliceClasses = ConcurrentHashMap.newKeySet<Class<*>>()
-
-    @Volatile
-    private var resolvedStreamMethod: MethodRef? = null
-
-    @Volatile
-    private var fallbackTargets: ResolvedTargets.Resolved? = null
 
     @Volatile
     private var lastFingerprint: Long = Long.MIN_VALUE
@@ -52,73 +40,27 @@ object StreamSliceFilterHook {
         prefs: SharedPreferences,
         targets: ResolvedTargets,
         processName: String,
-    ) = Safe.run(TAG, "install") {
+    ) = Safe.run("install") {
         hookPrefs = prefs
-        val streamRef = resolveStreamMethod(targets, processName)
+        val streamRef = (targets as? ResolvedTargets.Resolved)?.streamRenderableListMethod
         if (streamRef == null) {
-            Logger.w("stream method not resolved; skipping")
+            val reason = (targets as? ResolvedTargets.Missing)?.reason ?: "no cached targets"
+            Logger.log(
+                Log.WARN,
+                "no stream method in cache proc=$processName reason=$reason; " +
+                    "open Discover Ads Filter and tap Verify",
+            )
             return@run
         }
 
         val method =
             runCatching { streamRef.resolve(loader) }.getOrElse {
-                Logger.w("failed to resolve $streamRef")
+                Logger.log(Log.WARN, "failed to rehydrate $streamRef: ${it.message}")
                 return@run
             }
 
-        module.hook(method).intercept(StreamListHook())
-        Logger.i("hooked $streamRef")
-    }
-
-    private fun resolveStreamMethod(
-        targets: ResolvedTargets,
-        processName: String,
-    ): MethodRef? {
-        (targets as? ResolvedTargets.Resolved)?.streamRenderableListMethod?.let { return it }
-
-        resolvedStreamMethod?.let { return it }
-
-        val resolved = resolveFallbackTargets(processName) ?: return null
-        val ref = resolved.streamRenderableListMethod ?: return null
-        resolvedStreamMethod = ref
-        Logger.i("DexKit fallback resolved $ref")
-        return ref
-    }
-
-    private fun resolveFallbackTargets(processName: String): ResolvedTargets.Resolved? {
-        fallbackTargets?.let { return it }
-        if ("googleapp" !in processName && "search" !in processName) {
-            return null
-        }
-        val apk = currentPackageSourceDir() ?: return null
-        val resolved =
-            runCatching {
-                runBlocking { DexKitResolver.resolveAll(apk) }
-            }.getOrNull() as? ResolvedTargets.Resolved
-        if (resolved != null) fallbackTargets = resolved
-        return resolved
-    }
-
-    @Suppress("PrivateApi")
-    private fun currentPackageSourceDir(): String? {
-        val app =
-            runCatching {
-                Class
-                    .forName("android.app.ActivityThread")
-                    .getMethod("currentApplication")
-                    .invoke(null) as? Application
-            }.getOrNull()
-        return app?.applicationInfo?.sourceDir?.takeIf { it.isNotBlank() } ?: runCatching {
-            val at =
-                Class
-                    .forName("android.app.ActivityThread")
-                    .getMethod("currentActivityThread")
-                    .invoke(null) ?: return@runCatching null
-            val ctx =
-                at.javaClass.getMethod("getSystemContext").invoke(at) as? Context
-                    ?: return@runCatching null
-            ctx.packageManager.getApplicationInfo(TARGET_PACKAGE, 0).sourceDir
-        }.getOrNull()
+        module.hook(method).intercept(StreamListHook)
+        Logger.log(Log.INFO, "hooked $streamRef proc=$processName")
     }
 
     @Volatile
@@ -127,7 +69,7 @@ object StreamSliceFilterHook {
     private fun dumpKeysOnce(items: List<*>) {
         if (keysDumped) return
         keysDumped = true
-        Logger.v {
+        Logger.debug {
             items
                 .mapIndexed { i, item ->
                     val cls = item?.javaClass?.simpleName ?: "null"
@@ -151,7 +93,7 @@ object StreamSliceFilterHook {
                 removed++
                 if (countedAdKeys.add(key)) {
                     newAds++
-                    Logger.v { "blocked ad key=$key" }
+                    Logger.debug { "blocked ad key=$key" }
                 }
             } else {
                 filtered += item
@@ -162,7 +104,7 @@ object StreamSliceFilterHook {
         return filtered
     }
 
-    private class StreamListHook : XposedInterface.Hooker {
+    private object StreamListHook : XposedInterface.Hooker {
         override fun intercept(chain: XposedInterface.Chain): Any? {
             val result = chain.proceed()
             val items = result as? List<*> ?: return result

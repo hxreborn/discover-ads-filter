@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import eu.hxreborn.discoveradsfilter.provider.MetricsProvider
 import eu.hxreborn.discoveradsfilter.util.Logger
 
@@ -28,7 +29,7 @@ object HookMetrics {
                 },
             )
         }.onFailure {
-            Logger.w("provider increment failed: ${it.message}")
+            Logger.log(Log.WARN, "provider increment failed: ${it.message}")
         }
     }
 

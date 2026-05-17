@@ -2,13 +2,11 @@ package eu.hxreborn.discoveradsfilter.discovery
 
 import android.content.SharedPreferences
 import android.util.Log
-import eu.hxreborn.discoveradsfilter.module
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
+import eu.hxreborn.discoveradsfilter.util.Logger
 import kotlinx.serialization.json.Json
 
 object DexKitCache {
-    private const val TAG = "DiscoverAdsFilter/Fp"
-
     private val json =
         Json {
             ignoreUnknownKeys = true
@@ -33,7 +31,7 @@ object DexKitCache {
                     exactRaw,
                 )
             }.onFailure {
-                module.log(Log.ERROR, TAG, "failed to parse cached targets", it)
+                Logger.log(Log.ERROR, "failed to parse cached targets", it)
             }.getOrNull()
 
         if (decoded != null && decoded.isUsableHookCache()) return decoded

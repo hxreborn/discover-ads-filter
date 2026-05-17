@@ -10,17 +10,14 @@ object Logger {
     @PublishedApi
     internal const val TAG = DiscoverAdsFilterModule.TAG
 
-    inline fun v(msg: () -> String) {
-        if (!verboseEnabled()) return
-        module.log(Log.DEBUG, TAG, msg())
-    }
+    fun log(
+        level: Int,
+        msg: String,
+        t: Throwable? = null,
+    ) = if (t != null) module.log(level, TAG, msg, t) else module.log(level, TAG, msg)
 
-    fun i(msg: String) {
-        module.log(Log.INFO, TAG, msg)
-    }
-
-    fun w(msg: String) {
-        module.log(Log.WARN, TAG, msg)
+    inline fun debug(msg: () -> String) {
+        if (verboseEnabled()) module.log(Log.DEBUG, TAG, msg())
     }
 
     @PublishedApi
