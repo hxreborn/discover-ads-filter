@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.provider.MetricsProvider
+import eu.hxreborn.discoveradsfilter.util.CurrentApp
 import eu.hxreborn.discoveradsfilter.util.Logger
 
 object HookMetrics {
@@ -35,13 +36,6 @@ object HookMetrics {
 
     private fun context(): Context? {
         appContext?.let { return it }
-
-        @Suppress("PrivateApi")
-        return runCatching {
-            Class
-                .forName("android.app.ActivityThread")
-                .getMethod("currentApplication")
-                .invoke(null) as? Context
-        }.getOrNull()?.let { it.applicationContext ?: it }?.also { appContext = it }
+        return CurrentApp.get()?.let { it.applicationContext ?: it }?.also { appContext = it }
     }
 }

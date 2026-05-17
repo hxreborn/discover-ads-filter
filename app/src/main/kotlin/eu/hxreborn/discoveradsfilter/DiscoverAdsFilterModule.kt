@@ -1,12 +1,11 @@
 package eu.hxreborn.discoveradsfilter
 
-import android.annotation.SuppressLint
-import android.app.Application
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
+import eu.hxreborn.discoveradsfilter.util.CurrentApp
 import eu.hxreborn.discoveradsfilter.util.Logger
 import eu.hxreborn.discoveradsfilter.util.ProcessName
 import eu.hxreborn.discoveradsfilter.util.Safe
@@ -24,7 +23,6 @@ class DiscoverAdsFilterModule : XposedModule() {
         Logger.log(Log.INFO, "v${BuildConfig.VERSION_NAME} loaded in ${param.processName}")
     }
 
-    @SuppressLint("PrivateApi")
     override fun onPackageReady(param: PackageReadyParam) {
         if (!param.isFirstPackage && param.packageName != AGSA_PKG) return
 
@@ -80,15 +78,9 @@ class DiscoverAdsFilterModule : XposedModule() {
         )
     }
 
-    @Suppress("PrivateApi")
     private fun currentAgsaVersionCode(): Long =
         runCatching {
-            val activityThread = Class.forName("android.app.ActivityThread")
-            val app =
-                activityThread
-                    .getMethod(
-                        "currentApplication",
-                    ).invoke(null) as? Application ?: return@runCatching 0L
+            val app = CurrentApp.get() ?: return@runCatching 0L
             app.packageManager.getPackageInfo(AGSA_PKG, 0).longVersionCode
         }.getOrDefault(0L)
 
