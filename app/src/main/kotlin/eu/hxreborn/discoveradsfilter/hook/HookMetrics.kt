@@ -1,17 +1,15 @@
 package eu.hxreborn.discoveradsfilter.hook
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import androidx.core.net.toUri
 import eu.hxreborn.discoveradsfilter.provider.MetricsProvider
 import eu.hxreborn.discoveradsfilter.util.CurrentApp
 import eu.hxreborn.discoveradsfilter.util.Logger
 
 object HookMetrics {
-    @SuppressLint("UseKtx")
-    private val providerUri = Uri.parse("content://${MetricsProvider.AUTHORITY}")
+    private val providerUri = "content://${MetricsProvider.AUTHORITY}".toUri()
 
     @Volatile
     private var appContext: Context? = null
