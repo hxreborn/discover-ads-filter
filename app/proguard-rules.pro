@@ -8,10 +8,6 @@
 
 -keep,allowobfuscation,allowoptimization class * extends io.github.libxposed.api.XposedModule {
     public <init>();
-    public void onModuleLoaded(...);
-    public void onPackageLoaded(...);
-    public void onPackageReady(...);
-    public void onSystemServerStarting(...);
 }
 
 # Hook implementations are dispatched reflectively by libxposed via Chain.
