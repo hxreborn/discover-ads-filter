@@ -1,7 +1,7 @@
 [versions]
 agp = "9.2.0"
 kotlin = "2.3.21"
-kotlinxCoroutines = "1.10.2"
+kotlinxCoroutines = "1.11.0"
 kotlinxSerialization = "1.11.0"
 libxposedApi = "101.0.1"
 libxposedService = "101.0.0"
