@@ -62,7 +62,7 @@ internal fun ResolvedSymbolRow(
                 },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.End,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.width(ValueWidth),
         )

@@ -82,7 +82,7 @@ object DexKitResolver {
         val streamRenderableListMethod = findStreamRenderableListMethod(bridge)
         val streamValue =
             streamRenderableListMethod?.let {
-                "${it.className.substringAfterLast('.')}.${it.methodName}"
+                "${it.className.substringAfterLast('.')}.${it.methodName}()"
             }
         onStep?.invoke("Stream list", streamValue)
 

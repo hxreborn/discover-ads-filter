@@ -252,8 +252,7 @@ class HomeViewModel(
 
             val resolved =
                 DexKitResolver.resolveAll(apkPath) { name, value ->
-                    val rawShort = value?.substringAfterLast('.')
-                    steps.add(ScanStep(name, rawShort, value != null))
+                    steps.add(ScanStep(name, value, value != null))
                     verifyFlow.update {
                         it?.copy(scanProgress = steps.toList())
                     }

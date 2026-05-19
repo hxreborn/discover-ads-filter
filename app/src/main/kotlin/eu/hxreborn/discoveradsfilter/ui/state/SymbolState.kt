@@ -70,7 +70,7 @@ fun VerifyUiState.toSymbolSections(): List<SymbolSection> {
                     name = "Stream list",
                     value =
                         targets?.streamRenderableListMethod?.let {
-                            "${it.className.substringAfterLast('.')}.${it.methodName}"
+                            "${it.className.substringAfterLast('.')}.${it.methodName}()"
                         },
                     status =
                         if (targets?.streamRenderableListMethod != null) {
