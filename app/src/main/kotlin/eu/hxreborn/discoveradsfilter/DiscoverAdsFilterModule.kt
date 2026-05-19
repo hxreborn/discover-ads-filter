@@ -41,6 +41,7 @@ class DiscoverAdsFilterModule : XposedModule() {
             val attach =
                 Application::class.java.getDeclaredMethod("attach", Context::class.java)
             attach.isAccessible = true
+            deoptimize(attach)
             hook(attach).intercept(BootstrapHook(param.classLoader, prefs, proc))
         }
     }
