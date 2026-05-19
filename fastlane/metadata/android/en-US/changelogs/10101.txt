@@ -1,0 +1,7 @@
+Fix hook not installing when app context is unavailable at startup
+Defer hook installation to Application.attach for reliable version lookup
+Prevent ART inlining of hooked method on some ROMs
+Migrate scrollbar from deprecated Modifier.composed to Modifier.Node
+Add accessibility labels to status card and loading states
+Fix fragile top bar title expansion check
+Replace hardcoded spacing with design tokens
