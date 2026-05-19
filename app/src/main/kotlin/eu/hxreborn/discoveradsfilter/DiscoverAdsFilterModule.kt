@@ -10,7 +10,6 @@ import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.util.Logger
 import eu.hxreborn.discoveradsfilter.util.ProcessName
-import eu.hxreborn.discoveradsfilter.util.Safe
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
@@ -37,13 +36,13 @@ class DiscoverAdsFilterModule : XposedModule() {
 
         val prefs = getRemotePreferences(SettingsPrefs.GROUP)
 
-        Safe.run("bootstrap hook") {
+        runCatching {
             val attach =
                 Application::class.java.getDeclaredMethod("attach", Context::class.java)
             attach.isAccessible = true
             deoptimize(attach)
             hook(attach).intercept(BootstrapHook(param.classLoader, prefs, proc))
-        }
+        }.onFailure { Logger.log(Log.ERROR, "failed: bootstrap hook", it) }
     }
 
     companion object {
@@ -65,8 +64,8 @@ private class BootstrapHook(
         if (installed) return null
         installed = true
 
-        Safe.run("deferred install") {
-            val ctx = chain.getArgs()[0] as Context
+        runCatching {
+            val ctx = chain.args[0] as Context
             val versionCode =
                 ctx.packageManager
                     .getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
@@ -90,9 +89,9 @@ private class BootstrapHook(
                     }.getOrDefault(0L)
                 val keysSuffix =
                     if (SettingsPrefs.verbose.read(prefs)) {
-                        val allKeys =
-                            runCatching { prefs.all.keys.sorted() }.getOrDefault(emptyList())
-                        " allKeys=$allKeys"
+                        " allKeys=${runCatching { prefs.all.keys.sorted() }.getOrDefault(
+                            emptyList(),
+                        )}"
                     } else {
                         ""
                     }
@@ -103,20 +102,26 @@ private class BootstrapHook(
                 )
             }
 
-            val ok =
-                runCatching {
-                    StreamSliceFilterHook.install(loader, prefs, targets, proc)
-                    true
-                }.onFailure { t ->
-                    Safe.logFailure("install StreamSliceFilterHook", t)
-                }.isSuccess
-
-            val status = if (ok) "1/1" else "0/1 failed:StreamSliceFilterHook"
+            val hooks =
+                listOf(
+                    "StreamSliceFilterHook" to
+                        runCatching {
+                            StreamSliceFilterHook.install(loader, prefs, targets, proc)
+                        }.getOrElse {
+                            Logger.log(Log.ERROR, "failed: install StreamSliceFilterHook", it)
+                            false
+                        },
+                )
+            val passed = hooks.count { it.second }
+            val failedNames = hooks.filter { !it.second }.map { it.first }
+            val status =
+                "$passed/${hooks.size}" +
+                    if (failedNames.isEmpty()) "" else " failed:${failedNames.joinToString(",")}"
             Logger.log(
                 Log.INFO,
                 "installed proc=$proc agsaV=$versionCode hooks=$status ${targets.summary()}",
             )
-        }
+        }.onFailure { Logger.log(Log.ERROR, "failed: deferred install", it) }
         return null
     }
 }
