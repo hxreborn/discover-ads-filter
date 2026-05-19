@@ -16,6 +16,8 @@
     <string name="hero_target_agsa">Google %1$s</string>
     <string name="hero_module_not_active">Module Not Enabled</string>
     <string name="hero_module_not_active_detail">Enable this module in your Xposed manager, then tap here to restart the app</string>
+    <string name="action_restart_app">Restart app</string>
+    <string name="loading">Loading</string>
     <string name="hero_scanning">Scanning\u2026</string>
     <string name="hero_scanning_detail">Resolving symbols for this build</string>
     <string name="hero_scan_required">Scan required</string>

@@ -34,7 +34,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,7 +43,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -158,7 +158,6 @@ private fun DiagnosticsFabHost(
     onTap: () -> Unit,
 ) {
     val fabEnabled = !anyRunning
-    val onTapState by rememberUpdatedState(onTap)
     val haptic = LocalHapticFeedback.current
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -173,7 +172,7 @@ private fun DiagnosticsFabHost(
         hasCachedScan = hasCachedScan,
         onTap = {
             haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
-            onTapState()
+            onTap()
         },
         fabEnabled = fabEnabled,
         interactionSource = interactionSource,
@@ -199,9 +198,14 @@ private fun DiagnosticsFab(
     val fabContainerColor = if (fabEnabled) scheme.primaryContainer else scheme.surfaceVariant
     val fabContentColor = if (fabEnabled) scheme.onPrimaryContainer else scheme.onSurfaceVariant
     val baseModifier = modifier.animateContentSize(animationSpec = tween(durationMillis = 140))
-    val fabModifier = if (fabEnabled) baseModifier else baseModifier.alpha(0.7f).semantics { disabled() }
-    val idleFabLabel = stringResource(if (hasCachedScan) R.string.button_rescan else R.string.button_scan)
     val runningFabLabel = stringResource(R.string.fab_resolving)
+    val fabModifier =
+        if (fabEnabled) {
+            baseModifier
+        } else {
+            baseModifier.alpha(0.7f).clearAndSetSemantics { contentDescription = runningFabLabel }
+        }
+    val idleFabLabel = stringResource(if (hasCachedScan) R.string.button_rescan else R.string.button_scan)
 
     ExtendedFloatingActionButton(
         onClick = { if (fabEnabled) onTap() },

@@ -32,6 +32,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -69,7 +71,9 @@ fun StatusCard(
                 .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                 .let { base ->
                     if (isInactive) {
-                        base.clickable {
+                        base.clickable(
+                            onClickLabel = context.getString(R.string.action_restart_app),
+                        ) {
                             val intent =
                                 context.packageManager
                                     .getLaunchIntentForPackage(context.packageName)
@@ -93,7 +97,13 @@ fun StatusCard(
         ) {
             Box(modifier = Modifier.size(IconSize.lg), contentAlignment = Alignment.Center) {
                 if (scanning) {
-                    LoadingIndicator(modifier = Modifier.size(IconSize.lg))
+                    val loadingDesc = stringResource(R.string.loading)
+                    LoadingIndicator(
+                        modifier =
+                            Modifier.size(IconSize.lg).semantics {
+                                contentDescription = loadingDesc
+                            },
+                    )
                 } else {
                     Icon(
                         imageVector = visual.icon,
