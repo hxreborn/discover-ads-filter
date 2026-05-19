@@ -75,13 +75,12 @@ private class BootstrapHook(
             val targets = DexKitCache.load(versionCode, BuildConfig.VERSION_CODE, prefs)
 
             if (targets is ResolvedTargets.Resolved && SettingsPrefs.verbose.read(prefs)) {
-                Logger.log(Log.DEBUG, "[resolved] adMeta=${targets.adMetadataClass}")
-                Logger.log(Log.DEBUG, "[resolved] card=${targets.feedCardClass}")
-                Logger.log(Log.DEBUG, "[resolved] adFlagField=${targets.adFlagFieldName}")
-                Logger.log(Log.DEBUG, "[resolved] adLabelField=${targets.adLabelFieldName}")
-                Logger.log(Log.DEBUG, "[resolved] adMetaField=${targets.adMetadataFieldName}")
-                Logger.log(Log.DEBUG, "[resolved] stream=${targets.streamRenderableListMethod}")
-                Logger.log(Log.DEBUG, "[resolved] processors=${targets.cardProcessorMethods.size}")
+                Logger.log(
+                    Log.DEBUG,
+                    "[resolved] stream=${targets.streamRenderableListMethod} " +
+                        "adMeta=${targets.adMetadataClass} card=${targets.feedCardClass} " +
+                        "processors=${targets.cardProcessorMethods.size}",
+                )
             }
 
             if (targets is ResolvedTargets.Missing) {
