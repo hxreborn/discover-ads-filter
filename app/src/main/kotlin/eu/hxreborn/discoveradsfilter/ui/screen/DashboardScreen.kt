@@ -46,6 +46,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -62,6 +64,7 @@ import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
+import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -104,7 +107,7 @@ internal fun DashboardScreenContent(
         topBar = {
             LargeTopAppBar(
                 title = {
-                    val isExpanded = LocalTextStyle.current.fontSize >= MaterialTheme.typography.headlineMedium.fontSize
+                    val isExpanded = scrollBehavior.state.collapsedFraction < 0.5f
                     Text(
                         text = stringResource(R.string.app_name),
                         style =
@@ -172,7 +175,7 @@ private fun LazyListScope.dashboardReadyItems(
     onClearCacheClick: () -> Unit,
     onResetCounterClick: () -> Unit,
 ) {
-    item(key = "status") {
+    item(key = "status", contentType = "StatusCard") {
         StatusCard(state = ready.verify)
     }
 
@@ -347,12 +350,16 @@ private fun LazyListScope.dashboardReadyItems(
 private fun LazyListScope.dashboardLoadingCard(surface: Color) {
     item(key = "loading", contentType = "loading") {
         Surface(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm, vertical = Spacing.sm),
             color = surface,
             shape = MaterialTheme.shapes.large,
         ) {
+            val loadingDesc = stringResource(R.string.loading)
             Box(
-                modifier = Modifier.fillMaxWidth().padding(24.dp),
+                modifier =
+                    Modifier.fillMaxWidth().padding(Spacing.lg).semantics {
+                        contentDescription = loadingDesc
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 LoadingIndicator()
@@ -408,7 +415,7 @@ private fun ResetCounterDialog(
 private fun Modifier.preferenceCard(
     shape: Shape,
     surface: Color,
-): Modifier = this.padding(horizontal = 8.dp).background(color = surface, shape = shape).clip(shape)
+): Modifier = this.padding(horizontal = Spacing.sm).background(color = surface, shape = shape).clip(shape)
 
 // region Previews
 

@@ -409,7 +409,7 @@ private fun SymbolSections(sections: List<SymbolSection>) {
                     modifier =
                         Modifier.padding(
                             horizontal = Spacing.md,
-                            vertical = 8.dp,
+                            vertical = Spacing.sm,
                         ),
                 )
             }
