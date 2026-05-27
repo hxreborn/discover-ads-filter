@@ -1,0 +1,1 @@
+Add monochrome adaptive icon for themed icon support
