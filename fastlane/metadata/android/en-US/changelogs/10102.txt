@@ -1,1 +1,2 @@
 Add monochrome adaptive icon for themed icon support
+General code improvements
