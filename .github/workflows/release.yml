@@ -41,6 +41,12 @@ jobs:
             echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Derive mirror tag
+        id: mirror_tag
+        run: |
+          code=$(grep '^version\.code=' gradle.properties | cut -d= -f2)
+          echo "mirror_tag=${code}-${{ steps.version.outputs.name }}" >> "$GITHUB_OUTPUT"
+
       - name: Build APKs
         env:
           RELEASE_STORE_FILE: ${{ github.workspace }}/release.keystore
@@ -80,6 +86,18 @@ jobs:
           body: ${{ steps.changelog.outputs.content || '' }}
           files: |
             app/build/outputs/apk/release/*.apk
+
+      - name: Mirror to Xposed-Modules-Repo
+        uses: softprops/action-gh-release@v3
+        with:
+          repository: Xposed-Modules-Repo/eu.hxreborn.discoveradsfilter
+          token: ${{ secrets.XPOSED_REPO_PAT }}
+          tag_name: ${{ steps.mirror_tag.outputs.mirror_tag }}
+          prerelease: ${{ steps.version.outputs.prerelease }}
+          body: ${{ steps.changelog.outputs.content || '' }}
+          files: app/build/outputs/apk/release/*.apk
+          fail_on_unmatched_files: true
+          make_latest: true
 
       - name: Clean up keystore
         if: always()
