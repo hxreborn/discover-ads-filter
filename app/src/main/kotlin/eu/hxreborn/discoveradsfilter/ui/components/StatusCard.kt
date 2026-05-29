@@ -63,6 +63,7 @@ fun StatusCard(
     val scanning = state.phase == VerifyPhase.Running && state.lastResult == null
     val isInactive = state.moduleStatus == ModuleStatus.Inactive
     val context = LocalContext.current
+    val restartLabel = stringResource(R.string.action_restart_app)
 
     Surface(
         modifier =
@@ -72,7 +73,7 @@ fun StatusCard(
                 .let { base ->
                     if (isInactive) {
                         base.clickable(
-                            onClickLabel = context.getString(R.string.action_restart_app),
+                            onClickLabel = restartLabel,
                         ) {
                             val intent =
                                 context.packageManager
