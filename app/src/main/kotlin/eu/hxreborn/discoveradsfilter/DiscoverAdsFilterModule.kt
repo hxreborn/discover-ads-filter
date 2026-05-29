@@ -84,39 +84,31 @@ private class BootstrapHook(
 
             if (targets is ResolvedTargets.Missing) {
                 val lastRemoteWrite =
-                    runCatching {
-                        SettingsPrefs.lastRemoteWrite.read(prefs)
-                    }.getOrDefault(0L)
-                val keysSuffix =
-                    if (SettingsPrefs.verbose.read(prefs)) {
-                        " allKeys=${runCatching { prefs.all.keys.sorted() }.getOrDefault(
-                            emptyList(),
-                        )}"
-                    } else {
-                        ""
+                    runCatching { SettingsPrefs.lastRemoteWrite.read(prefs) }.getOrDefault(0L)
+                val fields =
+                    buildList {
+                        add("skipped")
+                        add("proc=$proc")
+                        add("v=$versionCode")
+                        add("reason=${targets.reason}")
+                        add("lastRemoteWrite=$lastRemoteWrite")
+                        if (SettingsPrefs.verbose.read(prefs)) {
+                            val keys =
+                                runCatching { prefs.all.keys.sorted() }.getOrDefault(emptyList())
+                            add("allKeys=$keys")
+                        }
                     }
-                Logger.log(
-                    Log.WARN,
-                    "skipped proc=$proc v=$versionCode reason=${targets.reason} " +
-                        "lastRemoteWrite=$lastRemoteWrite$keysSuffix",
-                )
+                Logger.log(Log.WARN, fields.joinToString(" "))
             }
 
-            val hooks =
-                listOf(
-                    "StreamSliceFilterHook" to
-                        runCatching {
-                            StreamSliceFilterHook.install(loader, prefs, targets, proc)
-                        }.getOrElse {
-                            Logger.log(Log.ERROR, "failed: install StreamSliceFilterHook", it)
-                            false
-                        },
-                )
-            val passed = hooks.count { it.second }
-            val failedNames = hooks.filter { !it.second }.map { it.first }
-            val status =
-                "$passed/${hooks.size}" +
-                    if (failedNames.isEmpty()) "" else " failed:${failedNames.joinToString(",")}"
+            val streamHookInstalled =
+                runCatching {
+                    StreamSliceFilterHook.install(loader, prefs, targets, proc)
+                }.getOrElse {
+                    Logger.log(Log.ERROR, "failed: install StreamSliceFilterHook", it)
+                    false
+                }
+            val status = if (streamHookInstalled) "1/1" else "0/1 failed:StreamSliceFilterHook"
             Logger.log(
                 Log.INFO,
                 "installed proc=$proc agsaV=$versionCode hooks=$status ${targets.summary()}",
