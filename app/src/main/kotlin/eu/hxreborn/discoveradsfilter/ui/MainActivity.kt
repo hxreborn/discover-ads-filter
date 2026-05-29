@@ -21,7 +21,7 @@ class MainActivity :
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        App.addServiceListener(this)
+        App.from(this).addServiceListener(this)
 
         setContent { DiscoverAdsFilterApp(viewModel) }
     }
@@ -33,7 +33,7 @@ class MainActivity :
     override fun onServiceDied(service: XposedService) = Unit
 
     override fun onDestroy() {
-        App.removeServiceListener(this)
+        App.from(this).removeServiceListener(this)
         super.onDestroy()
     }
 }

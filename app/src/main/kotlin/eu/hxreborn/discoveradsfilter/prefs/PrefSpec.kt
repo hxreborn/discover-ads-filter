@@ -16,6 +16,11 @@ class PrefSpec<T>(
     ) {
         editor.put(key, value)
     }
+
+    fun copy(
+        from: SharedPreferences,
+        to: SharedPreferences.Editor,
+    ) = write(to, read(from))
 }
 
 fun boolPref(

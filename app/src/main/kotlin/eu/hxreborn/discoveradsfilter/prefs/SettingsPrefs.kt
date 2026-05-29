@@ -15,6 +15,16 @@ object SettingsPrefs {
     val fingerprintCurrentVersion = longPref("fp_v4_current_version", 0L)
     val fingerprintCurrentModuleVersion = intPref("fp_v4_current_module_version", 0)
 
+    /** Prefs synced to remote (excludes adsHidden and lastRemoteWrite). */
+    val all: List<PrefSpec<*>> =
+        listOf(
+            verbose,
+            filterEnabled,
+            fingerprintCurrent,
+            fingerprintCurrentVersion,
+            fingerprintCurrentModuleVersion,
+        )
+
     const val KEY_FINGERPRINT_PREFIX = "fp_v4_"
 
     fun fingerprintKey(

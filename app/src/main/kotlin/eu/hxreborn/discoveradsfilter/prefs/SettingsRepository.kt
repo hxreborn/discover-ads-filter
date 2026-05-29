@@ -1,6 +1,5 @@
 package eu.hxreborn.discoveradsfilter.prefs
 
-import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import eu.hxreborn.discoveradsfilter.BuildConfig
@@ -8,16 +7,13 @@ import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 
 class SettingsRepository(
-    context: Context,
-    private val remotePrefsProvider: () -> SharedPreferences?,
+    private val local: SharedPreferences,
+    private val remoteProvider: () -> SharedPreferences?,
 ) {
-    private val localPrefs: SharedPreferences =
-        context.applicationContext.getSharedPreferences(SettingsPrefs.GROUP, Context.MODE_PRIVATE)
-
     fun snapshot(): PersistedSettings =
         PersistedSettings(
-            verbose = SettingsPrefs.verbose.read(localPrefs),
-            filterEnabled = SettingsPrefs.filterEnabled.read(localPrefs),
+            verbose = SettingsPrefs.verbose.read(local),
+            filterEnabled = SettingsPrefs.filterEnabled.read(local),
         )
 
     fun setVerbose(value: Boolean) = save { SettingsPrefs.verbose.write(this, value) }
@@ -32,7 +28,7 @@ class SettingsRepository(
         val encoded = DexKitCache.encode(targets)
 
         val keysToPrune =
-            localPrefs.all.keys.filter { key ->
+            local.all.keys.filter { key ->
                 key.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) && key !in
                     setOf(
                         SettingsPrefs.fingerprintCurrent.key,
@@ -57,16 +53,16 @@ class SettingsRepository(
     }
 
     fun readLastScan(): CachedScan? {
-        val raw = SettingsPrefs.fingerprintCurrent.read(localPrefs) ?: return null
+        val raw = SettingsPrefs.fingerprintCurrent.read(local) ?: return null
         val resolved =
             runCatching { DexKitCache.decode(raw) }.getOrNull() as? ResolvedTargets.Resolved
                 ?: return null
-        val version = SettingsPrefs.fingerprintCurrentVersion.read(localPrefs)
-        val moduleVersion = SettingsPrefs.fingerprintCurrentModuleVersion.read(localPrefs)
+        val version = SettingsPrefs.fingerprintCurrentVersion.read(local)
+        val moduleVersion = SettingsPrefs.fingerprintCurrentModuleVersion.read(local)
         return CachedScan(version, resolved, moduleVersion)
     }
 
-    fun readAdsHidden(): Long = SettingsPrefs.adsHidden.read(localPrefs)
+    fun readAdsHidden(): Long = SettingsPrefs.adsHidden.read(local)
 
     fun resetAdsCounter() {
         save { SettingsPrefs.adsHidden.write(this, 0L) }
@@ -74,29 +70,30 @@ class SettingsRepository(
 
     fun clearScanCache() {
         val keysToRemove =
-            localPrefs.all.keys.filter { it.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) }
+            local.all.keys.filter { it.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) }
         save { keysToRemove.forEach { remove(it) } }
     }
 
-    fun syncLocalToRemote() {
-        val remote = remotePrefsProvider() ?: return
+    fun syncToRemote() {
+        val remote = remoteProvider() ?: return
         remote.edit(commit = true) {
             SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
-            localPrefs.all.forEach { (key, value) ->
-                if (key == SettingsPrefs.adsHidden.key) return@forEach
-                when (value) {
-                    is Boolean -> putBoolean(key, value)
-                    is Int -> putInt(key, value)
-                    is String -> putString(key, value)
-                    is Long -> putLong(key, value)
+            SettingsPrefs.all.forEach { it.copy(local, this) }
+            // Sync versioned fingerprint keys that aren't in the typed all list.
+            local.all.keys
+                .filter { it.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) }
+                .forEach { key ->
+                    if (SettingsPrefs.all.none { it.key == key }) {
+                        val value = local.getString(key, null)
+                        if (value != null) putString(key, value)
+                    }
                 }
-            }
         }
     }
 
     private inline fun save(crossinline block: SharedPreferences.Editor.() -> Unit) {
-        localPrefs.edit { block() }
-        remotePrefsProvider()?.edit(commit = true) {
+        local.edit { block() }
+        remoteProvider()?.edit(commit = true) {
             block()
             SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
         }

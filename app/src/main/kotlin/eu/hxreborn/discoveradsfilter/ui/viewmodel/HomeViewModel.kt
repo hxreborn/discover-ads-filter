@@ -12,7 +12,6 @@ import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
 import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
-import eu.hxreborn.discoveradsfilter.prefs.SettingsRepository
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
@@ -38,11 +37,8 @@ class HomeViewModel(
     private val app: Application,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
-    private val repo =
-        SettingsRepository(
-            context = app,
-            remotePrefsProvider = { App.remotePrefs },
-        )
+    private val appInstance = App.from(app)
+    private val repo = appInstance.settingsRepository
 
     private val verboseFlow = MutableStateFlow(false)
     private val filterEnabledFlow = MutableStateFlow(true)
@@ -90,7 +86,7 @@ class HomeViewModel(
                 verifyFlow.value =
                     VerifyUiState(
                         phase = VerifyPhase.Idle,
-                        moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive,
+                        moduleStatus = if (appInstance.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive,
                     )
             }
         }
@@ -98,7 +94,6 @@ class HomeViewModel(
 
     fun onServiceBound() {
         viewModelScope.launch(ioDispatcher) {
-            repo.syncLocalToRemote()
             val adsHidden = repo.readAdsHidden()
             verifyFlow.update { current ->
                 current?.copy(
@@ -123,7 +118,7 @@ class HomeViewModel(
             result == null || agsaPkg?.versionCode?.let { it != result.versionCode } == true ||
                 lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
         val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
-        val moduleStatus = if (App.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive
+        val moduleStatus = if (appInstance.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive
 
         verifyFlow.value =
             VerifyUiState(
