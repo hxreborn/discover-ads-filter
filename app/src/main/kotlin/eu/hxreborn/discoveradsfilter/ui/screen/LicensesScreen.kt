@@ -45,7 +45,10 @@ private val DIRECT_DEPENDENCY_GROUPS =
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LicensesScreen(onBack: () -> Unit) {
+fun LicensesScreen(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val libs by produceLibraries()
     val listState = rememberLazyListState()
@@ -65,7 +68,7 @@ fun LicensesScreen(onBack: () -> Unit) {
         }
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = {

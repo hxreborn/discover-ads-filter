@@ -34,6 +34,7 @@ import eu.hxreborn.discoveradsfilter.R
 internal fun SettingsDetailScaffold(
     title: String,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit,
@@ -41,7 +42,7 @@ internal fun SettingsDetailScaffold(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = floatingActionButton,
         topBar = {
             LargeTopAppBar(

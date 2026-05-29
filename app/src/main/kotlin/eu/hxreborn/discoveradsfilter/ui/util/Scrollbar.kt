@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -107,8 +108,6 @@ private class ScrollbarNode(
             )
         }
     }
-
-    private fun snapshotFlow(block: () -> Any): kotlinx.coroutines.flow.Flow<Any> = androidx.compose.runtime.snapshotFlow(block)
 }
 
 private fun DrawScope.drawVerticalThumb(

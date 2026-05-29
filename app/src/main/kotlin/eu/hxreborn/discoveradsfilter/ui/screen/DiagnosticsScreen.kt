@@ -4,7 +4,6 @@ package eu.hxreborn.discoveradsfilter.ui.screen
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +44,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -75,6 +73,7 @@ import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 fun DiagnosticsScreen(
     viewModel: HomeViewModel,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val state = (uiState as? HomeUiState.Ready)?.verify ?: VerifyUiState()
@@ -83,6 +82,7 @@ fun DiagnosticsScreen(
         state = state,
         onVerify = viewModel.actions.onVerify,
         onBack = onBack,
+        modifier = modifier,
     )
 }
 
@@ -92,6 +92,7 @@ internal fun DiagnosticsScreenContent(
     state: VerifyUiState,
     onVerify: () -> Unit,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var showInfoDialog by rememberSaveable { mutableStateOf(false) }
     var showManualProgressThisVisit by rememberSaveable { mutableStateOf(false) }
@@ -107,6 +108,7 @@ internal fun DiagnosticsScreenContent(
     SettingsDetailScaffold(
         title = stringResource(R.string.nav_diagnostics),
         onBack = onBack,
+        modifier = modifier,
         actions = {
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
@@ -163,7 +165,7 @@ private fun DiagnosticsFabHost(
     val isPressed by interactionSource.collectIsPressedAsState()
     val pressedScale by animateFloatAsState(
         targetValue = if (fabEnabled && isPressed) 0.98f else 1f,
-        animationSpec = tween(durationMillis = 70),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "diagnostics_fab_press_scale",
     )
 
@@ -197,7 +199,7 @@ private fun DiagnosticsFab(
     val scheme = MaterialTheme.colorScheme
     val fabContainerColor = if (fabEnabled) scheme.primaryContainer else scheme.surfaceVariant
     val fabContentColor = if (fabEnabled) scheme.onPrimaryContainer else scheme.onSurfaceVariant
-    val baseModifier = modifier.animateContentSize(animationSpec = tween(durationMillis = 140))
+    val baseModifier = modifier.animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
     val runningFabLabel = stringResource(R.string.fab_resolving)
     val fabModifier =
         if (fabEnabled) {

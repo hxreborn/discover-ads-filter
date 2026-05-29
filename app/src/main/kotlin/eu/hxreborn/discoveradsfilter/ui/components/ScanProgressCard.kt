@@ -234,7 +234,7 @@ private fun ActiveStepRow(
         Surface(
             color = scheme.primaryContainer,
             contentColor = scheme.onPrimaryContainer,
-            shape = RoundedCornerShape(999.dp),
+            shape = CircleShape,
         ) {
             CircularWavyProgressIndicator(
                 modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp).size(14.dp),
@@ -270,7 +270,7 @@ private fun TrailingValueAndBadge(
         Surface(
             color = badgeColor,
             contentColor = badgeContentColor,
-            shape = RoundedCornerShape(999.dp),
+            shape = CircleShape,
         ) {
             Text(
                 text = badgeLabel,

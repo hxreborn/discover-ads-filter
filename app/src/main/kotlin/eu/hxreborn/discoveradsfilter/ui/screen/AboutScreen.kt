@@ -41,11 +41,16 @@ private const val GITHUB_ISSUES_URL = "https://github.com/hxreborn/discover-ads-
 @Composable
 fun AboutScreen(
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
     onNavigateToLicenses: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
-    SettingsDetailScaffold(title = stringResource(R.string.pref_category_about), onBack = onBack) {
+    SettingsDetailScaffold(
+        title = stringResource(R.string.pref_category_about),
+        onBack = onBack,
+        modifier = modifier,
+    ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = shapeForPosition(1, 0),
