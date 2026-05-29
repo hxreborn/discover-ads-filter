@@ -44,9 +44,16 @@ class HomeViewModel(
     private val filterEnabledFlow = MutableStateFlow(true)
     private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
+    private val adsHiddenFlow = repo.adsHiddenFlow()
 
     val uiState: StateFlow<HomeUiState> =
-        combine(verboseFlow, filterEnabledFlow, launcherIconHiddenFlow, verifyFlow) { verbose, filterEnabled, launcherIconHidden, verify ->
+        combine(
+            verboseFlow,
+            filterEnabledFlow,
+            launcherIconHiddenFlow,
+            verifyFlow,
+            adsHiddenFlow,
+        ) { verbose, filterEnabled, launcherIconHidden, verify, adsHidden ->
             if (verify == null) {
                 HomeUiState.Loading
             } else {
@@ -54,7 +61,7 @@ class HomeViewModel(
                     verbose = verbose,
                     filterEnabled = filterEnabled,
                     isLauncherIconHidden = launcherIconHidden,
-                    verify = verify,
+                    verify = verify.copy(adsHidden = adsHidden),
                 )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
@@ -93,15 +100,7 @@ class HomeViewModel(
     }
 
     fun onServiceBound() {
-        viewModelScope.launch(ioDispatcher) {
-            val adsHidden = repo.readAdsHidden()
-            verifyFlow.update { current ->
-                current?.copy(
-                    adsHidden = adsHidden,
-                    moduleStatus = ModuleStatus.Active,
-                )
-            }
-        }
+        verifyFlow.update { it?.copy(moduleStatus = ModuleStatus.Active) }
     }
 
     private suspend fun initialize() {
@@ -110,7 +109,6 @@ class HomeViewModel(
         filterEnabledFlow.value = snapshot.filterEnabled
         val lastScan = repo.readLastScan()
         val agsaPkg = currentAgsaPackageInfo()
-        val adsHidden = repo.readAdsHidden()
 
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
         val hasUsableResult = result is VerifyResult.Success
@@ -129,7 +127,6 @@ class HomeViewModel(
                 installedAgsaVersionName = agsaPkg?.versionName,
                 installedAgsaLastUpdateTime = agsaPkg?.lastUpdateTime ?: 0L,
                 scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
-                adsHidden = adsHidden,
                 moduleStatus = moduleStatus,
             )
 
@@ -139,7 +136,6 @@ class HomeViewModel(
     private fun resetAdsCounter() {
         viewModelScope.launch(ioDispatcher) {
             repo.resetAdsCounter()
-            verifyFlow.update { it?.copy(adsHidden = 0) }
         }
     }
 

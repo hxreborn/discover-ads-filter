@@ -5,6 +5,9 @@ import androidx.core.content.edit
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 class SettingsRepository(
     private val local: SharedPreferences,
@@ -63,6 +66,21 @@ class SettingsRepository(
     }
 
     fun readAdsHidden(): Long = SettingsPrefs.adsHidden.read(local)
+
+    // MetricsProvider writes the counter in this same process, so a local change
+    // listener sees every increment without polling.
+    fun adsHiddenFlow(): Flow<Long> =
+        callbackFlow {
+            trySend(readAdsHidden())
+            val listener =
+                SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                    if (key == null || key == SettingsPrefs.adsHidden.key) {
+                        trySend(readAdsHidden())
+                    }
+                }
+            local.registerOnSharedPreferenceChangeListener(listener)
+            awaitClose { local.unregisterOnSharedPreferenceChangeListener(listener) }
+        }
 
     fun resetAdsCounter() {
         save { SettingsPrefs.adsHidden.write(this, 0L) }
