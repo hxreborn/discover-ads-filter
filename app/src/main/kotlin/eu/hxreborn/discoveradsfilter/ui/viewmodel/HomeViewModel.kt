@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -44,7 +45,10 @@ class HomeViewModel(
     private val filterEnabledFlow = MutableStateFlow(true)
     private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
-    private val adsHiddenFlow = repo.adsHiddenFlow()
+
+    // A decorative counter must never be able to freeze the whole screen, so a
+    // throw in the cross-process prefs flow falls back to 0 instead of killing combine.
+    private val adsHiddenFlow = repo.adsHiddenFlow().catch { emit(0L) }
 
     val uiState: StateFlow<HomeUiState> =
         combine(
@@ -87,14 +91,13 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch(ioDispatcher) {
-            launcherIconHiddenFlow.value = !isLauncherIconVisible(app)
+            runCatching { launcherIconHiddenFlow.value = !isLauncherIconVisible(app) }
+                .onFailure { Log.w(TAG, "launcher icon state read failed", it) }
             runCatching { initialize() }.onFailure { t ->
                 Log.e(TAG, "initialization failed", t)
-                verifyFlow.value =
-                    VerifyUiState(
-                        phase = VerifyPhase.Idle,
-                        moduleStatus = if (appInstance.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive,
-                    )
+                verifyFlow.update {
+                    it ?: VerifyUiState(phase = VerifyPhase.Idle, moduleStatus = moduleStatusNow())
+                }
             }
         }
     }
@@ -107,31 +110,41 @@ class HomeViewModel(
         val snapshot = repo.snapshot()
         verboseFlow.value = snapshot.verbose
         filterEnabledFlow.value = snapshot.filterEnabled
+
         val lastScan = repo.readLastScan()
-        val agsaPkg = currentAgsaPackageInfo()
-
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
-        val hasUsableResult = result is VerifyResult.Success
-        val needsScan =
-            result == null || agsaPkg?.versionCode?.let { it != result.versionCode } == true ||
-                lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
-        val origin = if (hasUsableResult) ScanOrigin.Background else ScanOrigin.Startup
-        val moduleStatus = if (appInstance.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive
 
+        // Publish a usable state from the fast local reads before the PackageManager
+        // lookup below, which can stall while the system finishes an AGSA update.
+        // This is what keeps the screen from sitting on the bare Loading card.
         verifyFlow.value =
             VerifyUiState(
+                phase = VerifyPhase.Idle,
+                lastResult = result,
+                scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
+                moduleStatus = moduleStatusNow(),
+            )
+
+        val agsaPkg = currentAgsaPackageInfo()
+        val agsaUpdated = result != null && agsaPkg != null && agsaPkg.versionCode != result.versionCode
+        val moduleUpdated = lastScan != null && lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
+        val needsScan = result == null || agsaUpdated || moduleUpdated
+        val origin = if (result != null) ScanOrigin.Background else ScanOrigin.Startup
+
+        verifyFlow.update { current ->
+            current?.copy(
                 phase = if (needsScan) VerifyPhase.Running else VerifyPhase.Idle,
                 scanOrigin = if (needsScan) origin else null,
-                lastResult = result,
                 installedAgsaVersion = agsaPkg?.versionCode,
                 installedAgsaVersionName = agsaPkg?.versionName,
                 installedAgsaLastUpdateTime = agsaPkg?.lastUpdateTime ?: 0L,
-                scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
-                moduleStatus = moduleStatus,
             )
+        }
 
         if (needsScan) runScanAndUpdate()
     }
+
+    private fun moduleStatusNow(): ModuleStatus = if (appInstance.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive
 
     private fun resetAdsCounter() {
         viewModelScope.launch(ioDispatcher) {
