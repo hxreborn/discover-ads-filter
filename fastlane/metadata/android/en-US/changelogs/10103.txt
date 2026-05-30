@@ -1,0 +1,4 @@
+Fix the app sometimes getting stuck on the loading screen after a Google app update
+Re-check ad signatures automatically in the background on launch
+Blocked-ads counter now updates live while the app is open
+General code improvements
