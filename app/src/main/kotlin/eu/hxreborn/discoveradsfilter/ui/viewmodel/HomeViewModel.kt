@@ -39,7 +39,7 @@ class HomeViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val appInstance = App.from(app)
-    private val repo = appInstance.settingsRepository
+    private val repo = appInstance.prefsRepository
 
     private val verboseFlow = MutableStateFlow(false)
     private val filterEnabledFlow = MutableStateFlow(true)

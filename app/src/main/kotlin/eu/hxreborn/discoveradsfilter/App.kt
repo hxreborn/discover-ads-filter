@@ -3,8 +3,8 @@ package eu.hxreborn.discoveradsfilter
 import android.app.Application
 import android.content.Context
 import android.util.Log
+import eu.hxreborn.discoveradsfilter.prefs.PrefsRepository
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
-import eu.hxreborn.discoveradsfilter.prefs.SettingsRepository
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 
@@ -16,7 +16,7 @@ class App :
 
     fun xposedService(): XposedService? = mService
 
-    lateinit var settingsRepository: SettingsRepository
+    lateinit var prefsRepository: PrefsRepository
         private set
 
     private val listeners =
@@ -24,8 +24,8 @@ class App :
 
     override fun onCreate() {
         super.onCreate()
-        settingsRepository =
-            SettingsRepository(
+        prefsRepository =
+            PrefsRepository(
                 local = getSharedPreferences(SettingsPrefs.GROUP, Context.MODE_PRIVATE),
                 remoteProvider = { mService?.getRemotePreferences(SettingsPrefs.GROUP) },
             )
@@ -35,7 +35,7 @@ class App :
     override fun onServiceBind(service: XposedService) {
         Log.i(TAG, "service bound: ${service.frameworkName} v${service.frameworkVersion}")
         mService = service
-        settingsRepository.syncToRemote()
+        prefsRepository.syncToRemote()
         listeners.forEach { it.onServiceBind(service) }
     }
 

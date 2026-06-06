@@ -9,12 +9,12 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
-class SettingsRepository(
+class PrefsRepository(
     private val local: SharedPreferences,
     private val remoteProvider: () -> SharedPreferences?,
 ) {
-    fun snapshot(): PersistedSettings =
-        PersistedSettings(
+    fun snapshot(): AppPrefs =
+        AppPrefs(
             verbose = SettingsPrefs.verbose.read(local),
             filterEnabled = SettingsPrefs.filterEnabled.read(local),
         )
@@ -118,7 +118,7 @@ class SettingsRepository(
     }
 }
 
-data class PersistedSettings(
+data class AppPrefs(
     val verbose: Boolean,
     val filterEnabled: Boolean = true,
 )
