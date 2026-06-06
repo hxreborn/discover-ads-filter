@@ -144,7 +144,7 @@ class HomeViewModel(
         if (needsScan) runScanAndUpdate()
     }
 
-    private fun moduleStatusNow(): ModuleStatus = if (appInstance.boundService != null) ModuleStatus.Active else ModuleStatus.Inactive
+    private fun moduleStatusNow(): ModuleStatus = if (appInstance.xposedService() != null) ModuleStatus.Active else ModuleStatus.Inactive
 
     private fun resetAdsCounter() {
         viewModelScope.launch(ioDispatcher) {

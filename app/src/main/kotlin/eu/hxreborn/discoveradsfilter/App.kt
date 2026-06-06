@@ -12,8 +12,9 @@ class App :
     Application(),
     XposedServiceHelper.OnServiceListener {
     @Volatile
-    var boundService: XposedService? = null
-        private set
+    private var mService: XposedService? = null
+
+    fun xposedService(): XposedService? = mService
 
     lateinit var settingsRepository: SettingsRepository
         private set
@@ -26,27 +27,27 @@ class App :
         settingsRepository =
             SettingsRepository(
                 local = getSharedPreferences(SettingsPrefs.GROUP, Context.MODE_PRIVATE),
-                remoteProvider = { boundService?.getRemotePreferences(SettingsPrefs.GROUP) },
+                remoteProvider = { mService?.getRemotePreferences(SettingsPrefs.GROUP) },
             )
         XposedServiceHelper.registerListener(this)
     }
 
     override fun onServiceBind(service: XposedService) {
         Log.i(TAG, "service bound: ${service.frameworkName} v${service.frameworkVersion}")
-        boundService = service
+        mService = service
         settingsRepository.syncToRemote()
         listeners.forEach { it.onServiceBind(service) }
     }
 
     override fun onServiceDied(service: XposedService) {
         Log.w(TAG, "service died")
-        boundService = null
+        mService = null
         listeners.forEach { it.onServiceDied(service) }
     }
 
     fun addServiceListener(listener: XposedServiceHelper.OnServiceListener) {
         listeners.add(listener)
-        boundService?.let { listener.onServiceBind(it) }
+        mService?.let { listener.onServiceBind(it) }
     }
 
     fun removeServiceListener(listener: XposedServiceHelper.OnServiceListener) {
