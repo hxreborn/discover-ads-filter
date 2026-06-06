@@ -193,6 +193,7 @@ abstract class GenerateXposedModuleProp : DefaultTask() {
             minApiVersion=101
             targetApiVersion=101
             staticScope=true
+            exceptionMode=protective
             """.trimIndent() + "\n",
         )
     }
