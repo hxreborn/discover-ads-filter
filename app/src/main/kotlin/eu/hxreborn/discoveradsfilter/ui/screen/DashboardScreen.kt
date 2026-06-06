@@ -232,7 +232,7 @@ private fun LazyListScope.dashboardReadyItems(
         onClick = { onNavigate(Destination.Diagnostics) },
     )
 
-    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+    item(key = "spacer_diagnostics_clear", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
     preference(
         key = "clear_cache",
@@ -279,7 +279,7 @@ private fun LazyListScope.dashboardReadyItems(
         )
     }
 
-    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+    item(key = "spacer_verbose_reset", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
     preference(
         key = "reset_counter",
@@ -325,7 +325,7 @@ private fun LazyListScope.dashboardReadyItems(
         )
     }
 
-    item(contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+    item(key = "spacer_launcher_about", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
     preference(
         key = "about",
@@ -343,7 +343,7 @@ private fun LazyListScope.dashboardReadyItems(
         onClick = { onNavigate(Destination.About) },
     )
 
-    item(contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
+    item(key = "spacer_bottom", contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
