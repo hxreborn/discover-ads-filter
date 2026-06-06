@@ -4,7 +4,6 @@ import android.content.SharedPreferences
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.module
-import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.util.Logger
 import io.github.libxposed.api.XposedInterface
 import java.lang.reflect.Field
@@ -31,16 +30,12 @@ object StreamSliceFilterHook {
     @Volatile
     private var lastFilteredSnapshot: List<Any?>? = null
 
-    @Volatile
-    private var hookPrefs: SharedPreferences? = null
-
     fun install(
         loader: ClassLoader,
         prefs: SharedPreferences,
         targets: ResolvedTargets,
         processName: String,
     ): Boolean {
-        hookPrefs = prefs
         val streamRef = (targets as? ResolvedTargets.Resolved)?.streamRenderableListMethod
         if (streamRef == null) {
             val reason = (targets as? ResolvedTargets.Missing)?.reason ?: "no cached targets"
@@ -102,8 +97,7 @@ object StreamSliceFilterHook {
             val items = result as? List<*> ?: return result
             if (items.isEmpty()) return result
 
-            val prefs = hookPrefs
-            if (prefs != null && !SettingsPrefs.filterEnabled.read(prefs)) return result
+            if (!filterEnabled) return result
 
             val fp = fastFingerprint(items)
             if (fp == lastFingerprint) return lastFilteredSnapshot ?: result

@@ -7,6 +7,7 @@ import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
+import eu.hxreborn.discoveradsfilter.hook.loadHookPrefs
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.util.Logger
 import eu.hxreborn.discoveradsfilter.util.ProcessName
@@ -35,6 +36,7 @@ class DiscoverAdsFilterModule : XposedModule() {
             }
 
         val prefs = getRemotePreferences(SettingsPrefs.GROUP)
+        loadHookPrefs(prefs)
 
         runCatching {
             val attach =
