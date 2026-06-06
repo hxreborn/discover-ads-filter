@@ -41,7 +41,7 @@ class DiscoverAdsFilterModule : XposedModule() {
                 Application::class.java.getDeclaredMethod("attach", Context::class.java)
             attach.isAccessible = true
             deoptimize(attach)
-            hook(attach).intercept(BootstrapHook(param.classLoader, prefs, proc))
+            hook(attach).intercept(BootstrapHooker(param.classLoader, prefs, proc))
         }.onFailure { Logger.log(Log.ERROR, "failed: bootstrap hook", it) }
     }
 
@@ -51,7 +51,7 @@ class DiscoverAdsFilterModule : XposedModule() {
     }
 }
 
-private class BootstrapHook(
+private class BootstrapHooker(
     private val loader: ClassLoader,
     private val prefs: SharedPreferences,
     private val proc: String,

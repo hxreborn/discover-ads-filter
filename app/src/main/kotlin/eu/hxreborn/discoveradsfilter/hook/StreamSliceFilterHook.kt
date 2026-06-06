@@ -56,7 +56,7 @@ object StreamSliceFilterHook {
                 Logger.log(Log.WARN, "failed to rehydrate $streamRef: ${it.message}")
                 return false
             }
-        module.hook(method).intercept(StreamListHook)
+        module.hook(method).intercept(StreamListHooker)
         Logger.log(Log.INFO, "hooked $streamRef proc=$processName")
         return true
     }
@@ -96,7 +96,7 @@ object StreamSliceFilterHook {
         return filtered
     }
 
-    private object StreamListHook : XposedInterface.Hooker {
+    private object StreamListHooker : XposedInterface.Hooker {
         override fun intercept(chain: XposedInterface.Chain): Any? {
             val result = chain.proceed()
             val items = result as? List<*> ?: return result
