@@ -12,6 +12,7 @@ import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
 import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
@@ -73,11 +74,11 @@ class HomeViewModel(
     val actions: HomeActions =
         HomeActions(
             onVerboseChange = { value ->
-                repo.setVerbose(value)
+                repo.save(SettingsPrefs.verbose, value)
                 verboseFlow.value = value
             },
             onFilterEnabledChange = { value ->
-                repo.setFilterEnabled(value)
+                repo.save(SettingsPrefs.filterEnabled, value)
                 filterEnabledFlow.value = value
             },
             onLauncherIconHiddenChange = { hidden ->
@@ -107,9 +108,8 @@ class HomeViewModel(
     }
 
     private suspend fun initialize() {
-        val snapshot = repo.snapshot()
-        verboseFlow.value = snapshot.verbose
-        filterEnabledFlow.value = snapshot.filterEnabled
+        verboseFlow.value = repo.read(SettingsPrefs.verbose)
+        filterEnabledFlow.value = repo.read(SettingsPrefs.filterEnabled)
 
         val lastScan = repo.readLastScan()
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }

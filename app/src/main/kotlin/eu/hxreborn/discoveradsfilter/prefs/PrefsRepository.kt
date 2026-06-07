@@ -8,20 +8,34 @@ import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.onStart
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener as OnChangeListener
 
 class PrefsRepository(
     private val local: SharedPreferences,
     private val remoteProvider: () -> SharedPreferences?,
 ) {
-    fun snapshot(): AppPrefs =
-        AppPrefs(
-            verbose = SettingsPrefs.verbose.read(local),
-            filterEnabled = SettingsPrefs.filterEnabled.read(local),
-        )
+    fun <T> read(spec: PrefSpec<T>): T = spec.read(local)
 
-    fun setVerbose(value: Boolean) = save { SettingsPrefs.verbose.write(this, value) }
+    fun <T> save(
+        spec: PrefSpec<T>,
+        value: T,
+    ) {
+        local.edit { spec.write(this, value) }
+        remoteProvider()?.edit(commit = true) {
+            spec.write(this, value)
+            SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
+        }
+    }
 
-    fun setFilterEnabled(value: Boolean) = save { SettingsPrefs.filterEnabled.write(this, value) }
+    val state: Flow<AppPrefs> =
+        callbackFlow {
+            val listener = OnChangeListener { _, _ -> trySend(readAll()) }
+            local.registerOnSharedPreferenceChangeListener(listener)
+            awaitClose { local.unregisterOnSharedPreferenceChangeListener(listener) }
+        }.onStart { emit(readAll()) }
+            .distinctUntilChanged()
 
     fun writeResolvedTargets(
         agsaVersionCode: Long,
@@ -40,7 +54,7 @@ class PrefsRepository(
                         resolvedKey,
                     )
             }
-        save {
+        edit {
             // Keep the versioned entry for AGSA+module lookups.
             putString(resolvedKey, encoded)
 
@@ -83,13 +97,13 @@ class PrefsRepository(
         }
 
     fun resetAdsCounter() {
-        save { SettingsPrefs.adsHidden.write(this, 0L) }
+        edit { SettingsPrefs.adsHidden.write(this, 0L) }
     }
 
     fun clearScanCache() {
         val keysToRemove =
             local.all.keys.filter { it.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) }
-        save { keysToRemove.forEach { remove(it) } }
+        edit { keysToRemove.forEach { remove(it) } }
     }
 
     fun syncToRemote() {
@@ -109,7 +123,13 @@ class PrefsRepository(
         }
     }
 
-    private inline fun save(crossinline block: SharedPreferences.Editor.() -> Unit) {
+    private fun readAll() =
+        AppPrefs(
+            verbose = read(SettingsPrefs.verbose),
+            filterEnabled = read(SettingsPrefs.filterEnabled),
+        )
+
+    private inline fun edit(crossinline block: SharedPreferences.Editor.() -> Unit) {
         local.edit { block() }
         remoteProvider()?.edit(commit = true) {
             block()
