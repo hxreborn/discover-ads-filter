@@ -108,18 +108,24 @@ class PrefsRepository(
 
     fun syncToRemote() {
         val remote = remoteProvider() ?: return
+        var changed = false
         remote.edit(commit = true) {
-            SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
-            SettingsPrefs.all.forEach { it.copy(local, this) }
+            SettingsPrefs.all.forEach { spec ->
+                if (spec.copyIfChanged(local, remote, this)) changed = true
+            }
             // Sync versioned fingerprint keys that aren't in the typed all list.
             local.all.keys
                 .filter { it.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) }
                 .forEach { key ->
                     if (SettingsPrefs.all.none { it.key == key }) {
-                        val value = local.getString(key, null)
-                        if (value != null) putString(key, value)
+                        val localValue = local.getString(key, null) ?: return@forEach
+                        if (localValue != remote.getString(key, null)) {
+                            putString(key, localValue)
+                            changed = true
+                        }
                     }
                 }
+            if (changed) SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
         }
     }
 

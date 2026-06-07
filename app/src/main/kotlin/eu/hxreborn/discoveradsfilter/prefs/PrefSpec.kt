@@ -21,6 +21,17 @@ class PrefSpec<T>(
         from: SharedPreferences,
         to: SharedPreferences.Editor,
     ) = write(to, read(from))
+
+    fun copyIfChanged(
+        from: SharedPreferences,
+        to: SharedPreferences,
+        editor: SharedPreferences.Editor,
+    ): Boolean {
+        val value = read(from)
+        if (read(to) == value) return false
+        write(editor, value)
+        return true
+    }
 }
 
 fun boolPref(
