@@ -1,10 +1,9 @@
 package eu.hxreborn.discoveradsfilter.util
 
-import android.content.SharedPreferences
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
+import eu.hxreborn.discoveradsfilter.hook.verbose
 import eu.hxreborn.discoveradsfilter.module
-import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 
 object Logger {
     @PublishedApi
@@ -21,14 +20,5 @@ object Logger {
     }
 
     @PublishedApi
-    internal fun verboseEnabled(): Boolean =
-        cachedPrefs()?.let { SettingsPrefs.verbose.read(it) } == true
-
-    @Volatile
-    private var prefs: SharedPreferences? = null
-
-    private fun cachedPrefs(): SharedPreferences? =
-        prefs ?: runCatching { module.getRemotePreferences(SettingsPrefs.GROUP) }
-            .getOrNull()
-            ?.also { prefs = it }
+    internal fun verboseEnabled(): Boolean = verbose
 }
