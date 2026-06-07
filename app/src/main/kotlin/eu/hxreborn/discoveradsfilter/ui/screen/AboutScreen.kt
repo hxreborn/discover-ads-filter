@@ -38,6 +38,8 @@ import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 private const val GITHUB_URL = "https://github.com/hxreborn/discover-ads-filter"
 private const val GITHUB_ISSUES_URL = "https://github.com/hxreborn/discover-ads-filter/issues"
 
+private val EMPTY_CLICK: () -> Unit = {}
+
 @Composable
 fun AboutScreen(
     onBack: () -> Unit,
@@ -126,7 +128,7 @@ private fun AboutCard(
     onClick: (() -> Unit)? = null,
 ) {
     Surface(
-        onClick = onClick ?: {},
+        onClick = onClick ?: EMPTY_CLICK,
         enabled = onClick != null,
         modifier = Modifier.fillMaxWidth(),
         shape = shape,

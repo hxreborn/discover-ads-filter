@@ -70,9 +70,9 @@ fun StatusCard(
             modifier
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-                .let { base ->
+                .then(
                     if (isInactive) {
-                        base.clickable(
+                        Modifier.clickable(
                             onClickLabel = restartLabel,
                         ) {
                             val intent =
@@ -83,9 +83,9 @@ fun StatusCard(
                             Process.killProcess(Process.myPid())
                         }
                     } else {
-                        base
-                    }
-                },
+                        Modifier
+                    },
+                ),
         shape = MaterialTheme.shapes.large,
         color = visual.container,
         contentColor = visual.content,
