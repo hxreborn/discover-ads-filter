@@ -23,6 +23,8 @@ import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
 import eu.hxreborn.discoveradsfilter.util.isLauncherIconVisible
 import eu.hxreborn.discoveradsfilter.util.setLauncherIconVisible
+import io.github.libxposed.service.XposedService
+import io.github.libxposed.service.XposedServiceHelper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,17 +48,34 @@ class HomeViewModel(
     private val filterEnabledFlow = MutableStateFlow(true)
     private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
+    private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
+
+    private val serviceListener =
+        object : XposedServiceHelper.OnServiceListener {
+            override fun onServiceBind(service: XposedService) {
+                moduleStatusFlow.value = ModuleStatus.Active
+            }
+
+            override fun onServiceDied(service: XposedService) {
+                moduleStatusFlow.value = ModuleStatus.Inactive
+            }
+        }
 
     // A decorative counter must never be able to freeze the whole screen, so a
     // throw in the cross-process prefs flow falls back to 0 instead of killing combine.
     private val adsHiddenFlow = repo.adsHiddenFlow().catch { emit(0L) }
+
+    private val verifyWithStatusFlow =
+        combine(verifyFlow, moduleStatusFlow) { verify, status ->
+            verify?.copy(moduleStatus = status)
+        }
 
     val uiState: StateFlow<HomeUiState> =
         combine(
             verboseFlow,
             filterEnabledFlow,
             launcherIconHiddenFlow,
-            verifyFlow,
+            verifyWithStatusFlow,
             adsHiddenFlow,
         ) { verbose, filterEnabled, launcherIconHidden, verify, adsHidden ->
             if (verify == null) {
@@ -91,20 +110,20 @@ class HomeViewModel(
         )
 
     init {
+        appInstance.addServiceListener(serviceListener)
         viewModelScope.launch(ioDispatcher) {
             runCatching { launcherIconHiddenFlow.value = !isLauncherIconVisible(app) }
                 .onFailure { Log.w(TAG, "launcher icon state read failed", it) }
             runCatching { initialize() }.onFailure { t ->
                 Log.e(TAG, "initialization failed", t)
-                verifyFlow.update {
-                    it ?: VerifyUiState(phase = VerifyPhase.Idle, moduleStatus = moduleStatusNow())
-                }
+                verifyFlow.update { it ?: VerifyUiState(phase = VerifyPhase.Idle) }
             }
         }
     }
 
-    fun onServiceBound() {
-        verifyFlow.update { it?.copy(moduleStatus = ModuleStatus.Active) }
+    override fun onCleared() {
+        super.onCleared()
+        appInstance.removeServiceListener(serviceListener)
     }
 
     private suspend fun initialize() {
@@ -122,7 +141,6 @@ class HomeViewModel(
                 phase = VerifyPhase.Idle,
                 lastResult = result,
                 scanModuleVersion = lastScan?.moduleVersionCode ?: 0,
-                moduleStatus = moduleStatusNow(),
             )
 
         val agsaPkg = currentAgsaPackageInfo()
@@ -143,8 +161,6 @@ class HomeViewModel(
 
         if (needsScan) runScanAndUpdate()
     }
-
-    private fun moduleStatusNow(): ModuleStatus = if (appInstance.xposedService() != null) ModuleStatus.Active else ModuleStatus.Inactive
 
     private fun resetAdsCounter() {
         viewModelScope.launch(ioDispatcher) {

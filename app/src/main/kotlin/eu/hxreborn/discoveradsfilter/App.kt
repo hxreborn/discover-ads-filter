@@ -7,6 +7,7 @@ import eu.hxreborn.discoveradsfilter.prefs.PrefsRepository
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
+import java.util.concurrent.CopyOnWriteArrayList
 
 class App :
     Application(),
@@ -14,13 +15,10 @@ class App :
     @Volatile
     private var mService: XposedService? = null
 
-    fun xposedService(): XposedService? = mService
-
     lateinit var prefsRepository: PrefsRepository
         private set
 
-    private val listeners =
-        java.util.concurrent.CopyOnWriteArrayList<XposedServiceHelper.OnServiceListener>()
+    private val listeners = CopyOnWriteArrayList<XposedServiceHelper.OnServiceListener>()
 
     override fun onCreate() {
         super.onCreate()
