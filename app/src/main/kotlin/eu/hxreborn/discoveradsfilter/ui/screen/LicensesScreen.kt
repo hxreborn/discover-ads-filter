@@ -50,7 +50,7 @@ fun LicensesScreen(
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val libs by produceLibraries()
+    val libs by produceLibraries(R.raw.aboutlibraries)
     val listState = rememberLazyListState()
 
     val filtered =

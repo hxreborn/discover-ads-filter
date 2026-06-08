@@ -2,12 +2,15 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.aboutlibraries)
 }
 
 android {
     namespace = "eu.hxreborn.discoveradsfilter"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
 
     defaultConfig {
         applicationId = "eu.hxreborn.discoveradsfilter"
@@ -159,16 +162,6 @@ val ktlintFormat by tasks.registering(JavaExec::class) {
     args("-F", "src/**/*.kt")
 }
 
-val copyAboutLibraries by tasks.registering(Copy::class) {
-    dependsOn("exportLibraryDefinitions")
-    from("build/generated/aboutLibraries/aboutlibraries.json")
-    into("build/generated/aboutLibrariesRes/raw")
-}
-
-android.sourceSets["main"]
-    .res.directories
-    .add("build/generated/aboutLibrariesRes")
-
 abstract class GenerateXposedModuleProp : DefaultTask() {
     @get:Input abstract val moduleId: Property<String>
 
@@ -215,7 +208,7 @@ androidComponents {
 }
 
 tasks.named("preBuild").configure {
-    dependsOn(ktlintFormat, copyAboutLibraries)
+    dependsOn(ktlintFormat)
 }
 
 tasks.named("check").configure {
