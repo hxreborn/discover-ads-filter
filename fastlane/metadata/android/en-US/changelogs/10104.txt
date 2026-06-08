@@ -1,4 +1,4 @@
-Dashboard correctly flips to Inactive if the module service stops (was sometimes stuck on Active)
-Dashboard scroll position no longer resets on status refresh
+Dashboard flips to Inactive when the module service stops (was sometimes stuck on Active)
+Dashboard keeps scroll position on status refresh
 Settings sync skips unchanged keys to avoid redundant writes
 Updated dependencies
