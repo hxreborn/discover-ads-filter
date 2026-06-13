@@ -120,6 +120,9 @@ dependencies {
     // Verify scans AGSA with DexKit.
     implementation(libs.dexkit)
 
+    // Root shell to force-stop AGSA after an update
+    implementation(libs.libsu.core)
+
     implementation(libs.androidx.core)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.compose)
