@@ -1,7 +1,14 @@
 package eu.hxreborn.discoveradsfilter.ui.screen
 
 import android.content.Intent
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,25 +25,33 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
+import eu.hxreborn.discoveradsfilter.ui.components.SoftBlobBadge
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 
 private const val GITHUB_URL = "https://github.com/hxreborn/discover-ads-filter"
 private const val GITHUB_ISSUES_URL = "https://github.com/hxreborn/discover-ads-filter/issues"
+private const val BLOB_SPIN_DURATION_MS = 8_000
+
+private val BlobSize: Dp = 128.dp
+private val BlobIconSize: Dp = 72.dp
 
 private val EMPTY_CLICK: () -> Unit = {}
 
@@ -48,41 +63,58 @@ fun AboutScreen(
 ) {
     val context = LocalContext.current
 
+    val infiniteTransition = rememberInfiniteTransition(label = "blob_spin")
+    val blobRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = BLOB_SPIN_DURATION_MS, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+        label = "blob_rotation",
+    )
+
     SettingsDetailScaffold(
         title = stringResource(R.string.pref_category_about),
         onBack = onBack,
         modifier = modifier,
     ) {
-        Surface(
+        Box(
             modifier = Modifier.fillMaxWidth(),
-            shape = shapeForPosition(1, 0),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            tonalElevation = 2.dp,
+            contentAlignment = Alignment.Center,
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.lg),
-                horizontalAlignment = Alignment.CenterHorizontally,
+            Box(
+                modifier = Modifier.size(BlobSize),
+                contentAlignment = Alignment.Center,
             ) {
+                SoftBlobBadge(
+                    modifier = Modifier.graphicsLayer { rotationZ = blobRotation },
+                    size = BlobSize,
+                )
                 Image(
                     painter = painterResource(R.drawable.ic_about_discover),
                     contentDescription = null,
-                    modifier = Modifier.size(80.dp),
-                )
-                Spacer(Modifier.height(Spacing.md))
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(Spacing.xs))
-                Text(
-                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) - ${BuildConfig.BUILD_TYPE} build",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
+                    modifier = Modifier.size(BlobIconSize),
                 )
             }
         }
+
+        Spacer(Modifier.height(Spacing.lg))
+        Text(
+            text = stringResource(R.string.app_name),
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.headlineMedium,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(Spacing.xs))
+        Text(
+            text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) - ${BuildConfig.BUILD_TYPE} build",
+            modifier = Modifier.fillMaxWidth(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
 
         Spacer(Modifier.height(Spacing.lg))
         Text(
@@ -149,8 +181,6 @@ private fun AboutCard(
     }
 }
 
-// region Previews
-
 @Preview(name = "About", showSystemUi = true)
 @Composable
 private fun AboutScreenPreview() {
@@ -158,5 +188,3 @@ private fun AboutScreenPreview() {
         AboutScreen(onBack = {})
     }
 }
-
-// endregion
