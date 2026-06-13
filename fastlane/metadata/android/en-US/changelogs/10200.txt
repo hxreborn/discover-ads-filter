@@ -1,0 +1,3 @@
+Auto-resolve ad signatures after a Google app update (opt-in, needs root)
+Redesigned About screen
+Removed the filter toggle, always on now
