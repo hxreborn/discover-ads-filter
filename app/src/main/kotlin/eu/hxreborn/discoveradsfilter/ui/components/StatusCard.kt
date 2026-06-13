@@ -296,8 +296,6 @@ private fun failureVisual(
         )
     }
 
-// region Previews
-
 private class StatusCardStateProvider : PreviewParameterProvider<VerifyUiState> {
     override val values: Sequence<VerifyUiState> =
         sequenceOf(
@@ -317,5 +315,3 @@ private fun StatusCardPreview(
         StatusCard(state = state)
     }
 }
-
-// endregion

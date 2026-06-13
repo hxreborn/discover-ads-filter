@@ -2,6 +2,7 @@
 
 package eu.hxreborn.discoveradsfilter.ui.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,16 +11,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PhonelinkErase
 import androidx.compose.material.icons.outlined.RestartAlt
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -54,14 +59,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
 import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
 import eu.hxreborn.discoveradsfilter.ui.screen.preview.PreviewFixtures
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
-import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
@@ -80,6 +83,12 @@ fun DashboardScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { resId ->
+            Toast.makeText(context.applicationContext, context.getString(resId), Toast.LENGTH_LONG).show()
+        }
+    }
     DashboardScreenContent(
         modifier = modifier,
         state = state,
@@ -179,35 +188,6 @@ private fun LazyListScope.dashboardReadyItems(
         StatusCard(state = ready.verify)
     }
 
-    // Feed
-    preferenceCategory(
-        key = "cat_feed",
-        title = { Text(stringResource(R.string.pref_category_feed)) },
-    )
-
-    val moduleActive = ready.verify.moduleStatus == ModuleStatus.Active
-    item(key = "filter_enabled", contentType = "SwitchPreference") {
-        SwitchPreference(
-            value = ready.filterEnabled,
-            onValueChange = actions.onFilterEnabledChange,
-            enabled = moduleActive,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(1, 0), surface = surface),
-            icon = {
-                Icon(imageVector = Icons.Outlined.VisibilityOff, contentDescription = null)
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.pref_filter_sponsored),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            summary = {
-                Text(stringResource(R.string.pref_filter_sponsored_summary))
-            },
-        )
-    }
-
-    // Target Resolution
     preferenceCategory(
         key = "cat_resolution",
         title = { Text(stringResource(R.string.pref_category_target_resolution)) },
@@ -216,7 +196,7 @@ private fun LazyListScope.dashboardReadyItems(
     val scanning = ready.verify.phase == VerifyPhase.Running
     preference(
         key = "diagnostics",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 0), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 0), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.Map, contentDescription = null)
         },
@@ -229,6 +209,14 @@ private fun LazyListScope.dashboardReadyItems(
         summary = {
             Text(stringResource(R.string.pref_dexkit_summary_ready))
         },
+        widgetContainer = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 16.dp).size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
         onClick = { onNavigate(Destination.Diagnostics) },
     )
 
@@ -236,7 +224,7 @@ private fun LazyListScope.dashboardReadyItems(
 
     preference(
         key = "clear_cache",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
         },
@@ -253,37 +241,36 @@ private fun LazyListScope.dashboardReadyItems(
         onClick = onClearCacheClick,
     )
 
-    // Diagnostics
-    preferenceCategory(
-        key = "cat_diagnostics",
-        title = { Text(stringResource(R.string.pref_category_diagnostics)) },
-    )
+    item(key = "spacer_clear_recovery", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
-    item(key = "verbose", contentType = "SwitchPreference") {
+    item(key = "auto_recovery", contentType = "SwitchPreference") {
         SwitchPreference(
-            value = ready.verbose,
-            onValueChange = actions.onVerboseChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 0), surface = surface),
+            value = ready.autoRecoveryOnUpdate,
+            onValueChange = actions.onAutoRecoveryChange,
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 2), surface = surface),
             icon = {
-                Icon(imageVector = Icons.Outlined.BugReport, contentDescription = null)
+                Icon(imageVector = Icons.Outlined.Autorenew, contentDescription = null)
             },
             title = {
                 Text(
-                    text = stringResource(R.string.toggle_verbose),
+                    text = stringResource(R.string.pref_auto_recovery_title),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             },
             summary = {
-                Text(stringResource(R.string.toggle_verbose_summary))
+                Text(stringResource(R.string.pref_auto_recovery_summary))
             },
         )
     }
 
-    item(key = "spacer_verbose_reset", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+    preferenceCategory(
+        key = "cat_metrics",
+        title = { Text(stringResource(R.string.pref_category_metrics)) },
+    )
 
     preference(
         key = "reset_counter",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(1, 0), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.RestartAlt, contentDescription = null)
         },
@@ -299,7 +286,6 @@ private fun LazyListScope.dashboardReadyItems(
         onClick = onResetCounterClick,
     )
 
-    // App
     preferenceCategory(
         key = "cat_app",
         title = { Text(stringResource(R.string.pref_category_app)) },
@@ -309,7 +295,7 @@ private fun LazyListScope.dashboardReadyItems(
         SwitchPreference(
             value = ready.isLauncherIconHidden,
             onValueChange = actions.onLauncherIconHiddenChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 0), surface = surface),
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 0), surface = surface),
             icon = {
                 Icon(imageVector = Icons.Outlined.PhonelinkErase, contentDescription = null)
             },
@@ -325,11 +311,33 @@ private fun LazyListScope.dashboardReadyItems(
         )
     }
 
-    item(key = "spacer_launcher_about", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+    item(key = "spacer_hide_verbose", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+    item(key = "verbose", contentType = "SwitchPreference") {
+        SwitchPreference(
+            value = ready.verbose,
+            onValueChange = actions.onVerboseChange,
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
+            icon = {
+                Icon(imageVector = Icons.Outlined.BugReport, contentDescription = null)
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.toggle_verbose),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            },
+            summary = {
+                Text(stringResource(R.string.toggle_verbose_summary))
+            },
+        )
+    }
+
+    item(key = "spacer_verbose_about", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
     preference(
         key = "about",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 2), surface = surface),
         icon = {
             Icon(imageVector = Icons.Rounded.Info, contentDescription = null)
         },
@@ -339,7 +347,7 @@ private fun LazyListScope.dashboardReadyItems(
                 style = MaterialTheme.typography.bodyLarge,
             )
         },
-        summary = { Text("v${BuildConfig.VERSION_NAME}") },
+        summary = { Text(stringResource(R.string.pref_about_summary)) },
         onClick = { onNavigate(Destination.About) },
     )
 
@@ -417,12 +425,10 @@ private fun Modifier.preferenceCard(
     surface: Color,
 ): Modifier = this.padding(horizontal = Spacing.sm).background(color = surface, shape = shape).clip(shape)
 
-// region Previews
-
 private val NoOpActions =
     HomeActions(
         onVerboseChange = {},
-        onFilterEnabledChange = {},
+        onAutoRecoveryChange = {},
         onLauncherIconHiddenChange = {},
         onVerify = {},
         onClearCacheOnly = {},
@@ -444,8 +450,10 @@ private fun DashboardPreview(
     @PreviewParameter(DashboardStateProvider::class) state: HomeUiState,
 ) {
     DiscoverAdsFilterTheme(dynamicColor = false) {
-        DashboardScreenContent(state = state, actions = NoOpActions, onNavigate = {})
+        DashboardScreenContent(
+            state = state,
+            actions = NoOpActions,
+            onNavigate = {},
+        )
     }
 }
-
-// endregion
