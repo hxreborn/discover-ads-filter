@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -45,33 +46,11 @@ internal fun SettingsDetailScaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = floatingActionButton,
         topBar = {
-            LargeTopAppBar(
-                title = {
-                    Text(
-                        title,
-                        maxLines = 2,
-                        style =
-                            if (scrollBehavior.state.collapsedFraction < 0.5f) {
-                                MaterialTheme.typography.headlineLarge
-                            } else {
-                                MaterialTheme.typography.titleLarge
-                            },
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.nav_back),
-                        )
-                    }
-                },
-                actions = actions,
+            SettingsDetailTopBar(
+                title = title,
+                onBack = onBack,
                 scrollBehavior = scrollBehavior,
-                windowInsets =
-                    WindowInsets.safeDrawing.only(
-                        WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-                    ),
+                actions = actions,
             )
         },
         contentWindowInsets =
@@ -90,4 +69,42 @@ internal fun SettingsDetailScaffold(
             content = content,
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun SettingsDetailTopBar(
+    title: String,
+    onBack: () -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    LargeTopAppBar(
+        title = {
+            Text(
+                title,
+                maxLines = 2,
+                style =
+                    if (scrollBehavior.state.collapsedFraction < 0.5f) {
+                        MaterialTheme.typography.headlineLarge
+                    } else {
+                        MaterialTheme.typography.titleLarge
+                    },
+            )
+        },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.nav_back),
+                )
+            }
+        },
+        actions = actions,
+        scrollBehavior = scrollBehavior,
+        windowInsets =
+            WindowInsets.safeDrawing.only(
+                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+            ),
+    )
 }

@@ -4,15 +4,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,6 +17,7 @@ import com.mikepenz.aboutlibraries.Libs
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
 import eu.hxreborn.discoveradsfilter.R
+import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailTopBar
 import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
 
 private val DIRECT_DEPENDENCY_GROUPS =
@@ -70,26 +64,9 @@ fun LicensesScreen(
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.about_licenses),
-                        style =
-                            if (scrollBehavior.state.collapsedFraction < 0.5f) {
-                                MaterialTheme.typography.headlineLarge
-                            } else {
-                                MaterialTheme.typography.titleLarge
-                            },
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.nav_back),
-                        )
-                    }
-                },
+            SettingsDetailTopBar(
+                title = stringResource(R.string.about_licenses),
+                onBack = onBack,
                 scrollBehavior = scrollBehavior,
             )
         },

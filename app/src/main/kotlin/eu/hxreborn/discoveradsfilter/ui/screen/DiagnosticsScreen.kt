@@ -318,40 +318,32 @@ private fun ComboCard(state: VerifyUiState) {
     Spacer(Modifier.height(Spacing.sm))
 
     val fpSchema = SettingsPrefs.KEY_FINGERPRINT_PREFIX.removePrefix("fp_v").removeSuffix("_")
-    val fpLine = stringResource(R.string.diag_mapped_fp_value, fpSchema)
+    val rows =
+        listOf(
+            stringResource(R.string.diag_mapped_google_app_label) to agsaLine,
+            stringResource(R.string.diag_mapped_module_label) to moduleLine,
+            stringResource(R.string.diag_mapped_fp_label) to stringResource(R.string.diag_mapped_fp_value, fpSchema),
+        )
+    rows.forEachIndexed { index, (label, value) ->
+        if (index > 0) Spacer(Modifier.height(2.dp))
+        GroupedSurface(count = rows.size, index = index) {
+            MappingRow(label = label, value = value)
+        }
+    }
+}
 
+@Composable
+private fun GroupedSurface(
+    count: Int,
+    index: Int,
+    content: @Composable () -> Unit,
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = shapeForPosition(3, 0),
-        color = scheme.surfaceVariant,
-    ) {
-        MappingRow(
-            label = stringResource(R.string.diag_mapped_google_app_label),
-            value = agsaLine,
-        )
-    }
-    Spacer(Modifier.height(2.dp))
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = shapeForPosition(3, 1),
-        color = scheme.surfaceVariant,
-    ) {
-        MappingRow(
-            label = stringResource(R.string.diag_mapped_module_label),
-            value = moduleLine,
-        )
-    }
-    Spacer(Modifier.height(2.dp))
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = shapeForPosition(3, 2),
-        color = scheme.surfaceVariant,
-    ) {
-        MappingRow(
-            label = stringResource(R.string.diag_mapped_fp_label),
-            value = fpLine,
-        )
-    }
+        shape = shapeForPosition(count, index),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        content = content,
+    )
 }
 
 @Composable
@@ -401,11 +393,7 @@ private fun SymbolSections(sections: List<SymbolSection>) {
 
         val rowCount = section.rows.size
         section.rows.forEachIndexed { rowIndex, row ->
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = shapeForPosition(rowCount, rowIndex),
-                color = MaterialTheme.colorScheme.surfaceVariant,
-            ) {
+            GroupedSurface(count = rowCount, index = rowIndex) {
                 ResolvedSymbolRow(
                     row = row,
                     modifier =
@@ -421,8 +409,6 @@ private fun SymbolSections(sections: List<SymbolSection>) {
         }
     }
 }
-
-// region Previews
 
 @Preview(name = "Diagnostics - All mapped", showSystemUi = true)
 @Composable
@@ -447,5 +433,3 @@ private fun DiagnosticsNeedsScanPreview() {
         )
     }
 }
-
-// endregion
