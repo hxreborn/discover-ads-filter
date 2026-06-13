@@ -6,6 +6,8 @@ import android.content.SharedPreferences
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import eu.hxreborn.discoveradsfilter.hook.HookRecovery
+import eu.hxreborn.discoveradsfilter.hook.HookToast
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
 import eu.hxreborn.discoveradsfilter.hook.loadHookPrefs
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
@@ -31,7 +33,7 @@ class DiscoverAdsFilterModule : XposedModule() {
 
         val proc =
             ProcessName.current() ?: run {
-                Logger.log(Log.WARN, "could not read /proc/self/cmdline; aborting")
+                Logger.log(Log.WARN, "could not read /proc/self/cmdline, aborting")
                 return
             }
 
@@ -101,6 +103,17 @@ private class BootstrapHooker(
                         }
                     }
                 Logger.log(Log.WARN, fields.joinToString(" "))
+
+                if (versionCode > 0L && SettingsPrefs.autoRecoveryOnUpdate.read(prefs)) {
+                    Logger.log(
+                        Log.INFO,
+                        "update detected pkg=${DiscoverAdsFilterModule.AGSA_PKG} " +
+                            "v=$versionCode requesting rescan",
+                    )
+                    if (HookRecovery.request(ctx, versionCode)) {
+                        HookToast.show(ctx, "Removing ads, please wait")
+                    }
+                }
             }
 
             val streamHookInstalled =

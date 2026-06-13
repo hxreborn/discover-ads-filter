@@ -43,7 +43,7 @@ object DexKitCache {
                 else -> "cached targets contained no installable hook methods"
             }
         return ResolvedTargets.Missing(
-            "no usable hook cache for AGSA v$versionCode; $reason; rerun Verify after updating signatures",
+            "no usable hook cache for AGSA v$versionCode ($reason), rerun Verify after updating signatures",
         )
     }
 
@@ -59,6 +59,6 @@ object DexKitCache {
     private fun missingReason(versionCode: Long): String =
         versionCode
             .takeIf { it != 0L }
-            ?.let { "no cache for AGSA v$it; run Verify from module app" }
+            ?.let { "no cache for AGSA v$it, run Verify from module app" }
             ?: "AGSA version unavailable and no cache exists"
 }

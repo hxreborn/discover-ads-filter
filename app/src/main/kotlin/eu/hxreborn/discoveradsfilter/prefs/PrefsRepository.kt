@@ -23,7 +23,7 @@ class PrefsRepository(
         value: T,
     ) {
         local.edit { spec.write(this, value) }
-        remoteProvider()?.edit(commit = true) {
+        remoteProvider()?.edit {
             spec.write(this, value)
             SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
         }
@@ -55,14 +55,8 @@ class PrefsRepository(
                     )
             }
         edit {
-            // Keep the versioned entry for AGSA+module lookups.
             putString(resolvedKey, encoded)
-
-            // Drop entries from older schema, module, and AGSA builds.
-            // A prefix bump invalidates old entries without touching new ones.
             keysToPrune.forEach { remove(it) }
-
-            // Fall back to the latest scan when the hook side has no AGSA version code.
             SettingsPrefs.fingerprintCurrent.write(this, encoded)
             SettingsPrefs.fingerprintCurrentVersion.write(this, agsaVersionCode)
             SettingsPrefs.fingerprintCurrentModuleVersion.write(this, BuildConfig.VERSION_CODE)
@@ -81,8 +75,6 @@ class PrefsRepository(
 
     fun readAdsHidden(): Long = SettingsPrefs.adsHidden.read(local)
 
-    // MetricsProvider writes the counter in this same process, so a local change
-    // listener sees every increment without polling.
     fun adsHiddenFlow(): Flow<Long> =
         callbackFlow {
             trySend(readAdsHidden())
@@ -90,6 +82,19 @@ class PrefsRepository(
                 SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
                     if (key == null || key == SettingsPrefs.adsHidden.key) {
                         trySend(readAdsHidden())
+                    }
+                }
+            local.registerOnSharedPreferenceChangeListener(listener)
+            awaitClose { local.unregisterOnSharedPreferenceChangeListener(listener) }
+        }
+
+    fun lastScanFlow(): Flow<CachedScan?> =
+        callbackFlow {
+            trySend(readLastScan())
+            val listener =
+                SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                    if (key == null || key == SettingsPrefs.fingerprintCurrent.key) {
+                        trySend(readLastScan())
                     }
                 }
             local.registerOnSharedPreferenceChangeListener(listener)
@@ -109,7 +114,7 @@ class PrefsRepository(
     fun syncToRemote() {
         val remote = remoteProvider() ?: return
         var changed = false
-        remote.edit(commit = true) {
+        remote.edit {
             SettingsPrefs.all.forEach { spec ->
                 if (spec.copyIfChanged(local, remote, this)) changed = true
             }
@@ -132,12 +137,11 @@ class PrefsRepository(
     private fun readAll() =
         AppPrefs(
             verbose = read(SettingsPrefs.verbose),
-            filterEnabled = read(SettingsPrefs.filterEnabled),
         )
 
     private inline fun edit(crossinline block: SharedPreferences.Editor.() -> Unit) {
         local.edit { block() }
-        remoteProvider()?.edit(commit = true) {
+        remoteProvider()?.edit {
             block()
             SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
         }
@@ -146,7 +150,6 @@ class PrefsRepository(
 
 data class AppPrefs(
     val verbose: Boolean,
-    val filterEnabled: Boolean = true,
 )
 
 data class CachedScan(

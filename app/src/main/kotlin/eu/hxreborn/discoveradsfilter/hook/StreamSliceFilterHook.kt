@@ -41,7 +41,7 @@ object StreamSliceFilterHook {
             val reason = (targets as? ResolvedTargets.Missing)?.reason ?: "no cached targets"
             Logger.log(
                 Log.WARN,
-                "no stream method in cache proc=$processName reason=$reason; " +
+                "no stream method in cache proc=$processName reason=$reason, " +
                     "open Discover Ads Filter and tap Verify",
             )
             return false
@@ -96,8 +96,6 @@ object StreamSliceFilterHook {
             val result = chain.proceed()
             val items = result as? List<*> ?: return result
             if (items.isEmpty()) return result
-
-            if (!filterEnabled) return result
 
             val fp = fastFingerprint(items)
             if (fp == lastFingerprint) return lastFilteredSnapshot ?: result

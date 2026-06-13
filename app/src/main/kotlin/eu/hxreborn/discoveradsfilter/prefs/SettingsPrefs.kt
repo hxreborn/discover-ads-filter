@@ -4,7 +4,8 @@ object SettingsPrefs {
     const val GROUP = "discover_adsfilter_prefs"
 
     val verbose = boolPref("verbose", false)
-    val filterEnabled = boolPref("filter_enabled", true)
+
+    val autoRecoveryOnUpdate = boolPref("auto_recovery_on_update", false)
 
     // The hook process writes this via MetricsProvider.
     val adsHidden = longPref("ads_hidden", 0L)
@@ -19,7 +20,7 @@ object SettingsPrefs {
     val all: List<PrefSpec<*>> =
         listOf(
             verbose,
-            filterEnabled,
+            autoRecoveryOnUpdate,
             fingerprintCurrent,
             fingerprintCurrentVersion,
             fingerprintCurrentModuleVersion,

@@ -5,8 +5,13 @@ import android.content.Context
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.prefs.PrefsRepository
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
+import eu.hxreborn.discoveradsfilter.recovery.AutoRecovery
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import java.util.concurrent.CopyOnWriteArrayList
 
 class App :
@@ -19,6 +24,11 @@ class App :
         private set
 
     private val listeners = CopyOnWriteArrayList<XposedServiceHelper.OnServiceListener>()
+
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val recoveryLock = Any()
+    private var recoveryInFlight = false
+    private var lastRecoveryVersion = 0L
 
     override fun onCreate() {
         super.onCreate()
@@ -50,6 +60,38 @@ class App :
 
     fun removeServiceListener(listener: XposedServiceHelper.OnServiceListener) {
         listeners.remove(listener)
+    }
+
+    fun onRecoveryRequested(agsaVersionCode: Long): Boolean {
+        if (!::prefsRepository.isInitialized) return false
+        if (!prefsRepository.read(SettingsPrefs.autoRecoveryOnUpdate)) {
+            Log.d(TAG, "recovery ignored (disabled) v=$agsaVersionCode")
+            return false
+        }
+        synchronized(recoveryLock) {
+            if (recoveryInFlight) {
+                Log.d(TAG, "recovery already running v=$agsaVersionCode")
+                return false
+            }
+            if (agsaVersionCode != 0L && agsaVersionCode == lastRecoveryVersion) {
+                Log.d(TAG, "recovery already attempted v=$agsaVersionCode")
+                return false
+            }
+            recoveryInFlight = true
+        }
+        appScope.launch {
+            try {
+                AutoRecovery.run(this@App, prefsRepository, agsaVersionCode)
+            } catch (t: Throwable) {
+                Log.e(TAG, "recovery crashed v=$agsaVersionCode", t)
+            } finally {
+                synchronized(recoveryLock) {
+                    lastRecoveryVersion = agsaVersionCode
+                    recoveryInFlight = false
+                }
+            }
+        }
+        return true
     }
 
     companion object {

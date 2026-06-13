@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import eu.hxreborn.discoveradsfilter.App
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
+import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
@@ -21,16 +22,23 @@ import eu.hxreborn.discoveradsfilter.ui.state.ScanStep
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import eu.hxreborn.discoveradsfilter.util.RootShell
+import eu.hxreborn.discoveradsfilter.util.agsaApkPath
+import eu.hxreborn.discoveradsfilter.util.agsaVersionCode
 import eu.hxreborn.discoveradsfilter.util.isLauncherIconVisible
 import eu.hxreborn.discoveradsfilter.util.setLauncherIconVisible
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -45,10 +53,13 @@ class HomeViewModel(
     private val repo = appInstance.prefsRepository
 
     private val verboseFlow = MutableStateFlow(false)
-    private val filterEnabledFlow = MutableStateFlow(true)
+    private val autoRecoveryFlow = MutableStateFlow(false)
     private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
+
+    private val _messages = MutableSharedFlow<Int>(extraBufferCapacity = 1)
+    val messages: SharedFlow<Int> = _messages.asSharedFlow()
 
     private val serviceListener =
         object : XposedServiceHelper.OnServiceListener {
@@ -61,8 +72,6 @@ class HomeViewModel(
             }
         }
 
-    // A decorative counter must never be able to freeze the whole screen, so a
-    // throw in the cross-process prefs flow falls back to 0 instead of killing combine.
     private val adsHiddenFlow = repo.adsHiddenFlow().catch { emit(0L) }
 
     private val verifyWithStatusFlow =
@@ -70,20 +79,24 @@ class HomeViewModel(
             verify?.copy(moduleStatus = status)
         }
 
+    private val togglesFlow =
+        combine(verboseFlow, autoRecoveryFlow) { verbose, autoRecovery ->
+            verbose to autoRecovery
+        }
+
     val uiState: StateFlow<HomeUiState> =
         combine(
-            verboseFlow,
-            filterEnabledFlow,
+            togglesFlow,
             launcherIconHiddenFlow,
             verifyWithStatusFlow,
             adsHiddenFlow,
-        ) { verbose, filterEnabled, launcherIconHidden, verify, adsHidden ->
+        ) { (verbose, autoRecovery), launcherIconHidden, verify, adsHidden ->
             if (verify == null) {
                 HomeUiState.Loading
             } else {
                 HomeUiState.Ready(
                     verbose = verbose,
-                    filterEnabled = filterEnabled,
+                    autoRecoveryOnUpdate = autoRecovery,
                     isLauncherIconHidden = launcherIconHidden,
                     verify = verify.copy(adsHidden = adsHidden),
                 )
@@ -96,9 +109,24 @@ class HomeViewModel(
                 repo.save(SettingsPrefs.verbose, value)
                 verboseFlow.value = value
             },
-            onFilterEnabledChange = { value ->
-                repo.save(SettingsPrefs.filterEnabled, value)
-                filterEnabledFlow.value = value
+            onAutoRecoveryChange = { value ->
+                if (!value) {
+                    autoRecoveryFlow.value = false
+                    repo.save(SettingsPrefs.autoRecoveryOnUpdate, false)
+                } else {
+                    autoRecoveryFlow.value = true
+                    viewModelScope.launch(ioDispatcher) {
+                        if (RootShell.probe().getOrDefault(false)) {
+                            Log.i(TAG, "auto-recovery enabled, root granted")
+                            repo.save(SettingsPrefs.autoRecoveryOnUpdate, true)
+                        } else {
+                            Log.w(TAG, "auto-recovery off, root denied")
+                            autoRecoveryFlow.value = false
+                            repo.save(SettingsPrefs.autoRecoveryOnUpdate, false)
+                            _messages.tryEmit(R.string.auto_recovery_needs_root)
+                        }
+                    }
+                }
             },
             onLauncherIconHiddenChange = { hidden ->
                 setLauncherIconVisible(app, !hidden)
@@ -119,6 +147,30 @@ class HomeViewModel(
                 verifyFlow.update { it ?: VerifyUiState(phase = VerifyPhase.Idle) }
             }
         }
+        viewModelScope.launch { observeScanCache() }
+    }
+
+    private suspend fun observeScanCache() {
+        repo.lastScanFlow().collect { cached ->
+            if (cached == null) return@collect
+            verifyFlow.update { current ->
+                if (current == null || current.phase == VerifyPhase.Running) return@update current
+                val shown = current.lastResult
+                val unchanged =
+                    shown is VerifyResult.Success &&
+                        shown.versionCode == cached.versionCode &&
+                        current.scanModuleVersion == cached.moduleVersionCode
+                if (unchanged) {
+                    current
+                } else {
+                    current.copy(
+                        lastResult = VerifyResult.Success(cached.versionCode, cached.targets),
+                        scanModuleVersion = cached.moduleVersionCode,
+                        lastRefreshError = null,
+                    )
+                }
+            }
+        }
     }
 
     override fun onCleared() {
@@ -128,14 +180,11 @@ class HomeViewModel(
 
     private suspend fun initialize() {
         verboseFlow.value = repo.read(SettingsPrefs.verbose)
-        filterEnabledFlow.value = repo.read(SettingsPrefs.filterEnabled)
+        autoRecoveryFlow.value = repo.read(SettingsPrefs.autoRecoveryOnUpdate)
 
         val lastScan = repo.readLastScan()
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
 
-        // Publish a usable state from the fast local reads before the PackageManager
-        // lookup below, which can stall while the system finishes an AGSA update.
-        // This is what keeps the screen from sitting on the bare Loading card.
         verifyFlow.value =
             VerifyUiState(
                 phase = VerifyPhase.Idle,
@@ -148,6 +197,13 @@ class HomeViewModel(
         val moduleUpdated = lastScan != null && lastScan.moduleVersionCode != BuildConfig.VERSION_CODE
         val needsScan = result == null || agsaUpdated || moduleUpdated
         val origin = if (result != null) ScanOrigin.Background else ScanOrigin.Startup
+
+        if (agsaUpdated) {
+            Log.i(TAG, "AGSA updated ${result.versionCode} -> ${agsaPkg.versionCode}, rescanning")
+        }
+        if (moduleUpdated) {
+            Log.i(TAG, "module updated ${lastScan.moduleVersionCode} -> ${BuildConfig.VERSION_CODE}, rescanning")
+        }
 
         verifyFlow.update { current ->
             current?.copy(
@@ -238,33 +294,11 @@ class HomeViewModel(
 
     private suspend fun scan(steps: MutableList<ScanStep>): VerifyResult =
         withContext(ioDispatcher) {
-            val agsaInfo =
-                runCatching {
-                    app.packageManager.getApplicationInfo(
-                        DiscoverAdsFilterModule.AGSA_PKG,
-                        0,
-                    )
-                }.getOrElse { t ->
-                    if (verboseFlow.value) {
-                        Log.d(
-                            TAG,
-                            "AGSA lookup failed: ${t.javaClass.simpleName}: ${t.message}",
-                        )
-                    }
-                    return@withContext VerifyResult.Failure(
-                        reason = "AGSA not installed on this device",
-                        detail = t.message,
-                    )
-                }
+            val pm = app.packageManager
             val apkPath =
-                agsaInfo.sourceDir ?: return@withContext VerifyResult.Failure(
-                    "AGSA ApplicationInfo.sourceDir was null",
-                )
-
-            val versionCode =
-                runCatching {
-                    app.packageManager.getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0).longVersionCode
-                }.getOrNull() ?: 0L
+                pm.agsaApkPath()
+                    ?: return@withContext VerifyResult.Failure("AGSA not installed on this device")
+            val versionCode = pm.agsaVersionCode()
 
             if (verboseFlow.value) {
                 Log.d(TAG, "DexKit scan: agsaV=$versionCode apk=$apkPath")

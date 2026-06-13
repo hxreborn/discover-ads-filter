@@ -8,7 +8,7 @@ sealed interface HomeUiState {
     @Immutable
     data class Ready(
         val verbose: Boolean = false,
-        val filterEnabled: Boolean = true,
+        val autoRecoveryOnUpdate: Boolean = false,
         val isLauncherIconHidden: Boolean = false,
         val verify: VerifyUiState = VerifyUiState(),
     ) : HomeUiState
@@ -17,7 +17,7 @@ sealed interface HomeUiState {
 @Immutable
 data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
-    val onFilterEnabledChange: (Boolean) -> Unit,
+    val onAutoRecoveryChange: (Boolean) -> Unit,
     val onLauncherIconHiddenChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,
