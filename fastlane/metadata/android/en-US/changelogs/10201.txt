@@ -1,0 +1,3 @@
+Softer shadow on the Rescan button in light theme
+Compatible with newer LSPosed builds (API 102)
+Updated dependencies
