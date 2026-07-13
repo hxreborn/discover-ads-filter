@@ -187,7 +187,7 @@ abstract class GenerateXposedModuleProp : DefaultTask() {
             author=hxreborn
             description=Filters sponsored cards from the Google Discover feed.
             minApiVersion=101
-            targetApiVersion=101
+            targetApiVersion=102
             staticScope=true
             exceptionMode=protective
             """.trimIndent() + "\n",
