@@ -1,6 +1,9 @@
 <div align="center">
 
-<img src="https://socialify.git.ci/hxreborn/discover-ads-filter/image?custom_description=Filter+ads+and+sponsored+content+from+Google+Discover+via+Xposed+framework.&description=1&font=Inter&issues=1&logo=https%3A%2F%2Fraw.githubusercontent.com%2Fhxreborn%2Fdiscover-ads-filter%2Frefs%2Fheads%2Fmain%2Fartwork%2Ficon.png&name=1&owner=1&pattern=Brick+Wall&stargazers=1&theme=Auto" alt="discover-ads-filter" width="640" height="320" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/banner_dark.png">
+  <img src="assets/banner_light.png" alt="Discover Ads Filter">
+</picture>
 
 <p>An Xposed module that hides sponsored cards and ads from the Google Discover feed in the Pixel Launcher -1 screen and inside the Google app itself.</p>
 
@@ -30,6 +33,10 @@
 ## How It Works
 
 The app scans the installed Google App with DexKit, resolving hook targets via protobuf extension field numbers and type signatures, and stores the result in a versioned cache. The hooked process uses the cached targets to filter ad items from the Discover feed.
+
+## Related
+
+Also dislike ads in the Google Play Store? Try <a href="https://github.com/hxreborn/playstore-adblock"><img src=".github/assets/playstore-adblock.png" height="16" alt=""> playstore-adblock</a>, a sister module.
 
 ## License
 
