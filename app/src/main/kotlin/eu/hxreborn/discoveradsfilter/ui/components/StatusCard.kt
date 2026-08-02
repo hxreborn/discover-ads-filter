@@ -18,12 +18,13 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,8 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.screen.preview.PreviewFixtures
@@ -65,7 +64,7 @@ fun StatusCard(
     val context = LocalContext.current
     val restartLabel = stringResource(R.string.action_restart_app)
 
-    Surface(
+    ElevatedCard(
         modifier =
             modifier
                 .fillMaxWidth()
@@ -87,9 +86,11 @@ fun StatusCard(
                     },
                 ),
         shape = MaterialTheme.shapes.large,
-        color = visual.container,
-        contentColor = visual.content,
-        tonalElevation = visual.tonalElevation,
+        colors =
+            CardDefaults.elevatedCardColors(
+                containerColor = visual.container,
+                contentColor = visual.content,
+            ),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(Spacing.lg),
@@ -100,6 +101,7 @@ fun StatusCard(
                 if (scanning) {
                     val loadingDesc = stringResource(R.string.loading)
                     LoadingIndicator(
+                        color = visual.content,
                         modifier =
                             Modifier.size(IconSize.lg).semantics {
                                 contentDescription = loadingDesc
@@ -188,7 +190,6 @@ private data class StatusVisual(
     val titleRes: Int,
     val container: Color,
     val content: Color,
-    val tonalElevation: Dp = 0.dp,
 )
 
 @Composable
@@ -218,8 +219,8 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         return StatusVisual(
             icon = Icons.Filled.CheckCircle,
             titleRes = R.string.hero_module_active,
-            container = scheme.primaryContainer,
-            content = scheme.onPrimaryContainer,
+            container = scheme.primary,
+            content = scheme.onPrimary,
         )
     }
 
@@ -238,21 +239,19 @@ private fun statusVisual(state: VerifyUiState): StatusVisual {
         return StatusVisual(
             icon = Icons.Filled.CheckCircle,
             titleRes = R.string.hero_scanning,
-            container = scheme.primaryContainer,
-            content = scheme.onPrimaryContainer,
+            container = scheme.primary,
+            content = scheme.onPrimary,
         )
     }
 
     if (state.lastResult == null) return noResultVisual(scheme, moduleActive)
     if (state.lastResult is VerifyResult.Failure) return failureVisual(scheme, moduleActive)
 
-    val elevation = if (state.adsHidden > 0) 3.dp else 0.dp
     return StatusVisual(
         icon = Icons.Filled.CheckCircle,
         titleRes = R.string.hero_module_active,
-        container = scheme.primaryContainer,
-        content = scheme.onPrimaryContainer,
-        tonalElevation = elevation,
+        container = scheme.primary,
+        content = scheme.onPrimary,
     )
 }
 
