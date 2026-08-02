@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.1"
+agp = "9.3.1"
 kotlin = "2.4.10"
 kotlinxCoroutines = "1.11.0"
 kotlinxSerialization = "1.11.0"
@@ -10,12 +10,12 @@ libsu = "6.0.0"
 androidxCore = "1.19.0"
 activityCompose = "1.13.0"
 lifecycle = "2.11.0"
-composeBom = "2026.06.00"
-material3 = "1.5.0-alpha22"
+composeBom = "2026.06.01"
+material3 = "1.5.0-alpha24"
 splashscreen = "1.2.0"
 composePreferences = "2.2.0"
 navigation3 = "1.1.4"
-aboutlibraries = "15.0.3"
+aboutlibraries = "15.0.4"
 ktlint = "1.8.0"
 
 [libraries]
