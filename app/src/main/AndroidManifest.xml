@@ -1,55 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <queries>
-        <!-- Verify reads the installed AGSA APK path. -->
-        <package android:name="com.google.android.googlequicksearchbox" />
-    </queries>
-
     <application
-        android:name=".App"
         android:allowBackup="false"
         android:description="@string/app_description"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.DiscoverAdsFilter">
+        android:supportsRtl="true" />
 
-        <activity
-            android:name=".ui.MainActivity"
-            android:enableOnBackInvokedCallback="true"
-            android:exported="true"
-            android:theme="@style/Theme.DiscoverAdsFilter.Splash">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="de.robv.android.xposed.category.MODULE_SETTINGS" />
-            </intent-filter>
-        </activity>
-
-        <activity-alias
-            android:name=".LauncherAlias"
-            android:targetActivity=".ui.MainActivity"
-            android:exported="true"
-            android:enabled="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <provider
-            android:name=".provider.MetricsProvider"
-            android:authorities="eu.hxreborn.discoveradsfilter.metrics"
-            android:exported="true" />
-
-        <receiver
-            android:name=".receiver.PackageReplacedReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
-
-    </application>
 </manifest>

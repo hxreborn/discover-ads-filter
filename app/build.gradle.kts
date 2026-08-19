@@ -1,8 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.kotlin.serialization)
 }
+
+val cfgTargetPackage: String = providers.gradleProperty("target.package").get()
+val cfgModuleId: String = providers.gradleProperty("module.id").get()
+val cfgModuleName: String = providers.gradleProperty("module.name").get()
+val cfgModuleAuthor: String = providers.gradleProperty("module.author").get()
+val cfgModuleDescription: String = providers.gradleProperty("module.description").get()
+val cfgXposedApiMin: Int = providers.gradleProperty("xposed.api.min").get().toInt()
+val cfgXposedApiTarget: Int = providers.gradleProperty("xposed.api.target").get().toInt()
+val versionNameProvider = providers.gradleProperty("version.name")
+val versionCodeProvider = providers.gradleProperty("version.code").map(String::toInt)
 
 android {
     namespace = "eu.hxreborn.discoveradsfilter"
@@ -13,14 +21,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "eu.hxreborn.discoveradsfilter"
+        applicationId = cfgModuleId
         minSdk = 30
         targetSdk = 36
+        versionCode = versionCodeProvider.get()
+        versionName = versionNameProvider.get()
 
-        val semver = project.property("version.name").toString()
-        versionCode = project.property("version.code").toString().toInt()
-
-        versionName = semver
+        buildConfigField("String", "TARGET_PACKAGE", "\"$cfgTargetPackage\"")
 
         ndk {
             abiFilters += listOf("arm64-v8a")
@@ -38,7 +45,6 @@ android {
 
     buildFeatures {
         buildConfig = true
-        compose = true
     }
 
     signingConfigs {
@@ -81,7 +87,6 @@ android {
     packaging {
         jniLibs.useLegacyPackaging = false
         resources {
-            // Keep META-INF/xposed/* untouched.
             merges += listOf("META-INF/xposed/**")
             excludes +=
                 listOf(
@@ -101,9 +106,6 @@ android {
 
 kotlin {
     jvmToolchain(21)
-    compilerOptions {
-        freeCompilerArgs.add("-opt-in=kotlinx.serialization.ExperimentalSerializationApi")
-    }
 }
 
 val ktlint: Configuration by configurations.creating
@@ -111,42 +113,9 @@ val ktlint: Configuration by configurations.creating
 dependencies {
     ktlint(libs.ktlint.cli)
 
-    // LSPosed provides this at runtime.
     compileOnly(libs.libxposed.api)
 
-    // Bind XposedService so the hook process can read prefs.
-    implementation(libs.libxposed.service)
-
-    // Verify scans AGSA with DexKit.
     implementation(libs.dexkit)
-
-    // Root shell to force-stop AGSA after an update
-    implementation(libs.libsu.core)
-
-    implementation(libs.androidx.core)
-    implementation(libs.androidx.core.splashscreen)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.lifecycle.runtime)
-    implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    implementation(platform(libs.compose.bom))
-    implementation(libs.compose.ui)
-    implementation(libs.compose.ui.graphics)
-    implementation(libs.compose.ui.tooling.preview)
-    implementation(libs.compose.material3)
-    implementation(libs.compose.material.icons.extended)
-    implementation(libs.compose.preferences)
-    debugImplementation(libs.compose.ui.tooling)
-
-    implementation(libs.navigation3.runtime)
-    implementation(libs.navigation3.ui)
-
-    implementation(libs.aboutlibraries.core)
-    implementation(libs.aboutlibraries.compose)
-
-    implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.kotlinx.serialization.json)
 }
 
 val ktlintCheck by tasks.registering(JavaExec::class) {
@@ -166,40 +135,72 @@ val ktlintFormat by tasks.registering(JavaExec::class) {
 }
 
 abstract class GenerateXposedModuleProp : DefaultTask() {
-    @get:Input abstract val moduleId: Property<String>
+    @get:Input
+    abstract val moduleId: Property<String>
 
-    @get:Input abstract val moduleVersionName: Property<String>
+    @get:Input
+    abstract val moduleName: Property<String>
 
-    @get:Input abstract val moduleVersionCode: Property<Int>
+    @get:Input
+    abstract val moduleAuthor: Property<String>
 
-    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+    @get:Input
+    abstract val moduleDescription: Property<String>
+
+    @get:Input
+    abstract val moduleVersionName: Property<String>
+
+    @get:Input
+    abstract val moduleVersionCode: Property<Int>
+
+    @get:Input
+    abstract val moduleMinApiVersion: Property<Int>
+
+    @get:Input
+    abstract val moduleTargetApiVersion: Property<Int>
+
+    @get:Input
+    abstract val targetPackage: Property<String>
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
 
     @TaskAction
-    fun run() {
-        val target = outputDir.get().file("META-INF/xposed/module.prop").asFile
-        target.parentFile.mkdirs()
-        target.writeText(
+    fun generate() {
+        val moduleProp = outputDir.get().file("META-INF/xposed/module.prop").asFile
+        moduleProp.parentFile.mkdirs()
+        moduleProp.writeText(
             """
             id=${moduleId.get()}
-            name=Discover Ads Filter
+            name=${moduleName.get()}
             version=${moduleVersionName.get()}
             versionCode=${moduleVersionCode.get()}
-            author=hxreborn
-            description=Filters sponsored cards from the Google Discover feed.
-            minApiVersion=101
-            targetApiVersion=102
+            author=${moduleAuthor.get()}
+            description=${moduleDescription.get()}
+            minApiVersion=${moduleMinApiVersion.get()}
+            targetApiVersion=${moduleTargetApiVersion.get()}
             staticScope=true
             exceptionMode=protective
             """.trimIndent() + "\n",
         )
+        outputDir.get().file("META-INF/xposed/scope.list").asFile.writeText(
+            targetPackage.get() + "\n",
+        )
     }
 }
 
-val generateXposedModuleProp by tasks.registering(GenerateXposedModuleProp::class) {
-    moduleId.set("eu.hxreborn.discoveradsfilter")
-    moduleVersionName.set(project.property("version.name").toString())
-    moduleVersionCode.set(project.property("version.code").toString().toInt())
-}
+val generateXposedModuleProp =
+    tasks.register<GenerateXposedModuleProp>("generateXposedModuleProp") {
+        moduleId.set(cfgModuleId)
+        moduleName.set(cfgModuleName)
+        moduleAuthor.set(cfgModuleAuthor)
+        moduleDescription.set(cfgModuleDescription)
+        moduleVersionName.set(versionNameProvider)
+        moduleVersionCode.set(versionCodeProvider)
+        moduleMinApiVersion.set(cfgXposedApiMin)
+        moduleTargetApiVersion.set(cfgXposedApiTarget)
+        targetPackage.set(cfgTargetPackage)
+    }
 
 androidComponents {
     onVariants { variant ->

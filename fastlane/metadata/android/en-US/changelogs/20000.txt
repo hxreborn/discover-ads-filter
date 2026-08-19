@@ -1,0 +1,3 @@
+No companion app, the module now resolves ad signatures on its own
+Rescans automatically after a Google app update, no Scan button and no root
+Smaller download, 572 KB instead of 3.2 MB

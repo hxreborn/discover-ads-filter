@@ -1,18 +1,15 @@
 package eu.hxreborn.discoveradsfilter
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
-import android.util.Log
-import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
+import android.os.Handler
+import android.os.Looper
+import android.widget.Toast
+import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
-import eu.hxreborn.discoveradsfilter.hook.HookRecovery
-import eu.hxreborn.discoveradsfilter.hook.HookToast
+import eu.hxreborn.discoveradsfilter.discovery.TargetCache
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
-import eu.hxreborn.discoveradsfilter.hook.loadHookPrefs
-import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
-import eu.hxreborn.discoveradsfilter.util.Logger
-import eu.hxreborn.discoveradsfilter.util.ProcessName
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
@@ -20,115 +17,145 @@ import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
 
 @PublishedApi
 internal lateinit var module: DiscoverAdsFilterModule
-    private set
 
 class DiscoverAdsFilterModule : XposedModule() {
+    private lateinit var processName: String
+
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         module = this
-        Logger.log(Log.INFO, "v${BuildConfig.VERSION_NAME} loaded in ${param.processName}")
+        processName = param.processName
+        if (processName != FEED_PROCESS) return
+        Logger.info("loaded in $processName")
     }
 
+    @SuppressLint("DiscouragedPrivateApi")
     override fun onPackageReady(param: PackageReadyParam) {
-        if (!param.isFirstPackage && param.packageName != AGSA_PKG) return
-
-        val proc =
-            ProcessName.current() ?: run {
-                Logger.log(Log.WARN, "could not read /proc/self/cmdline, aborting")
-                return
-            }
-
-        val prefs = getRemotePreferences(SettingsPrefs.GROUP)
-        loadHookPrefs(prefs)
-
-        runCatching {
-            val attach =
-                Application::class.java.getDeclaredMethod("attach", Context::class.java)
+        if (param.packageName != TARGET_PACKAGE ||
+            processName != FEED_PROCESS ||
+            !param.isFirstPackage
+        ) {
+            return
+        }
+        try {
+            val attach = Application::class.java.getDeclaredMethod("attach", Context::class.java)
             attach.isAccessible = true
             deoptimize(attach)
-            hook(attach).intercept(BootstrapHooker(param.classLoader, prefs, proc))
-        }.onFailure { Logger.log(Log.ERROR, "failed: bootstrap hook", it) }
+            val interceptor = BootstrapInterceptor(this, param.classLoader)
+            hook(attach)
+                .setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE)
+                .intercept { chain -> interceptor.intercept(chain) }
+        } catch (exception: Exception) {
+            Logger.error("bootstrap hook installation failed", exception)
+        }
     }
 
-    companion object {
-        const val AGSA_PKG = "com.google.android.googlequicksearchbox"
-        const val TAG = "DiscoverAdsFilter"
+    private class BootstrapInterceptor(
+        private val module: DiscoverAdsFilterModule,
+        private val classLoader: ClassLoader,
+    ) {
+        @Volatile
+        private var installed = false
+
+        fun intercept(chain: XposedInterface.Chain): Any? {
+            chain.proceed()
+            if (installed) return null
+            synchronized(this) {
+                if (installed) return null
+                installed = true
+            }
+            module.install(chain.getArg(0) as Context, classLoader)
+            return null
+        }
     }
-}
 
-private class BootstrapHooker(
-    private val loader: ClassLoader,
-    private val prefs: SharedPreferences,
-    private val proc: String,
-) : XposedInterface.Hooker {
-    @Volatile
-    private var installed = false
-
-    override fun intercept(chain: XposedInterface.Chain): Any? {
-        chain.proceed()
-        if (installed) return null
-        installed = true
-
-        runCatching {
-            val ctx = chain.args[0] as Context
-            val versionCode =
-                ctx.packageManager
-                    .getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
-                    .longVersionCode
-
-            val targets = DexKitCache.load(versionCode, BuildConfig.VERSION_CODE, prefs)
-
-            if (targets is ResolvedTargets.Resolved && SettingsPrefs.verbose.read(prefs)) {
-                Logger.log(
-                    Log.DEBUG,
-                    "[resolved] stream=${targets.streamRenderableListMethod} " +
-                        "adMeta=${targets.adMetadataClass} card=${targets.feedCardClass} " +
-                        "processors=${targets.cardProcessorMethods.size}",
+    private fun install(
+        context: Context,
+        classLoader: ClassLoader,
+    ) {
+        try {
+            val packageInfo = context.packageManager.getPackageInfo(TARGET_PACKAGE, 0)
+            val targetVersionCode = packageInfo.longVersionCode
+            val moduleVersionCode = BuildConfig.VERSION_CODE.toLong()
+            val status =
+                "Google app ${packageInfo.versionName} ($targetVersionCode) " +
+                    "module v${BuildConfig.VERSION_NAME}"
+            val applicationInfo = context.applicationInfo
+            val cached =
+                TargetCache.load(
+                    dataDir = applicationInfo.dataDir,
+                    targetVersionCode = targetVersionCode,
+                    moduleVersionCode = moduleVersionCode,
                 )
-            }
-
-            if (targets is ResolvedTargets.Missing) {
-                val lastRemoteWrite =
-                    runCatching { SettingsPrefs.lastRemoteWrite.read(prefs) }.getOrDefault(0L)
-                val fields =
-                    buildList {
-                        add("skipped")
-                        add("proc=$proc")
-                        add("v=$versionCode")
-                        add("reason=${targets.reason}")
-                        add("lastRemoteWrite=$lastRemoteWrite")
-                        if (SettingsPrefs.verbose.read(prefs)) {
-                            val keys =
-                                runCatching { prefs.all.keys.sorted() }.getOrDefault(emptyList())
-                            add("allKeys=$keys")
-                        }
+            val targets =
+                cached ?: DexKitResolver
+                    .resolve(
+                        buildList {
+                            add(applicationInfo.sourceDir)
+                            applicationInfo.splitSourceDirs?.let(::addAll)
+                        },
+                    ).also { resolved ->
+                        TargetCache.store(
+                            dataDir = applicationInfo.dataDir,
+                            targetVersionCode = targetVersionCode,
+                            moduleVersionCode = moduleVersionCode,
+                            targets = resolved,
+                        )
                     }
-                Logger.log(Log.WARN, fields.joinToString(" "))
+            val source =
+                when {
+                    cached != null -> "from-cache"
+                    DexKitResolver.hasNativeLoadFailure() -> "native-load-failed"
+                    else -> "fresh-scan"
+                }
 
-                if (versionCode > 0L && SettingsPrefs.autoRecoveryOnUpdate.read(prefs)) {
-                    Logger.log(
-                        Log.INFO,
-                        "update detected pkg=${DiscoverAdsFilterModule.AGSA_PKG} " +
-                            "v=$versionCode requesting rescan",
+            when (targets) {
+                is ResolvedTargets.Missing -> {
+                    Logger.error(
+                        "resolution missing resolved=$source : $status reason=${targets.reason}",
                     )
-                    if (HookRecovery.request(ctx, versionCode)) {
-                        HookToast.show(ctx, "Removing ads, please wait")
+                    notifyFilteringUnavailable(context)
+                }
+
+                is ResolvedTargets.Resolved -> {
+                    val streamMethod = targets.streamRenderableListMethod
+                    Logger.debug {
+                        "targets resolved streamMethod=${streamMethod.className}." +
+                            streamMethod.methodName
+                    }
+                    try {
+                        StreamSliceFilterHook.install(this, classLoader, targets)
+                        Logger.info("hooks installed hooks=[stream] resolved=$source : $status")
+                    } catch (exception: Exception) {
+                        Logger.error("hook group 'stream' failed to install", exception)
+                        notifyFilteringUnavailable(context)
                     }
                 }
             }
+        } catch (exception: Exception) {
+            Logger.error("deferred installation failed", exception)
+            notifyFilteringUnavailable(context)
+        }
+    }
 
-            val streamHookInstalled =
-                runCatching {
-                    StreamSliceFilterHook.install(loader, prefs, targets, proc)
-                }.getOrElse {
-                    Logger.log(Log.ERROR, "failed: install StreamSliceFilterHook", it)
-                    false
-                }
-            val status = if (streamHookInstalled) "1/1" else "0/1 failed:StreamSliceFilterHook"
-            Logger.log(
-                Log.INFO,
-                "installed proc=$proc agsaV=$versionCode hooks=$status ${targets.summary()}",
+    private companion object {
+        const val FILTERING_UNAVAILABLE_TOAST_DELAY_MS = 3000L
+        const val FILTERING_UNAVAILABLE_MESSAGE =
+            "Discover Ads Filter couldn't start. Ads may appear. Check Xposed logs."
+        val TARGET_PACKAGE: String = BuildConfig.TARGET_PACKAGE
+        val FEED_PROCESS = "$TARGET_PACKAGE:googleapp"
+
+        fun notifyFilteringUnavailable(context: Context) {
+            Handler(Looper.getMainLooper()).postDelayed(
+                {
+                    try {
+                        Toast
+                            .makeText(context, FILTERING_UNAVAILABLE_MESSAGE, Toast.LENGTH_LONG)
+                            .show()
+                    } catch (_: Exception) {
+                    }
+                },
+                FILTERING_UNAVAILABLE_TOAST_DELAY_MS,
             )
-        }.onFailure { Logger.log(Log.ERROR, "failed: deferred install", it) }
-        return null
+        }
     }
 }

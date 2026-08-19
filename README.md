@@ -29,12 +29,13 @@
     <a href="https://f-droid.org/es/packages/eu.hxreborn.discoveradsfilter/"><img src=".github/assets/badge_fdroid.png" height="60" alt="Get it on F-Droid" /></a>
 
 2. Enable the module in LSPosed and scope it to `com.google.android.googlequicksearchbox`.
-3. Open the Discover Ads Filter app and tap Scan to resolve hook targets.
-4. Force-stop Google App and relaunch.
+3. Force-stop Google App and relaunch.
+
+There is no app to open. The module has no icon and no settings screen.
 
 ## How It Works
 
-The app scans the installed Google App with DexKit, resolving hook targets via protobuf extension field numbers and type signatures, and stores the result in a versioned cache. The hooked process uses the cached targets to filter ad items from the Discover feed.
+The hooked process scans the installed Google App with DexKit on first launch, resolving the obfuscated feed method from toString literals that survive the renames, and caches the result keyed by Google App version. Every later launch reads the cache. A Google App update misses the cache and triggers one rescan, so nothing has to be re-run by hand.
 
 ## Related
 
