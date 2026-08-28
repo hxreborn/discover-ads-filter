@@ -19,18 +19,14 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShortText
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.outlined.Autorenew
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BugReport
-import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Link
-import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PhonelinkErase
-import androidx.compose.material.icons.outlined.PhonelinkSetup
-import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -42,19 +38,18 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
@@ -68,19 +63,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.hxreborn.discoveradsfilter.R
+import eu.hxreborn.discoveradsfilter.ui.components.IconSwitch
 import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
 import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
 import eu.hxreborn.discoveradsfilter.ui.screen.preview.PreviewFixtures
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
-import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.preferenceCard
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
-import me.zhanghai.compose.preference.SwitchPreference
 import me.zhanghai.compose.preference.TextFieldPreference
 import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
@@ -117,9 +111,6 @@ internal fun DashboardScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val ready = state as? HomeUiState.Ready
-    var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
-    var showResetCounterDialog by rememberSaveable { mutableStateOf(false) }
-    var showRestartAgsaDialog by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
 
@@ -128,7 +119,9 @@ internal fun DashboardScreenContent(
         topBar = {
             LargeTopAppBar(
                 title = {
-                    val isExpanded = scrollBehavior.state.collapsedFraction < 0.5f
+                    val isExpanded by remember {
+                        derivedStateOf { scrollBehavior.state.collapsedFraction < 0.5f }
+                    }
                     Text(
                         text = stringResource(R.string.app_name),
                         style =
@@ -157,45 +150,12 @@ internal fun DashboardScreenContent(
                         actions = actions,
                         onNavigate = onNavigate,
                         surface = surface,
-                        onClearCacheClick = { showClearCacheDialog = true },
-                        onResetCounterClick = { showResetCounterDialog = true },
-                        onRestartAgsaClick = { showRestartAgsaDialog = true },
                     )
                 } else {
                     dashboardLoadingCard(surface = surface)
                 }
             }
         }
-    }
-
-    if (showClearCacheDialog) {
-        ClearCacheDialog(
-            onDismiss = { showClearCacheDialog = false },
-            onConfirm = {
-                showClearCacheDialog = false
-                actions.onClearCacheOnly()
-            },
-        )
-    }
-
-    if (showResetCounterDialog) {
-        ResetCounterDialog(
-            onDismiss = { showResetCounterDialog = false },
-            onConfirm = {
-                showResetCounterDialog = false
-                actions.onResetAdsCounter()
-            },
-        )
-    }
-
-    if (showRestartAgsaDialog) {
-        RestartAgsaDialog(
-            onDismiss = { showRestartAgsaDialog = false },
-            onConfirm = {
-                showRestartAgsaDialog = false
-                actions.onRestartGoogleApp()
-            },
-        )
     }
 }
 
@@ -204,34 +164,57 @@ private fun LazyListScope.dashboardReadyItems(
     actions: HomeActions,
     onNavigate: (Destination) -> Unit,
     surface: Color,
-    onClearCacheClick: () -> Unit,
-    onResetCounterClick: () -> Unit,
-    onRestartAgsaClick: () -> Unit,
 ) {
     item(key = "status", contentType = "StatusCard") {
-        StatusCard(state = ready.verify)
+        StatusCard(
+            state = ready.verify,
+            onOpenDiagnostics = { onNavigate(Destination.Diagnostics) },
+        )
     }
 
     preferenceCategory(
-        key = "cat_resolution",
-        title = { Text(stringResource(R.string.pref_category_target_resolution)) },
+        key = "cat_feed",
+        title = { Text(stringResource(R.string.pref_category_feed)) },
     )
 
-    val scanning = ready.verify.phase == VerifyPhase.Running
+    switchRow(
+        key = "filter_ads",
+        value = ready.filterAds,
+        onValueChange = actions.onFilterAdsChange,
+        shapeCount = 2,
+        shapeIndex = 0,
+        surface = surface,
+        icon = Icons.Outlined.Block,
+        titleRes = R.string.pref_filter_ads_title,
+        summaryRes = R.string.pref_filter_ads_summary,
+    )
+
+    item(key = "spacer_ads_rules", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
     preference(
-        key = "diagnostics",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 0), surface = surface),
+        key = "news_rules",
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
         icon = {
-            Icon(imageVector = Icons.Outlined.Map, contentDescription = null)
+            Icon(imageVector = Icons.Outlined.FilterAlt, contentDescription = null)
         },
         title = {
             Text(
-                stringResource(R.string.pref_dexkit_title),
+                stringResource(R.string.pref_news_rules_title),
                 style = MaterialTheme.typography.bodyLarge,
             )
         },
         summary = {
-            Text(stringResource(R.string.pref_dexkit_summary_ready))
+            Text(
+                if (ready.newsRules.isEmpty()) {
+                    stringResource(R.string.pref_news_rules_summary)
+                } else {
+                    stringResource(
+                        R.string.pref_news_rules_summary_count,
+                        ready.newsRules.count { it.enabled },
+                        ready.newsRules.size,
+                    )
+                },
+            )
         },
         widgetContainer = {
             Icon(
@@ -241,120 +224,40 @@ private fun LazyListScope.dashboardReadyItems(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         },
-        onClick = { onNavigate(Destination.Diagnostics) },
+        onClick = { onNavigate(Destination.NewsRules) },
     )
-
-    item(key = "spacer_diagnostics_clear", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    preference(
-        key = "clear_cache",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 1), surface = surface),
-        icon = {
-            Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(R.string.pref_clear_cache),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        summary = {
-            Text(stringResource(R.string.pref_clear_cache_summary))
-        },
-        enabled = !scanning,
-        onClick = onClearCacheClick,
-    )
-
-    item(key = "spacer_clear_restart", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    preference(
-        key = "restart_agsa",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 2), surface = surface),
-        icon = {
-            Icon(imageVector = Icons.Outlined.PhonelinkSetup, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(R.string.pref_restart_agsa),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        summary = {
-            Text(stringResource(R.string.pref_restart_agsa_summary))
-        },
-        enabled = !scanning,
-        onClick = onRestartAgsaClick,
-    )
-
-    item(key = "spacer_restart_recovery", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    item(key = "auto_recovery", contentType = "SwitchPreference") {
-        SwitchPreference(
-            value = ready.autoRecoveryOnUpdate,
-            onValueChange = actions.onAutoRecoveryChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 3), surface = surface),
-            icon = {
-                Icon(imageVector = Icons.Outlined.Autorenew, contentDescription = null)
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.pref_auto_recovery_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            summary = {
-                Text(stringResource(R.string.pref_auto_recovery_summary))
-            },
-        )
-    }
 
     preferenceCategory(
         key = "cat_sharing",
         title = { Text(stringResource(R.string.pref_category_sharing)) },
     )
 
-    item(key = "share_original_link", contentType = "SwitchPreference") {
-        SwitchPreference(
-            value = ready.shareOriginalLink,
-            onValueChange = actions.onShareOriginalLinkChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 0), surface = surface),
-            icon = {
-                Icon(imageVector = Icons.Outlined.Link, contentDescription = null)
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.pref_share_original_link_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            summary = {
-                Text(stringResource(R.string.pref_share_original_link_summary))
-            },
-        )
-    }
+    switchRow(
+        key = "share_original_link",
+        value = ready.shareOriginalLink,
+        onValueChange = actions.onShareOriginalLinkChange,
+        shapeCount = 3,
+        shapeIndex = 0,
+        surface = surface,
+        icon = Icons.Outlined.Link,
+        titleRes = R.string.pref_share_original_link_title,
+        summaryRes = R.string.pref_share_original_link_summary,
+    )
 
     item(key = "spacer_share_strip", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
-    item(key = "share_strip_source", contentType = "SwitchPreference") {
-        SwitchPreference(
-            value = ready.shareStripSourceLine,
-            onValueChange = actions.onShareStripSourceLineChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
-            enabled = ready.shareOriginalLink,
-            icon = {
-                Icon(imageVector = Icons.AutoMirrored.Outlined.ShortText, contentDescription = null)
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.pref_share_strip_source_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            summary = {
-                Text(stringResource(R.string.pref_share_strip_source_summary))
-            },
-        )
-    }
+    switchRow(
+        key = "share_strip_source",
+        value = ready.shareStripSourceLine,
+        onValueChange = actions.onShareStripSourceLineChange,
+        shapeCount = 3,
+        shapeIndex = 1,
+        surface = surface,
+        enabled = ready.shareOriginalLink,
+        icon = Icons.AutoMirrored.Outlined.ShortText,
+        titleRes = R.string.pref_share_strip_source_title,
+        summaryRes = R.string.pref_share_strip_source_summary,
+    )
 
     item(key = "spacer_strip_custom", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
@@ -395,121 +298,60 @@ private fun LazyListScope.dashboardReadyItems(
     }
 
     preferenceCategory(
-        key = "cat_feed",
-        title = { Text(stringResource(R.string.pref_category_feed)) },
-    )
-
-    preference(
-        key = "news_rules",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(1, 0), surface = surface),
-        icon = {
-            Icon(imageVector = Icons.Outlined.FilterAlt, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(R.string.pref_news_rules_title),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        summary = {
-            Text(
-                if (ready.newsRules.isEmpty()) {
-                    stringResource(R.string.pref_news_rules_summary)
-                } else {
-                    stringResource(
-                        R.string.pref_news_rules_summary_count,
-                        ready.newsRules.count { it.enabled },
-                        ready.newsRules.size,
-                    )
-                },
-            )
-        },
-        widgetContainer = {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 16.dp).size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        onClick = { onNavigate(Destination.NewsRules) },
-    )
-
-    preferenceCategory(
-        key = "cat_metrics",
-        title = { Text(stringResource(R.string.pref_category_metrics)) },
-    )
-
-    preference(
-        key = "reset_counter",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(1, 0), surface = surface),
-        icon = {
-            Icon(imageVector = Icons.Outlined.RestartAlt, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(R.string.pref_reset_counter),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        summary = {
-            Text(stringResource(R.string.pref_reset_counter_summary))
-        },
-        onClick = onResetCounterClick,
-    )
-
-    preferenceCategory(
         key = "cat_app",
         title = { Text(stringResource(R.string.pref_category_app)) },
     )
 
-    item(key = "hide_launcher_icon", contentType = "SwitchPreference") {
-        SwitchPreference(
-            value = ready.isLauncherIconHidden,
-            onValueChange = actions.onLauncherIconHiddenChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 0), surface = surface),
-            icon = {
-                Icon(imageVector = Icons.Outlined.PhonelinkErase, contentDescription = null)
+    switchRow(
+        key = "auto_recovery",
+        value = ready.autoRecoveryOnUpdate,
+        onValueChange = actions.onAutoRecoveryChange,
+        shapeCount = 4,
+        shapeIndex = 0,
+        surface = surface,
+        icon = Icons.Outlined.Build,
+        titleRes = R.string.pref_auto_recovery_title,
+        summaryRes =
+            if (ready.autoRecoveryOnUpdate) {
+                R.string.pref_auto_recovery_summary
+            } else {
+                R.string.pref_auto_recovery_summary_root
             },
-            title = {
-                Text(
-                    text = stringResource(R.string.pref_hide_launcher_icon_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            summary = {
-                Text(stringResource(R.string.pref_hide_launcher_icon_summary))
-            },
-        )
-    }
+    )
+
+    item(key = "spacer_recovery_hide", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+    switchRow(
+        key = "hide_launcher_icon",
+        value = ready.isLauncherIconHidden,
+        onValueChange = actions.onLauncherIconHiddenChange,
+        shapeCount = 4,
+        shapeIndex = 1,
+        surface = surface,
+        icon = Icons.Outlined.PhonelinkErase,
+        titleRes = R.string.pref_hide_launcher_icon_title,
+        summaryRes = R.string.pref_hide_launcher_icon_summary,
+    )
 
     item(key = "spacer_hide_verbose", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
-    item(key = "verbose", contentType = "SwitchPreference") {
-        SwitchPreference(
-            value = ready.verbose,
-            onValueChange = actions.onVerboseChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
-            icon = {
-                Icon(imageVector = Icons.Outlined.BugReport, contentDescription = null)
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.toggle_verbose),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            summary = {
-                Text(stringResource(R.string.toggle_verbose_summary))
-            },
-        )
-    }
+    switchRow(
+        key = "verbose",
+        value = ready.verbose,
+        onValueChange = actions.onVerboseChange,
+        shapeCount = 4,
+        shapeIndex = 2,
+        surface = surface,
+        icon = Icons.Outlined.BugReport,
+        titleRes = R.string.toggle_verbose,
+        summaryRes = R.string.toggle_verbose_summary,
+    )
 
     item(key = "spacer_verbose_about", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
     preference(
         key = "about",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 2), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 3), surface = surface),
         icon = {
             Icon(imageVector = Icons.Rounded.Info, contentDescription = null)
         },
@@ -524,6 +366,50 @@ private fun LazyListScope.dashboardReadyItems(
     )
 
     item(key = "spacer_bottom", contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
+}
+
+private fun LazyListScope.switchRow(
+    key: String,
+    value: Boolean,
+    onValueChange: (Boolean) -> Unit,
+    shapeCount: Int,
+    shapeIndex: Int,
+    surface: Color,
+    icon: ImageVector,
+    titleRes: Int,
+    summaryRes: Int,
+    enabled: Boolean = true,
+) {
+    preference(
+        key = key,
+        modifier =
+            Modifier.preferenceCard(
+                shape = shapeForPosition(shapeCount, shapeIndex),
+                surface = surface,
+            ),
+        enabled = enabled,
+        icon = {
+            Icon(imageVector = icon, contentDescription = null)
+        },
+        title = {
+            Text(
+                stringResource(titleRes),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        },
+        summary = {
+            Text(stringResource(summaryRes))
+        },
+        widgetContainer = {
+            IconSwitch(
+                checked = value,
+                onCheckedChange = onValueChange,
+                enabled = enabled,
+                modifier = Modifier.padding(start = Spacing.md, end = Spacing.md),
+            )
+        },
+        onClick = { onValueChange(!value) },
+    )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -548,75 +434,10 @@ private fun LazyListScope.dashboardLoadingCard(surface: Color) {
     }
 }
 
-@Composable
-private fun ClearCacheDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.clear_cache_dialog_title)) },
-        text = { Text(stringResource(R.string.clear_cache_dialog_body)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.clear_cache_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
-        },
-    )
-}
-
-@Composable
-private fun RestartAgsaDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.restart_agsa_dialog_title)) },
-        text = { Text(stringResource(R.string.restart_agsa_dialog_body)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.restart_agsa_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
-        },
-    )
-}
-
-@Composable
-private fun ResetCounterDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.reset_counter_dialog_title)) },
-        text = { Text(stringResource(R.string.reset_counter_dialog_body)) },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.reset_counter_dialog_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
-        },
-    )
-}
-
 private val NoOpActions =
     HomeActions(
         onVerboseChange = {},
+        onFilterAdsChange = {},
         onAutoRecoveryChange = {},
         onShareOriginalLinkChange = {},
         onShareStripSourceLineChange = {},

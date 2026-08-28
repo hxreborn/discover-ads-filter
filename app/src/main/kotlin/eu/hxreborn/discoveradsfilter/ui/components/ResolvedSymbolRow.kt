@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Icon
@@ -74,10 +73,7 @@ internal fun ResolvedSymbolRow(
 private fun StatusBadge(status: SymbolStatus) {
     when (status) {
         SymbolStatus.Mapped -> {
-            QuietStatus(
-                icon = Icons.Outlined.CheckCircle,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Unit
         }
 
         SymbolStatus.Partial -> {

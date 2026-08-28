@@ -10,6 +10,7 @@ sealed interface HomeUiState {
     @Immutable
     data class Ready(
         val verbose: Boolean = false,
+        val filterAds: Boolean = true,
         val autoRecoveryOnUpdate: Boolean = false,
         val shareOriginalLink: Boolean = false,
         val shareStripSourceLine: Boolean = false,
@@ -23,6 +24,7 @@ sealed interface HomeUiState {
 @Immutable
 data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
+    val onFilterAdsChange: (Boolean) -> Unit,
     val onAutoRecoveryChange: (Boolean) -> Unit,
     val onShareOriginalLinkChange: (Boolean) -> Unit,
     val onShareStripSourceLineChange: (Boolean) -> Unit,

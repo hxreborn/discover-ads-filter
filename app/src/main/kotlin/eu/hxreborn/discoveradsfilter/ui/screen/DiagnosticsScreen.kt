@@ -9,6 +9,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +22,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.PhonelinkSetup
+import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,7 +49,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -59,7 +65,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
-import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.ui.components.ResolvedSymbolRow
 import eu.hxreborn.discoveradsfilter.ui.components.ScanProgressCard
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
@@ -85,13 +90,18 @@ fun DiagnosticsScreen(
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val state = (uiState as? HomeUiState.Ready)?.verify ?: VerifyUiState()
+    val ready = uiState as? HomeUiState.Ready
+    val state = ready?.verify ?: VerifyUiState()
 
     DiagnosticsScreenContent(
         state = state,
         onVerify = viewModel.actions.onVerify,
         onBack = onBack,
         modifier = modifier,
+        onClearCache = viewModel.actions.onClearCacheOnly,
+        onRestartAgsa = viewModel.actions.onRestartGoogleApp,
+        onResetCounters = viewModel.actions.onResetAdsCounter,
+        rootLikelyGranted = ready?.autoRecoveryOnUpdate == true,
     )
 }
 
@@ -102,8 +112,15 @@ internal fun DiagnosticsScreenContent(
     onVerify: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onClearCache: () -> Unit = {},
+    onRestartAgsa: () -> Unit = {},
+    onResetCounters: () -> Unit = {},
+    rootLikelyGranted: Boolean = false,
 ) {
     var showInfoDialog by rememberSaveable { mutableStateOf(false) }
+    var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
+    var showRestartAgsaDialog by rememberSaveable { mutableStateOf(false) }
+    var showResetCountersDialog by rememberSaveable { mutableStateOf(false) }
     var showManualProgressThisVisit by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val anyRunning = state.phase == VerifyPhase.Running
@@ -146,6 +163,53 @@ internal fun DiagnosticsScreenContent(
             state = state,
             sections = sections,
             showProgress = showProgress,
+        )
+        MaintenanceSection(
+            enabled = !anyRunning,
+            rootLikelyGranted = rootLikelyGranted,
+            onClearCache = { showClearCacheDialog = true },
+            onRestartAgsa = { showRestartAgsaDialog = true },
+            onResetCounters = { showResetCountersDialog = true },
+        )
+        Spacer(Modifier.height(96.dp))
+    }
+
+    if (showClearCacheDialog) {
+        ConfirmActionDialog(
+            titleRes = R.string.clear_cache_dialog_title,
+            bodyRes = R.string.clear_cache_dialog_body,
+            confirmRes = R.string.clear_cache_dialog_confirm,
+            onDismiss = { showClearCacheDialog = false },
+            onConfirm = {
+                showClearCacheDialog = false
+                onClearCache()
+            },
+        )
+    }
+
+    if (showRestartAgsaDialog) {
+        ConfirmActionDialog(
+            titleRes = R.string.restart_agsa_dialog_title,
+            bodyRes = R.string.restart_agsa_dialog_body,
+            confirmRes = R.string.restart_agsa_dialog_confirm,
+            onDismiss = { showRestartAgsaDialog = false },
+            onConfirm = {
+                showRestartAgsaDialog = false
+                onRestartAgsa()
+            },
+        )
+    }
+
+    if (showResetCountersDialog) {
+        ConfirmActionDialog(
+            titleRes = R.string.reset_counter_dialog_title,
+            bodyRes = R.string.reset_counter_dialog_body,
+            confirmRes = R.string.reset_counter_dialog_confirm,
+            onDismiss = { showResetCountersDialog = false },
+            onConfirm = {
+                showResetCountersDialog = false
+                onResetCounters()
+            },
         )
     }
 
@@ -295,8 +359,121 @@ internal fun DiagnosticsContent(
             color = MaterialTheme.colorScheme.error,
         )
     }
+}
 
-    Spacer(Modifier.height(96.dp))
+@Composable
+private fun MaintenanceSection(
+    enabled: Boolean,
+    rootLikelyGranted: Boolean,
+    onClearCache: () -> Unit,
+    onRestartAgsa: () -> Unit,
+    onResetCounters: () -> Unit,
+) {
+    Spacer(Modifier.height(12.dp))
+    Text(
+        text = stringResource(R.string.diag_category_maintenance),
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    Spacer(Modifier.height(Spacing.xs))
+    MaintenanceRow(
+        icon = Icons.Outlined.DeleteSweep,
+        title = stringResource(R.string.pref_clear_cache),
+        summary = stringResource(R.string.pref_clear_cache_summary),
+        enabled = enabled,
+        onClick = onClearCache,
+        shape = shapeForPosition(3, 0),
+    )
+    Spacer(Modifier.height(2.dp))
+    MaintenanceRow(
+        icon = Icons.Outlined.PhonelinkSetup,
+        title = stringResource(R.string.pref_restart_agsa),
+        summary =
+            stringResource(
+                if (rootLikelyGranted) {
+                    R.string.pref_restart_agsa_summary
+                } else {
+                    R.string.pref_restart_agsa_summary_root
+                },
+            ),
+        enabled = enabled,
+        onClick = onRestartAgsa,
+        shape = shapeForPosition(3, 1),
+    )
+    Spacer(Modifier.height(2.dp))
+    MaintenanceRow(
+        icon = Icons.Outlined.RestartAlt,
+        title = stringResource(R.string.pref_reset_counter),
+        summary = stringResource(R.string.pref_reset_counter_summary),
+        enabled = true,
+        onClick = onResetCounters,
+        shape = shapeForPosition(3, 2),
+    )
+}
+
+@Composable
+private fun MaintenanceRow(
+    icon: ImageVector,
+    title: String,
+    summary: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    shape: Shape,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shape,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .clickable(enabled = enabled, onClick = onClick)
+                    .alpha(if (enabled) 1f else 0.38f)
+                    .padding(Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Column {
+                Text(text = title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ConfirmActionDialog(
+    titleRes: Int,
+    bodyRes: Int,
+    confirmRes: Int,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(titleRes)) },
+        text = { Text(stringResource(bodyRes)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(confirmRes))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -346,12 +523,10 @@ private fun ComboCard(state: VerifyUiState) {
     )
     Spacer(Modifier.height(Spacing.sm))
 
-    val fpSchema = SettingsPrefs.KEY_FINGERPRINT_PREFIX.removePrefix("fp_v").removeSuffix("_")
     val rows =
         listOf(
             stringResource(R.string.diag_mapped_google_app_label) to agsaLine,
             stringResource(R.string.diag_mapped_module_label) to moduleLine,
-            stringResource(R.string.diag_mapped_fp_label) to stringResource(R.string.diag_mapped_fp_value, fpSchema),
         )
     rows.forEachIndexed { index, (label, value) ->
         if (index > 0) Spacer(Modifier.height(2.dp))

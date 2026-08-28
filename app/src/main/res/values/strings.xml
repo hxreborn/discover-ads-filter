@@ -25,6 +25,17 @@
     <string name="hero_signatures_missing">Signatures missing</string>
     <string name="hero_target_missing">Google app not found</string>
     <string name="hero_blocked_since_install">%1$s ads blocked since install</string>
+    <plurals name="hero_clickbait_hidden">
+        <item quantity="one">%1$d clickbait article %2$s</item>
+        <item quantity="other">%1$d clickbait articles %2$s</item>
+    </plurals>
+    <string-array name="clickbait_verbs">
+        <item>dodged</item>
+        <item>yeeted</item>
+        <item>binned</item>
+        <item>vaporized</item>
+        <item>skipped</item>
+    </string-array>
 
     <!-- Preferences -->
     <string name="pref_hide_launcher_icon_title">Hide launcher icon</string>
@@ -33,19 +44,23 @@
     <string name="toggle_verbose_summary">Detailed logs for troubleshooting</string>
     <string name="pref_clear_cache">Clear target cache</string>
     <string name="pref_clear_cache_summary">Remove saved scan results for this Google app build</string>
-    <string name="pref_reset_counter">Reset ad counter</string>
-    <string name="pref_reset_counter_summary">Set the blocked ads count back to zero</string>
+    <string name="pref_reset_counter">Reset counters</string>
+    <string name="pref_reset_counter_summary">Set the hidden ads and clickbait counts back to zero</string>
     <string name="pref_restart_agsa">Close Google app</string>
-    <string name="pref_restart_agsa_summary">Closes it so the filter reloads. Needs root</string>
+    <string name="pref_restart_agsa_summary">Closes it so the filter reloads</string>
+    <string name="pref_restart_agsa_summary_root">Closes it so the filter reloads. Needs root</string>
     <string name="restart_agsa_done">Google app closed</string>
     <string name="restart_agsa_failed">No root access</string>
     <string name="restart_agsa_dialog_title">Close Google app?</string>
     <string name="restart_agsa_dialog_body">You lose anything open in it.</string>
     <string name="restart_agsa_dialog_confirm">Close</string>
-    <string name="pref_auto_recovery_title">Auto-resolve after updates</string>
-    <string name="pref_auto_recovery_summary">Resolve symbols and force close the Google app when it updates. Needs root</string>
+    <string name="pref_auto_recovery_title">Auto-repair after Google app updates</string>
+    <string name="pref_auto_recovery_summary">Rescans and restarts the Google app when it updates</string>
+    <string name="pref_auto_recovery_summary_root">Rescans and restarts the Google app when it updates. Needs root</string>
     <string name="auto_recovery_needs_root">Needs root access to turn on</string>
 
+    <string name="pref_filter_ads_title">Hide sponsored cards</string>
+    <string name="pref_filter_ads_summary">Remove ads from the Discover feed</string>
     <string name="pref_share_original_link_title">Replace share.google links</string>
     <string name="pref_share_original_link_summary">Uses the article\'s own link</string>
     <string name="pref_share_strip_source_title">Link only</string>
@@ -59,6 +74,7 @@
 
     <!-- News filter rules -->
     <string name="news_rules_empty_title">No filters yet</string>
+    <string name="news_rules_empty_body">Hide stories by headline or source. Start with the built-in clickbait presets.</string>
     <string name="news_rule_add">Add filter</string>
     <string name="news_rules_load_presets">Load presets</string>
     <string name="news_rules_more">More</string>
@@ -93,22 +109,18 @@
     <string name="news_rule_action_allow">Keep</string>
 
     <!-- Category headers -->
-    <string name="pref_category_target_resolution">Target resolution</string>
     <string name="pref_category_sharing">Sharing</string>
-    <string name="pref_category_feed">Feed</string>
-    <string name="pref_category_metrics">Metrics</string>
+    <string name="pref_category_feed">Discover feed</string>
     <string name="pref_category_app">App</string>
+    <string name="diag_category_maintenance">Maintenance</string>
 
     <!-- About -->
     <string name="pref_category_about">About</string>
     <string name="pref_about_summary">App info and source</string>
 
-    <!-- Hook targets -->
-    <string name="pref_dexkit_title">Resolved targets</string>
-    <string name="pref_dexkit_summary_ready">View resolved hook targets</string>
-
     <!-- Navigation -->
-    <string name="nav_diagnostics">Resolved targets</string>
+    <string name="nav_diagnostics">Diagnostics</string>
+    <string name="nav_diagnostics_open">Open diagnostics</string>
     <string name="nav_news_rules">News filters</string>
     <string name="nav_back">Back</string>
     <string name="nav_info">Info</string>
@@ -117,8 +129,6 @@
     <string name="diag_mapped_combo_title">Scanned against</string>
     <string name="diag_mapped_google_app_label">Google app</string>
     <string name="diag_mapped_module_label">Module</string>
-    <string name="diag_mapped_fp_label">FP schema</string>
-    <string name="diag_mapped_fp_value">v%1$s</string>
     <string name="diag_mapped_agsa_empty">—</string>
     <string name="diag_mapped_agsa_versioned">v%1$s (%2$d)</string>
     <string name="diag_mapped_agsa_code_only">(%1$d)</string>
@@ -163,7 +173,7 @@
     <string name="clear_cache_dialog_title">Clear target cache?</string>
     <string name="clear_cache_dialog_body">Clears the saved scan results for the current Google app build. The next scan runs from scratch and may take a few seconds. Use it after a Google app update or when diagnostics look wrong.</string>
     <string name="clear_cache_dialog_confirm">Clear cache</string>
-    <string name="reset_counter_dialog_title">Reset blocked ads count?</string>
-    <string name="reset_counter_dialog_body">Sets the blocked ads count back to zero. Filtering, the scan cache, and symbol mappings stay untouched.</string>
-    <string name="reset_counter_dialog_confirm">Reset count</string>
+    <string name="reset_counter_dialog_title">Reset counters?</string>
+    <string name="reset_counter_dialog_body">Sets the hidden ads and clickbait counts back to zero. Filtering, the scan cache, and symbol mappings stay untouched.</string>
+    <string name="reset_counter_dialog_confirm">Reset</string>
 </resources>

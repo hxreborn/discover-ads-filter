@@ -27,11 +27,14 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -57,12 +60,14 @@ import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 fun StatusCard(
     state: VerifyUiState,
     modifier: Modifier = Modifier,
+    onOpenDiagnostics: (() -> Unit)? = null,
 ) {
     val visual = statusVisual(state)
     val scanning = state.phase == VerifyPhase.Running && state.lastResult == null
     val isInactive = state.moduleStatus == ModuleStatus.Inactive
     val context = LocalContext.current
     val restartLabel = stringResource(R.string.action_restart_app)
+    val diagnosticsLabel = stringResource(R.string.nav_diagnostics_open)
 
     ElevatedCard(
         modifier =
@@ -70,19 +75,27 @@ fun StatusCard(
                 .fillMaxWidth()
                 .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
                 .then(
-                    if (isInactive) {
-                        Modifier.clickable(
-                            onClickLabel = restartLabel,
-                        ) {
-                            val intent =
-                                context.packageManager
-                                    .getLaunchIntentForPackage(context.packageName)
-                                    ?.apply { addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK) }
-                            intent?.let { context.startActivity(it) }
-                            Process.killProcess(Process.myPid())
+                    when {
+                        isInactive -> {
+                            Modifier.clickable(
+                                onClickLabel = restartLabel,
+                            ) {
+                                val intent =
+                                    context.packageManager
+                                        .getLaunchIntentForPackage(context.packageName)
+                                        ?.apply { addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK) }
+                                intent?.let { context.startActivity(it) }
+                                Process.killProcess(Process.myPid())
+                            }
                         }
-                    } else {
-                        Modifier
+
+                        onOpenDiagnostics != null -> {
+                            Modifier.clickable(onClickLabel = diagnosticsLabel) { onOpenDiagnostics() }
+                        }
+
+                        else -> {
+                            Modifier
+                        }
                     },
                 ),
         shape = MaterialTheme.shapes.large,
@@ -126,7 +139,7 @@ fun StatusCard(
                 )
                 StatusCardBody(state)
             }
-            if (isInactive) {
+            if (isInactive || onOpenDiagnostics != null) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                     contentDescription = null,
@@ -169,6 +182,20 @@ private fun StatusCardBody(state: VerifyUiState) {
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
+            if (state.newsHidden > 0) {
+                val verbs = stringArrayResource(R.array.clickbait_verbs)
+                val verb = remember { verbs.random() }
+                Text(
+                    text =
+                        pluralStringResource(
+                            R.plurals.hero_clickbait_hidden,
+                            state.newsHidden.toInt(),
+                            state.newsHidden,
+                            verb,
+                        ),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
     }
 }
@@ -178,12 +205,18 @@ private fun targetLine(state: VerifyUiState): String {
     val name = state.installedAgsaVersionName
     val code = state.installedAgsaVersion
     return when {
-        name != null && code != null -> stringResource(R.string.hero_target_agsa, "v$name ($code)")
-        name != null -> stringResource(R.string.hero_target_agsa, "v$name")
+        name != null -> stringResource(R.string.hero_target_agsa, "v${shortAgsaVersion(name)}")
         code != null -> stringResource(R.string.hero_target_agsa, "v$code")
         else -> stringResource(R.string.hero_target_missing)
     }
 }
+
+private fun shortAgsaVersion(name: String): String =
+    name
+        .split(".")
+        .takeWhile { segment -> segment.all(Char::isDigit) }
+        .joinToString(".")
+        .ifEmpty { name }
 
 private data class StatusVisual(
     val icon: ImageVector,

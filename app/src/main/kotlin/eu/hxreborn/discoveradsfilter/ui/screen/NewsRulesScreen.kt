@@ -36,7 +36,6 @@ import androidx.compose.material.icons.outlined.Abc
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AllInclusive
 import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FilterAltOff
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.MoreVert
@@ -44,21 +43,20 @@ import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -89,8 +87,10 @@ import eu.hxreborn.discoveradsfilter.filter.NewsRule
 import eu.hxreborn.discoveradsfilter.filter.RuleAction
 import eu.hxreborn.discoveradsfilter.filter.RuleMatch
 import eu.hxreborn.discoveradsfilter.filter.RuleScope
+import eu.hxreborn.discoveradsfilter.ui.components.IconSwitch
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailTopBar
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
+import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.preferenceCard
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
@@ -146,6 +146,15 @@ fun NewsRulesScreen(
                 editingId = null
             },
             onDismiss = { editingId = null },
+            onDelete =
+                if (existing != null) {
+                    {
+                        editingId = null
+                        pendingDelete = id
+                    }
+                } else {
+                    null
+                },
         )
     }
 
@@ -228,7 +237,12 @@ fun NewsRulesScreen(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             if (rules.isEmpty()) {
-                item(key = "empty") { NewsRulesEmptyState(Modifier.fillParentMaxWidth()) }
+                item(key = "empty") {
+                    NewsRulesEmptyState(
+                        onLoadPresets = onLoadPresets,
+                        modifier = Modifier.fillParentMaxWidth(),
+                    )
+                }
             } else {
                 itemsIndexed(rules, key = { _, rule -> rule.id }) { index, rule ->
                     NewsRuleRow(
@@ -237,7 +251,6 @@ fun NewsRulesScreen(
                         surface = surface,
                         onToggle = { onSave(rule.copy(enabled = it)) },
                         onEdit = { editingId = rule.id },
-                        onDelete = { pendingDelete = rule.id },
                     )
                 }
             }
@@ -252,85 +265,75 @@ private fun NewsRuleRow(
     surface: Color,
     onToggle: (Boolean) -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val editLabel = stringResource(R.string.news_rule_edit)
-    ListItem(
+    Row(
         modifier =
             modifier
                 .preferenceCard(shape = shape, surface = surface)
-                .clickable(onClickLabel = editLabel, onClick = onEdit),
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        supportingContent = {
-            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                if (rule.label != null) {
-                    Text(
-                        text = rule.pattern,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily =
-                            if (rule.match == RuleMatch.Regex) {
-                                FontFamily.Monospace
-                            } else {
-                                FontFamily.Default
-                            },
-                    )
-                }
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-                    modifier = Modifier.padding(top = Spacing.xs),
-                ) {
+                .clickable(onClickLabel = editLabel, onClick = onEdit)
+                .padding(horizontal = Spacing.md, vertical = Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        ) {
+            Text(
+                text = rule.label ?: rule.pattern,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyLarge,
+                fontFamily =
+                    if (rule.label == null && rule.match == RuleMatch.Regex) {
+                        FontFamily.Monospace
+                    } else {
+                        FontFamily.Default
+                    },
+            )
+            if (rule.label != null) {
+                Text(
+                    text = rule.pattern,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily =
+                        if (rule.match == RuleMatch.Regex) {
+                            FontFamily.Monospace
+                        } else {
+                            FontFamily.Default
+                        },
+                )
+            }
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.padding(top = Spacing.xs),
+            ) {
+                if (rule.action == RuleAction.Allow) {
                     RuleChip(
                         icon = actionIcon(rule.action),
                         text = stringResource(actionLabel(rule.action)),
-                        container =
-                            if (rule.action == RuleAction.Allow) {
-                                MaterialTheme.colorScheme.tertiaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.errorContainer
-                            },
-                        content =
-                            if (rule.action == RuleAction.Allow) {
-                                MaterialTheme.colorScheme.onTertiaryContainer
-                            } else {
-                                MaterialTheme.colorScheme.onErrorContainer
-                            },
+                        container = MaterialTheme.colorScheme.tertiaryContainer,
+                        content = MaterialTheme.colorScheme.onTertiaryContainer,
                     )
-                    RuleChip(icon = scopeIcon(rule.scope), text = stringResource(scopeLabel(rule.scope)))
-                    RuleChip(icon = matchIcon(rule.match), text = stringResource(matchLabel(rule.match)))
-                }
-            }
-        },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Switch(
-                    checked = rule.enabled,
-                    onCheckedChange = onToggle,
-                    modifier = Modifier.semantics { contentDescription = rule.pattern },
-                )
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Outlined.DeleteOutline,
-                        contentDescription = stringResource(R.string.news_rule_delete),
-                    )
-                }
-            }
-        },
-    ) {
-        Text(
-            text = rule.label ?: rule.pattern,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            fontFamily =
-                if (rule.label == null && rule.match == RuleMatch.Regex) {
-                    FontFamily.Monospace
                 } else {
-                    FontFamily.Default
-                },
+                    RuleChip(
+                        icon = actionIcon(rule.action),
+                        text = stringResource(actionLabel(rule.action)),
+                    )
+                }
+                RuleChip(icon = scopeIcon(rule.scope), text = stringResource(scopeLabel(rule.scope)))
+                RuleChip(icon = matchIcon(rule.match), text = stringResource(matchLabel(rule.match)))
+            }
+        }
+        IconSwitch(
+            checked = rule.enabled,
+            onCheckedChange = onToggle,
+            modifier = Modifier.semantics { contentDescription = rule.pattern },
         )
     }
 }
@@ -354,7 +357,7 @@ private fun RuleChip(
             imageVector = icon,
             contentDescription = null,
             tint = content,
-            modifier = Modifier.size(14.dp),
+            modifier = Modifier.size(IconSize.xs),
         )
         Text(
             text = text,
@@ -370,6 +373,7 @@ private fun NewsRuleDialog(
     isNew: Boolean,
     onConfirm: (NewsRule) -> Unit,
     onDismiss: () -> Unit,
+    onDelete: (() -> Unit)? = null,
 ) {
     var name by rememberSaveable { mutableStateOf(initial.label.orEmpty()) }
     var pattern by rememberSaveable { mutableStateOf(initial.pattern) }
@@ -440,25 +444,37 @@ private fun NewsRuleDialog(
             }
         },
         confirmButton = {
-            TextButton(
-                enabled = valid,
-                onClick = {
-                    onConfirm(
-                        initial.copy(
-                            pattern = pattern.trim(),
-                            action = action,
-                            scope = scope,
-                            match = match,
-                            label = name.trim().takeIf { it.isNotEmpty() },
-                        ),
-                    )
-                },
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(stringResource(android.R.string.ok))
+                if (onDelete != null) {
+                    TextButton(
+                        onClick = onDelete,
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    ) {
+                        Text(stringResource(R.string.news_rule_delete_dialog_confirm))
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
+                TextButton(
+                    enabled = valid,
+                    onClick = {
+                        onConfirm(
+                            initial.copy(
+                                pattern = pattern.trim(),
+                                action = action,
+                                scope = scope,
+                                match = match,
+                                label = name.trim().takeIf { it.isNotEmpty() },
+                            ),
+                        )
+                    },
+                ) {
+                    Text(stringResource(android.R.string.ok))
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
         },
     )
 }
@@ -530,7 +546,10 @@ private fun <T> Choice(
 }
 
 @Composable
-private fun NewsRulesEmptyState(modifier: Modifier = Modifier) {
+private fun NewsRulesEmptyState(
+    onLoadPresets: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier.padding(horizontal = 32.dp, vertical = 64.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -547,6 +566,17 @@ private fun NewsRulesEmptyState(modifier: Modifier = Modifier) {
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center,
         )
+        Spacer(Modifier.height(Spacing.sm))
+        Text(
+            text = stringResource(R.string.news_rules_empty_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(Spacing.lg))
+        FilledTonalButton(onClick = onLoadPresets) {
+            Text(stringResource(R.string.news_rules_load_presets))
+        }
     }
 }
 

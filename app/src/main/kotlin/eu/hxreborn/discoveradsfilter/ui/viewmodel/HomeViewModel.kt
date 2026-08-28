@@ -16,6 +16,7 @@ import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.filter.NewsRule
 import eu.hxreborn.discoveradsfilter.filter.NewsRules
+import eu.hxreborn.discoveradsfilter.prefs.Counters
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
@@ -56,6 +57,7 @@ class HomeViewModel(
     private val repo = appInstance.prefsRepository
 
     private val verboseFlow = MutableStateFlow(false)
+    private val filterAdsFlow = MutableStateFlow(true)
     private val autoRecoveryFlow = MutableStateFlow(false)
     private val shareOriginalLinkFlow = MutableStateFlow(false)
     private val shareStripSourceLineFlow = MutableStateFlow(false)
@@ -79,22 +81,37 @@ class HomeViewModel(
             }
         }
 
-    private val adsHiddenFlow = repo.adsHiddenFlow().catch { emit(0L) }
+    private val countersFlow = repo.countersFlow().catch { emit(Counters(0L, 0L)) }
 
     private val verifyWithStatusFlow =
         combine(verifyFlow, moduleStatusFlow) { verify, status ->
             verify?.copy(moduleStatus = status)
         }
 
-    private val togglesFlow =
+    private val shareTogglesFlow =
         combine(
-            verboseFlow,
-            autoRecoveryFlow,
             shareOriginalLinkFlow,
             shareStripSourceLineFlow,
             shareCustomLineFlow,
-        ) { verbose, autoRecovery, shareOriginalLink, shareStripSourceLine, shareCustomLine ->
-            Toggles(verbose, autoRecovery, shareOriginalLink, shareStripSourceLine, shareCustomLine)
+        ) { shareOriginalLink, shareStripSourceLine, shareCustomLine ->
+            ShareToggles(shareOriginalLink, shareStripSourceLine, shareCustomLine)
+        }
+
+    private val togglesFlow =
+        combine(
+            verboseFlow,
+            filterAdsFlow,
+            autoRecoveryFlow,
+            shareTogglesFlow,
+        ) { verbose, filterAds, autoRecovery, share ->
+            Toggles(
+                verbose = verbose,
+                filterAds = filterAds,
+                autoRecovery = autoRecovery,
+                shareOriginalLink = share.shareOriginalLink,
+                shareStripSourceLine = share.shareStripSourceLine,
+                shareCustomLine = share.shareCustomLine,
+            )
         }
 
     val uiState: StateFlow<HomeUiState> =
@@ -102,21 +119,26 @@ class HomeViewModel(
             togglesFlow,
             launcherIconHiddenFlow,
             verifyWithStatusFlow,
-            adsHiddenFlow,
+            countersFlow,
             newsRulesFlow,
-        ) { toggles, launcherIconHidden, verify, adsHidden, rules ->
+        ) { toggles, launcherIconHidden, verify, counters, rules ->
             if (verify == null) {
                 HomeUiState.Loading
             } else {
                 HomeUiState.Ready(
                     verbose = toggles.verbose,
+                    filterAds = toggles.filterAds,
                     autoRecoveryOnUpdate = toggles.autoRecovery,
                     shareOriginalLink = toggles.shareOriginalLink,
                     shareStripSourceLine = toggles.shareStripSourceLine,
                     shareCustomLine = toggles.shareCustomLine,
                     newsRules = rules,
                     isLauncherIconHidden = launcherIconHidden,
-                    verify = verify.copy(adsHidden = adsHidden),
+                    verify =
+                        verify.copy(
+                            adsHidden = counters.adsHidden,
+                            newsHidden = counters.newsHidden,
+                        ),
                 )
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState.Loading)
@@ -126,6 +148,10 @@ class HomeViewModel(
             onVerboseChange = { value ->
                 repo.save(SettingsPrefs.verbose, value)
                 verboseFlow.value = value
+            },
+            onFilterAdsChange = { value ->
+                repo.save(SettingsPrefs.filterAds, value)
+                filterAdsFlow.value = value
             },
             onAutoRecoveryChange = { value ->
                 if (!value) {
@@ -288,6 +314,7 @@ class HomeViewModel(
 
     private suspend fun initialize() {
         verboseFlow.value = repo.read(SettingsPrefs.verbose)
+        filterAdsFlow.value = repo.read(SettingsPrefs.filterAds)
         autoRecoveryFlow.value = repo.read(SettingsPrefs.autoRecoveryOnUpdate)
         shareOriginalLinkFlow.value = repo.read(SettingsPrefs.shareOriginalLink)
         shareStripSourceLineFlow.value = repo.read(SettingsPrefs.shareStripSourceLine)
@@ -478,7 +505,14 @@ class HomeViewModel(
 
 private data class Toggles(
     val verbose: Boolean,
+    val filterAds: Boolean,
     val autoRecovery: Boolean,
+    val shareOriginalLink: Boolean,
+    val shareStripSourceLine: Boolean,
+    val shareCustomLine: String?,
+)
+
+private data class ShareToggles(
     val shareOriginalLink: Boolean,
     val shareStripSourceLine: Boolean,
     val shareCustomLine: String?,
