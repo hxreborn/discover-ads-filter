@@ -2,6 +2,7 @@
 
 package eu.hxreborn.discoveradsfilter.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,10 +27,17 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Abc
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AllInclusive
+import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FilterAltOff
+import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.PlaylistAdd
+import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -59,6 +67,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -222,6 +231,7 @@ private fun NewsRuleRow(
                     modifier = Modifier.padding(top = Spacing.xs),
                 ) {
                     RuleChip(
+                        icon = actionIcon(rule.action),
                         text = stringResource(actionLabel(rule.action)),
                         container =
                             if (rule.action == RuleAction.Allow) {
@@ -236,8 +246,8 @@ private fun NewsRuleRow(
                                 MaterialTheme.colorScheme.onErrorContainer
                             },
                     )
-                    RuleChip(text = stringResource(scopeLabel(rule.scope)))
-                    RuleChip(text = stringResource(matchLabel(rule.match)))
+                    RuleChip(icon = scopeIcon(rule.scope), text = stringResource(scopeLabel(rule.scope)))
+                    RuleChip(icon = matchIcon(rule.match), text = stringResource(matchLabel(rule.match)))
                 }
             }
         },
@@ -273,19 +283,29 @@ private fun NewsRuleRow(
 
 @Composable
 private fun RuleChip(
+    icon: ImageVector,
     text: String,
     container: Color = MaterialTheme.colorScheme.surface,
     content: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
-    Surface(
-        color = container,
-        contentColor = content,
-        shape = MaterialTheme.shapes.small,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+        modifier =
+            Modifier
+                .background(color = container, shape = MaterialTheme.shapes.small)
+                .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
     ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = content,
+            modifier = Modifier.size(14.dp),
+        )
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+            color = content,
         )
     }
 }
@@ -493,6 +513,25 @@ private fun actionLabel(action: RuleAction): Int =
     when (action) {
         RuleAction.Block -> R.string.news_rule_action_block
         RuleAction.Allow -> R.string.news_rule_action_allow
+    }
+
+private fun scopeIcon(scope: RuleScope): ImageVector =
+    when (scope) {
+        RuleScope.Headline -> Icons.Outlined.Title
+        RuleScope.Source -> Icons.Outlined.Language
+        RuleScope.Any -> Icons.Outlined.AllInclusive
+    }
+
+private fun matchIcon(match: RuleMatch): ImageVector =
+    when (match) {
+        RuleMatch.Contains -> Icons.Outlined.Abc
+        RuleMatch.Regex -> Icons.Outlined.Code
+    }
+
+private fun actionIcon(action: RuleAction): ImageVector =
+    when (action) {
+        RuleAction.Block -> Icons.Outlined.VisibilityOff
+        RuleAction.Allow -> Icons.Outlined.Visibility
     }
 
 @Preview(name = "News filters", showSystemUi = true)
