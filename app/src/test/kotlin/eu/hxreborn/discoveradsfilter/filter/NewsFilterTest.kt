@@ -207,7 +207,7 @@ class NewsFilterTest {
                 NewsRule(id = "c", pattern = "fresh"),
             )
 
-        val merged = NewsRules.merge(existing, imported)
+        val merged = NewsRules.merge(existing, imported).rules
 
         assertEquals(listOf("a", "b", "c"), merged.map { it.id })
         assertEquals("new", merged.first { it.id == "a" }.pattern)

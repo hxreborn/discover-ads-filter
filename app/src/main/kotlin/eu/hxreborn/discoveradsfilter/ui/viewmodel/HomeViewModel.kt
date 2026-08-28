@@ -67,8 +67,8 @@ class HomeViewModel(
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
 
-    private val _messages = MutableSharedFlow<Int>(extraBufferCapacity = 1)
-    val messages: SharedFlow<Int> = _messages.asSharedFlow()
+    private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val messages: SharedFlow<String> = _messages.asSharedFlow()
 
     private val serviceListener =
         object : XposedServiceHelper.OnServiceListener {
@@ -167,7 +167,7 @@ class HomeViewModel(
                             Log.w(TAG, "auto-recovery off, root denied")
                             autoRecoveryFlow.value = false
                             repo.save(SettingsPrefs.autoRecoveryOnUpdate, false)
-                            _messages.tryEmit(R.string.auto_recovery_needs_root)
+                            _messages.tryEmit(app.getString(R.string.auto_recovery_needs_root))
                         }
                     }
                 }
@@ -244,11 +244,19 @@ class HomeViewModel(
                 }.getOrNull()
             val imported = NewsRules.decode(raw)
             if (imported.isEmpty()) {
-                _messages.tryEmit(R.string.news_rules_import_failed)
+                _messages.tryEmit(app.getString(R.string.news_rules_import_failed))
                 return@launch
             }
-            persistNewsRules(NewsRules.merge(newsRulesFlow.value, imported))
-            _messages.tryEmit(R.string.news_rules_imported)
+            val result = NewsRules.merge(newsRulesFlow.value, imported)
+            val changed = result.added + result.updated
+            if (changed == 0) {
+                _messages.tryEmit(app.getString(R.string.news_rules_import_nothing_new))
+                return@launch
+            }
+            persistNewsRules(result.rules)
+            _messages.tryEmit(
+                app.resources.getQuantityString(R.plurals.news_rules_imported_count, changed, changed),
+            )
         }
     }
 
@@ -261,7 +269,9 @@ class HomeViewModel(
                     } ?: error("no output stream")
                 }.isSuccess
             _messages.tryEmit(
-                if (written) R.string.news_rules_exported else R.string.news_rules_export_failed,
+                app.getString(
+                    if (written) R.string.news_rules_exported else R.string.news_rules_export_failed,
+                ),
             )
         }
     }
@@ -279,7 +289,9 @@ class HomeViewModel(
                     null
                 } != null
             _messages.tryEmit(
-                if (stopped) R.string.restart_agsa_done else R.string.restart_agsa_failed,
+                app.getString(
+                    if (stopped) R.string.restart_agsa_done else R.string.restart_agsa_failed,
+                ),
             )
         }
     }

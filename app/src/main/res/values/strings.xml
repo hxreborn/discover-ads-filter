@@ -80,7 +80,11 @@
     <string name="news_rules_more">More</string>
     <string name="news_rules_import">Import</string>
     <string name="news_rules_export">Export</string>
-    <string name="news_rules_imported">Filters imported</string>
+    <plurals name="news_rules_imported_count">
+        <item quantity="one">Imported %d filter</item>
+        <item quantity="other">Imported %d filters</item>
+    </plurals>
+    <string name="news_rules_import_nothing_new">No new filters</string>
     <string name="news_rules_import_failed">No filters in that file</string>
     <string name="news_rules_exported">Filters exported</string>
     <string name="news_rules_export_failed">Could not write that file</string>

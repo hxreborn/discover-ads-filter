@@ -1,11 +1,14 @@
 package eu.hxreborn.discoveradsfilter.ui.navigation
 
+import android.widget.Toast
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -25,6 +28,12 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
 ) {
     val backStack = rememberNavBackStack(Destination.Dashboard)
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.messages.collect { message ->
+            Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
+        }
+    }
 
     NavDisplay(
         backStack = backStack,

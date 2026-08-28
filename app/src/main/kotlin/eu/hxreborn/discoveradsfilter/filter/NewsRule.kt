@@ -23,6 +23,12 @@ data class NewsRule(
     val label: String? = null,
 )
 
+data class MergeResult(
+    val rules: List<NewsRule>,
+    val added: Int,
+    val updated: Int,
+)
+
 data class CardText(
     val headline: String?,
     val source: String?,
@@ -162,11 +168,30 @@ object NewsRules {
     fun merge(
         existing: List<NewsRule>,
         incoming: List<NewsRule>,
-    ): List<NewsRule> {
+    ): MergeResult {
         val byId = existing.associateByTo(LinkedHashMap()) { it.id }
-        incoming.forEach { byId[it.id] = it }
-        return byId.values.toList()
+        val contentKeys = existing.mapTo(HashSet()) { it.contentKey() }
+        var added = 0
+        var updated = 0
+        for (rule in incoming) {
+            if (rule.pattern.isBlank()) continue
+            val current = byId[rule.id]
+            if (current != null) {
+                if (current != rule) {
+                    byId[rule.id] = rule
+                    updated++
+                }
+                continue
+            }
+            if (!contentKeys.add(rule.contentKey())) continue
+            byId[rule.id] = rule
+            added++
+        }
+        return MergeResult(byId.values.toList(), added, updated)
     }
+
+    private fun NewsRule.contentKey(): String =
+        listOf(action, scope, match, pattern.trim().lowercase()).joinToString("|")
 
     fun encode(rules: List<NewsRule>): String = json.encodeToString(serializer, rules)
 
