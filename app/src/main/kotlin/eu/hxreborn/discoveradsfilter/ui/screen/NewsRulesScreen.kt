@@ -99,6 +99,7 @@ import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailTopBar
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
+import eu.hxreborn.discoveradsfilter.ui.util.drawVerticalScrollbar
 import eu.hxreborn.discoveradsfilter.ui.util.preferenceCard
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import java.util.UUID
@@ -285,7 +286,12 @@ fun NewsRulesScreen(
         val surface = MaterialTheme.colorScheme.surfaceVariant
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().padding(innerPadding).consumeWindowInsets(innerPadding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .consumeWindowInsets(innerPadding)
+                    .drawVerticalScrollbar(listState),
             contentPadding = PaddingValues(top = Spacing.sm, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
