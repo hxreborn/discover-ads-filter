@@ -1,0 +1,137 @@
+[
+  {
+    "id": "preset-ai-hype",
+    "label": "AI just killed X",
+    "pattern": "(chatgpt|claude|gemini|copilot|openai)\\b.{0,40}\\b(just killed|killed|is dead|is over|replaces)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-declared-dead",
+    "label": "X is dead",
+    "pattern": "\\b(java|python|seo|email|passwords?|the web|blogging|google search) is dead\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-listicle",
+    "label": "Listicles",
+    "pattern": "^\\d+ (things|reasons|ways|signs|facts|tricks|habits|foods)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-experts-say",
+    "label": "Experts say",
+    "pattern": "\\b(experts|scientists|doctors|nutritionists)\\b.{0,25}\\b(say|reveal|warn|agree|stunned|baffled)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-curiosity-gap",
+    "label": "What happened next",
+    "pattern": "(what happened next|the reason will surprise you|and it'?s not what you think|nobody saw it coming)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-farewell",
+    "label": "Goodbye to X",
+    "pattern": "^(goodbye|farewell|say goodbye) to\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-official-claim",
+    "label": "Officially confirmed",
+    "pattern": "\\b(it'?s official|officially confirmed|confirmed by the (eu|government))\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-secret-trick",
+    "label": "Secret trick",
+    "pattern": "\\b(secret|hidden) (feature|trick|setting|reason|menu)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-doing-it-wrong",
+    "label": "You have been doing it wrong",
+    "pattern": "\\byou'?(ve|( have)) been .{0,25} wrong\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-urgent-prefix",
+    "label": "Urgent prefixes",
+    "pattern": "^(warning|attention|urgent|alert|breaking)[:!]",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-money-bait",
+    "label": "Money in the headline",
+    "pattern": "([€£] ?\\d{2,}|\\b(\\d{2,}|thousands of) (euros|dollars|pounds)\\b)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-tabloid",
+    "label": "Tabloid drama",
+    "pattern": "\\b(breaks? (his|her|their) silence|opens up about|slams|sparks concern|fans are convinced)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-viral-bait",
+    "label": "Goes viral",
+    "pattern": "\\b(goes viral|breaks the internet|leaves everyone speechless|the internet is losing it)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "preset-wont-believe",
+    "label": "You won't believe",
+    "pattern": "you won't believe",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Contains",
+    "enabled": true
+  },
+  {
+    "id": "preset-hype-words",
+    "label": "Hype words",
+    "pattern": "\\b(game[- ]?changer|mind[- ]?blowing|shocking truth|this one trick|jaw[- ]?dropping)\\b",
+    "action": "Block",
+    "scope": "Any",
+    "match": "Regex",
+    "enabled": true
+  }
+]

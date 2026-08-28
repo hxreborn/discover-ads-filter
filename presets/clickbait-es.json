@@ -1,0 +1,128 @@
+[
+  {
+    "id": "pack-es-listicle",
+    "label": "Listas numeradas",
+    "pattern": "^\\d+ (cosas|razones|trucos|se[ñn]ales|formas|maneras|h[áa]bitos|alimentos|errores)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-expertos",
+    "label": "Expertos dicen",
+    "pattern": "\\b(expertos|cient[íi]ficos|m[ée]dicos|nutricionistas)\\b.{0,25}\\b(dicen|revelan|advierten|alertan|confirman|aseguran)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-curiosidad",
+    "label": "No creerás lo que pasó",
+    "pattern": "(no creer[áa]s|no te imaginas|lo que pas[óo] despu[ée]s|te sorprender[áa]|nadie (lo )?esperaba|no es lo que piensas)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-adios",
+    "label": "Adiós a X",
+    "pattern": "^(adi[óo]s|di adi[óo]s|desp[íi]dete) a\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-oficial",
+    "label": "Es oficial",
+    "pattern": "\\b(es oficial|confirmado oficialmente|confirmado por (la ue|el gobierno)|lo confirma (el gobierno|la ue))\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-organismos",
+    "label": "La DGT avisa",
+    "pattern": "\\b(la dgt|hacienda|la seguridad social|la aemet|el sepe|la ue|la ocu) (lo )?(avisa|advierte|alerta|confirma|desmiente|proh[íi]be|cambia las normas)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-experto",
+    "label": "Experto en X",
+    "pattern": "\\bexpert[oa]s? en\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-secreto",
+    "label": "Truco secreto",
+    "pattern": "\\b(truco|funci[óo]n|ajuste|raz[óo]n|men[úu]) (secret[oa]|ocult[oa])\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-haciendolo-mal",
+    "label": "Lo estás haciendo mal",
+    "pattern": "\\b(lo has hecho|lo est[áa]s haciendo|lo hac[íi]as) mal\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-urgente",
+    "label": "Prefijos de alarma",
+    "pattern": "^(atenci[óo]n|cuidado|urgente|alerta|aviso|ojo)[:!]",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-dinero",
+    "label": "Dinero en el titular",
+    "pattern": "(€ ?\\d{2,}|\\b(\\d{2,}|miles de) euros\\b)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-prensa-rosa",
+    "label": "Prensa rosa",
+    "pattern": "\\b(rompe su silencio|se sincera sobre|arremete contra|desata la pol[ée]mica|preocupa a sus seguidores)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-viral",
+    "label": "Se hace viral",
+    "pattern": "\\b(se hace viral|arrasa en redes|revoluciona (las redes|internet)|deja a todos sin palabras)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-es-bombo",
+    "label": "Frases gancho",
+    "pattern": "\\b(el truco definitivo|te cambiar[áa] la vida|lo que nadie te cuenta|el secreto mejor guardado)\\b",
+    "action": "Block",
+    "scope": "Any",
+    "match": "Regex",
+    "enabled": true
+  }
+]
