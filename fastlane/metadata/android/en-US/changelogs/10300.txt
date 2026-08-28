@@ -1,0 +1,6 @@
+Renamed to Discover Feed Filter
+News filters hide stories by headline or source, with clickbait presets, import and export
+Importable filter packs in English and Spanish on GitHub
+Counts hidden clickbait next to blocked ads
+Separate switch for ad hiding on the dashboard
+Redesigned dashboard, Diagnostics opens from the status card
