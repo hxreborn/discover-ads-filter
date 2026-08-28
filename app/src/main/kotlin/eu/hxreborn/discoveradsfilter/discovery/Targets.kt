@@ -16,6 +16,7 @@ sealed interface ResolvedTargets {
         val adMetadataFieldName: String? = null,
         val cardProcessorMethods: List<MethodRef> = emptyList(),
         val streamRenderableListMethod: MethodRef? = null,
+        val shareIntentMethod: MethodRef? = null,
     ) : ResolvedTargets {
         override fun summary(): String =
             buildString {
@@ -28,6 +29,11 @@ sealed interface ResolvedTargets {
                         streamRenderableListMethod?.className?.substringAfterLast(
                             '.',
                         ) ?: "–"
+                    }, ",
+                )
+                append(
+                    "share=${
+                        shareIntentMethod?.className?.substringAfterLast('.') ?: "–"
                     })",
                 )
             }

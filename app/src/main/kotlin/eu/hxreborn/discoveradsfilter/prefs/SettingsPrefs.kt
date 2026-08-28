@@ -7,6 +7,12 @@ object SettingsPrefs {
 
     val autoRecoveryOnUpdate = boolPref("auto_recovery_on_update", false)
 
+    val shareOriginalLink = boolPref("share_original_link", false)
+
+    val shareStripSourceLine = boolPref("share_strip_source_line", false)
+
+    val shareCustomLine = nullableStringPref("share_custom_line")
+
     // The hook process writes this via MetricsProvider.
     val adsHidden = longPref("ads_hidden", 0L)
     val lastRemoteWrite = longPref("_last_remote_write", 0L)
@@ -21,6 +27,9 @@ object SettingsPrefs {
         listOf(
             verbose,
             autoRecoveryOnUpdate,
+            shareOriginalLink,
+            shareStripSourceLine,
+            shareCustomLine,
             fingerprintCurrent,
             fingerprintCurrentVersion,
             fingerprintCurrentModuleVersion,

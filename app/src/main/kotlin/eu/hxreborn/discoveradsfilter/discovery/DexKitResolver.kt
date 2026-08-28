@@ -15,6 +15,7 @@ object DexKitResolver {
     private const val CLINIT = "<clinit>"
     private const val TYPE_STRING = "java.lang.String"
     private val RUNTIME_PACKAGES = listOf("java.", "kotlin.", "android.")
+    private val NON_PROTO_RETURNS = setOf("void", "java.lang.Object")
 
     // DexKit 2.x needs an explicit System.loadLibrary call.
     private val nativeLoaded: Boolean by lazy {
@@ -86,6 +87,13 @@ object DexKitResolver {
             }
         onStep?.invoke("Stream list", streamValue)
 
+        val shareIntentMethod = findShareIntentMethod(bridge)
+        val shareValue =
+            shareIntentMethod?.let {
+                "${it.className.substringAfterLast('.')}.${it.methodName}()"
+            }
+        onStep?.invoke("Share intent", shareValue)
+
         if (processors.isEmpty()) {
             return ResolvedTargets.Missing(
                 "found proto classes and fields but no card-processor methods reading $adMetaField",
@@ -100,6 +108,7 @@ object DexKitResolver {
             adMetadataFieldName = adMetaField,
             cardProcessorMethods = processors,
             streamRenderableListMethod = streamRenderableListMethod,
+            shareIntentMethod = shareIntentMethod,
         )
     }
 
@@ -320,6 +329,32 @@ object DexKitResolver {
             .maxByOrNull(::scoreStreamMethodCandidate)
             ?.let(::toMethodRef)
     }
+
+    private fun findShareIntentMethod(bridge: DexKitBridge): MethodRef? =
+        runCatching {
+            bridge.findMethod {
+                matcher {
+                    usingStrings =
+                        listOf(
+                            "android.intent.action.SEND",
+                            "android.intent.extra.TEXT",
+                            "text/plain",
+                        )
+                    paramCount(2)
+                    addInvoke {
+                        name = "createChooser"
+                        declaredClass = "android.content.Intent"
+                    }
+                }
+            }
+        }.getOrDefault(emptyList())
+            .filter { method ->
+                method.paramTypeNames.none { name ->
+                    RUNTIME_PACKAGES.any(name::startsWith)
+                }
+            }.filterNot { it.returnTypeName in NON_PROTO_RETURNS }
+            .map(::toMethodRef)
+            .singleOrNull()
 
     private val FieldData.isStatic: Boolean
         get() =

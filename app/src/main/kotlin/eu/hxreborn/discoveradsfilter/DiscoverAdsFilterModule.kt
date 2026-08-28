@@ -8,6 +8,7 @@ import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.hook.HookRecovery
 import eu.hxreborn.discoveradsfilter.hook.HookToast
+import eu.hxreborn.discoveradsfilter.hook.ShareLinkHook
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
 import eu.hxreborn.discoveradsfilter.hook.loadHookPrefs
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
@@ -123,7 +124,27 @@ private class BootstrapHooker(
                     Logger.log(Log.ERROR, "failed: install StreamSliceFilterHook", it)
                     false
                 }
-            val status = if (streamHookInstalled) "1/1" else "0/1 failed:StreamSliceFilterHook"
+            val shareHookInstalled =
+                runCatching {
+                    ShareLinkHook.install(loader, targets, proc)
+                }.getOrElse {
+                    Logger.log(Log.ERROR, "failed: install ShareLinkHook", it)
+                    false
+                }
+            val installed = listOf(streamHookInstalled, shareHookInstalled).count { it }
+            val failed =
+                buildList {
+                    if (!streamHookInstalled) add("StreamSliceFilterHook")
+                    if (!shareHookInstalled) add("ShareLinkHook")
+                }
+            val status =
+                if (failed.isEmpty()) {
+                    "$installed/2"
+                } else {
+                    "$installed/2 failed:${failed.joinToString(
+                        ",",
+                    )}"
+                }
             Logger.log(
                 Log.INFO,
                 "installed proc=$proc agsaV=$versionCode hooks=$status ${targets.summary()}",

@@ -79,6 +79,19 @@ fun VerifyUiState.toSymbolSections(): List<SymbolSection> {
                             SymbolStatus.NotFound
                         },
                 ),
+                SymbolRow(
+                    name = "Share intent",
+                    value =
+                        targets?.shareIntentMethod?.let {
+                            "${it.className.substringAfterLast('.')}.${it.methodName}()"
+                        },
+                    status =
+                        if (targets?.shareIntentMethod != null) {
+                            SymbolStatus.Mapped
+                        } else {
+                            SymbolStatus.NotFound
+                        },
+                ),
             ),
         ),
     )
