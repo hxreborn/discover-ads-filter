@@ -85,6 +85,11 @@
         <item quantity="other">Imported %d filters</item>
     </plurals>
     <string name="news_rules_import_nothing_new">No new filters</string>
+    <string name="news_rules_enable_all">Enable all</string>
+    <string name="news_rules_disable_all">Disable all</string>
+    <string name="news_rules_delete_all">Delete all</string>
+    <string name="news_rules_delete_all_dialog_title">Delete all filters?</string>
+    <string name="news_rules_delete_all_dialog_body">This removes every filter.</string>
     <string name="news_rules_import_failed">No filters in that file</string>
     <string name="news_rules_exported">Filters exported</string>
     <string name="news_rules_export_failed">Could not write that file</string>

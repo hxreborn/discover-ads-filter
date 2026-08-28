@@ -32,14 +32,20 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.Abc
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AllInclusive
 import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.FilterAltOff
 import androidx.compose.material.icons.outlined.Language
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Title
+import androidx.compose.material.icons.outlined.ToggleOff
+import androidx.compose.material.icons.outlined.ToggleOn
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
@@ -49,6 +55,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -117,12 +124,15 @@ fun NewsRulesScreen(
     onLoadPresets: () -> Unit,
     onImport: (Uri) -> Unit,
     onExport: (Uri) -> Unit,
+    onSetAllEnabled: (Boolean) -> Unit,
+    onDeleteAll: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmPresets by rememberSaveable { mutableStateOf(false) }
+    var confirmDeleteAll by rememberSaveable { mutableStateOf(false) }
     var menuOpen by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
     val importLauncher =
@@ -180,6 +190,19 @@ fun NewsRulesScreen(
         )
     }
 
+    if (confirmDeleteAll) {
+        ConfirmDialog(
+            title = stringResource(R.string.news_rules_delete_all_dialog_title),
+            body = stringResource(R.string.news_rules_delete_all_dialog_body),
+            confirmLabel = stringResource(R.string.news_rule_delete_dialog_confirm),
+            onDismiss = { confirmDeleteAll = false },
+            onConfirm = {
+                confirmDeleteAll = false
+                onDeleteAll()
+            },
+        )
+    }
+
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -197,6 +220,7 @@ fun NewsRulesScreen(
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.news_rules_load_presets)) },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Outlined.PlaylistAdd, contentDescription = null) },
                             onClick = {
                                 menuOpen = false
                                 confirmPresets = true
@@ -204,6 +228,7 @@ fun NewsRulesScreen(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.news_rules_import)) },
+                            leadingIcon = { Icon(Icons.Outlined.FileDownload, contentDescription = null) },
                             onClick = {
                                 menuOpen = false
                                 launchPicker(context) { importLauncher.launch(arrayOf("*/*")) }
@@ -211,11 +236,39 @@ fun NewsRulesScreen(
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.news_rules_export)) },
+                            leadingIcon = { Icon(Icons.Outlined.FileUpload, contentDescription = null) },
                             onClick = {
                                 menuOpen = false
                                 launchPicker(context) { exportLauncher.launch(EXPORT_FILE_NAME) }
                             },
                         )
+                        if (rules.isNotEmpty()) {
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.news_rules_enable_all)) },
+                                leadingIcon = { Icon(Icons.Outlined.ToggleOn, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    onSetAllEnabled(true)
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.news_rules_disable_all)) },
+                                leadingIcon = { Icon(Icons.Outlined.ToggleOff, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    onSetAllEnabled(false)
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.news_rules_delete_all)) },
+                                leadingIcon = { Icon(Icons.Outlined.DeleteSweep, contentDescription = null) },
+                                onClick = {
+                                    menuOpen = false
+                                    confirmDeleteAll = true
+                                },
+                            )
+                        }
                     }
                 },
             )
@@ -633,6 +686,8 @@ private fun NewsRulesScreenPreview() {
             onLoadPresets = {},
             onImport = {},
             onExport = {},
+            onSetAllEnabled = {},
+            onDeleteAll = {},
             onBack = {},
         )
     }

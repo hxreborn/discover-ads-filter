@@ -189,6 +189,10 @@ class HomeViewModel(
             onLoadPresets = ::loadPresets,
             onImportRules = ::importRules,
             onExportRules = ::exportRules,
+            onSetAllRulesEnabled = { value ->
+                persistNewsRules(newsRulesFlow.value.map { it.copy(enabled = value) })
+            },
+            onDeleteAllRules = { persistNewsRules(emptyList()) },
             onLauncherIconHiddenChange = { hidden ->
                 setLauncherIconVisible(app, !hidden)
                 launcherIconHiddenFlow.value = hidden

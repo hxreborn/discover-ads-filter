@@ -74,6 +74,8 @@ fun AppNavHost(
                         onLoadPresets = viewModel.actions.onLoadPresets,
                         onImport = viewModel.actions.onImportRules,
                         onExport = viewModel.actions.onExportRules,
+                        onSetAllEnabled = viewModel.actions.onSetAllRulesEnabled,
+                        onDeleteAll = viewModel.actions.onDeleteAllRules,
                         onBack = { backStack.removeLastOrNull() },
                     )
                 }

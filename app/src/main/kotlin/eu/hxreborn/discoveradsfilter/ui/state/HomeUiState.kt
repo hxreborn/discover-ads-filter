@@ -34,6 +34,8 @@ data class HomeActions(
     val onLoadPresets: () -> Unit,
     val onImportRules: (Uri) -> Unit,
     val onExportRules: (Uri) -> Unit,
+    val onSetAllRulesEnabled: (Boolean) -> Unit,
+    val onDeleteAllRules: () -> Unit,
     val onLauncherIconHiddenChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,
