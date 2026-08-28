@@ -79,6 +79,8 @@
     <string name="diag_mapped_module_code_only">(%1$d)</string>
     <string name="diag_section_summary">%1$s · %2$d/%3$d</string>
     <string name="diag_last_refresh_failed">Last background refresh failed: %1$s</string>
+    <string name="diag_copy">Copy diagnostics</string>
+    <string name="diag_copied">Diagnostics copied</string>
     <string name="badge_partial">partial</string>
     <string name="badge_not_found">Missing</string>
     <string name="badge_not_mapped">Missing</string>

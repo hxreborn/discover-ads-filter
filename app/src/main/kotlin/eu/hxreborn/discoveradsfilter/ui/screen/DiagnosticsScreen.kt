@@ -2,6 +2,11 @@
 
 package eu.hxreborn.discoveradsfilter.ui.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
+import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
@@ -41,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -63,6 +70,7 @@ import eu.hxreborn.discoveradsfilter.ui.state.SymbolSection
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import eu.hxreborn.discoveradsfilter.ui.state.toDiagnosticsReport
 import eu.hxreborn.discoveradsfilter.ui.state.toSymbolSections
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
@@ -97,6 +105,7 @@ internal fun DiagnosticsScreenContent(
 ) {
     var showInfoDialog by rememberSaveable { mutableStateOf(false) }
     var showManualProgressThisVisit by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
     val anyRunning = state.phase == VerifyPhase.Running
     val manualRunning = anyRunning && state.scanOrigin == ScanOrigin.Manual
 
@@ -111,6 +120,12 @@ internal fun DiagnosticsScreenContent(
         onBack = onBack,
         modifier = modifier,
         actions = {
+            IconButton(onClick = { copyDiagnostics(context, state) }) {
+                Icon(
+                    Icons.Outlined.ContentCopy,
+                    contentDescription = stringResource(R.string.diag_copy),
+                )
+            }
             IconButton(onClick = { showInfoDialog = true }) {
                 Icon(
                     Icons.Outlined.Info,
@@ -150,6 +165,18 @@ internal fun DiagnosticsScreenContent(
                 }
             },
         )
+    }
+}
+
+private fun copyDiagnostics(
+    context: Context,
+    state: VerifyUiState,
+) {
+    val report = state.toDiagnosticsReport(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE)
+    val clipboard = context.getSystemService(ClipboardManager::class.java) ?: return
+    clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.diag_copy), report))
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        Toast.makeText(context, R.string.diag_copied, Toast.LENGTH_SHORT).show()
     }
 }
 

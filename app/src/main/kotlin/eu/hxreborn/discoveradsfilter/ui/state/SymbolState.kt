@@ -97,4 +97,37 @@ fun VerifyUiState.toSymbolSections(): List<SymbolSection> {
     )
 }
 
+fun VerifyUiState.toDiagnosticsReport(
+    moduleVersionName: String,
+    moduleVersionCode: Int,
+): String =
+    buildString {
+        appendLine("Discover Ads Filter $moduleVersionName ($moduleVersionCode)")
+        appendLine(
+            "Google app ${installedAgsaVersionName ?: "unknown"} (${installedAgsaVersion ?: 0})",
+        )
+        appendLine("Module $moduleStatus")
+        appendLine("Scanned with module version $scanModuleVersion")
+        appendLine("Ads hidden $adsHidden")
+        when (val result = lastResult) {
+            is VerifyResult.Success -> {
+                appendLine("Scan ok for Google app ${result.versionCode}")
+            }
+
+            is VerifyResult.Failure -> {
+                appendLine("Scan failed ${result.reason}")
+                result.detail?.let { appendLine("  $it") }
+            }
+
+            null -> {
+                appendLine("No scan yet")
+            }
+        }
+        lastRefreshError?.let { appendLine("Last refresh error $it") }
+        toSymbolSections().forEach { section ->
+            appendLine("${section.title} ${section.resolvedCount}/${section.totalCount}")
+            section.rows.forEach { appendLine("  ${it.name}: ${it.value ?: "not found"}") }
+        }
+    }
+
 private fun String?.toSymbolStatus(): SymbolStatus = if (this.isNullOrBlank()) SymbolStatus.NotFound else SymbolStatus.Mapped
