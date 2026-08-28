@@ -10,9 +10,8 @@
 <p>An Xposed module that removes ads, sponsored cards and clickbait from the Google Discover feed, in the Pixel Launcher -1 screen and inside the Google app itself. Hide stories by headline or source with your own filters, and share articles with their real link instead of Google's redirect.</p>
 
 
-![AGSA 17.14+](https://img.shields.io/badge/AGSA-17.14%2B-4285F4?style=flat-square&logo=google&logoColor=white)
-![libxposed API 101](https://img.shields.io/badge/libxposed-API_101-ff69b4?style=flat-square)
-![DexKit 2.2.0](https://img.shields.io/badge/DexKit-2.2.0-E65100?style=flat-square)
+<img src="https://img.shields.io/badge/Android-11%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android 11+">
+<img src="https://img.shields.io/badge/libxposed-API_101%2B-ff69b4?style=for-the-badge" alt="libxposed API 101+">
 
 </div>
 
