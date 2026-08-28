@@ -205,7 +205,6 @@ object NewsFilter {
     fun compile(rules: List<NewsRule>): List<CompiledRule> =
         rules.filter { it.enabled }.map(::CompiledRule).filter { it.usable }
 
-    // An Allow rule is an exception to the block list, never an exclusive allow list.
     fun shouldHide(
         compiled: List<CompiledRule>,
         card: CardText,

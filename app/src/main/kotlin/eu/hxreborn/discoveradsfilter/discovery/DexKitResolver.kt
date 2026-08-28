@@ -9,7 +9,6 @@ import org.luckypray.dexkit.result.MethodData
 import java.util.Locale
 
 object DexKitResolver {
-    // This proto wire-format field number survives obfuscation in fwml.<clinit>.
     private const val AD_METADATA_EXTENSION_FIELD_NUMBER = 393053250L
     private const val MAX_CARD_PROCESSOR_METHODS = 120
     private const val CLINIT = "<clinit>"
@@ -17,7 +16,6 @@ object DexKitResolver {
     private val RUNTIME_PACKAGES = listOf("java.", "kotlin.", "android.")
     private val NON_PROTO_RETURNS = setOf("void", "java.lang.Object")
 
-    // DexKit 2.x needs an explicit System.loadLibrary call.
     private val nativeLoaded: Boolean by lazy {
         runCatching { System.loadLibrary("dexkit") }.isSuccess
     }
@@ -222,7 +220,6 @@ object DexKitResolver {
                 field?.readers ?: emptyList()
             }.getOrDefault(emptyList())
 
-        // Skip serialization internals that also read this field.
         val fromReaders =
             fieldReaders
                 .asSequence()
@@ -231,7 +228,6 @@ object DexKitResolver {
                 .map(::toMethodRef)
                 .toList()
 
-        // Callers catch the active render path when the reader is inlined or bypassed.
         val fromReaderCallers =
             fieldReaders
                 .asSequence()
@@ -296,7 +292,6 @@ object DexKitResolver {
         )
     }
 
-    // The toString literal "WithContent(sessionRepresentation=..." survives renames.
     private fun findStreamRenderableListMethod(bridge: DexKitBridge): MethodRef? {
         val streamClasses =
             runCatching {

@@ -65,12 +65,11 @@ data class MethodRef(
 
     override fun toString(): String = "$className.$methodName(${paramTypeNames.joinToString(",")})"
 
-    @Suppress("RemoveRedundantQualifierName") // clearer for JVM reflection
+    @Suppress("RemoveRedundantQualifierName")
     private fun typeFor(
         loader: ClassLoader,
         name: String,
     ): Class<*> {
-        // DexKit may return names like int[] or java.lang.String[][].
         var base = name
         var rank = 0
         while (base.endsWith("[]")) {
@@ -99,7 +98,7 @@ data class MethodRef(
         return Class.forName(descriptor, false, loader)
     }
 
-    @Suppress("RemoveRedundantQualifierName") // clearer for JVM reflection
+    @Suppress("RemoveRedundantQualifierName")
     private fun primitiveDescriptor(c: Class<*>): String? =
         when (c) {
             java.lang.Boolean.TYPE -> "Z"

@@ -1,7 +1,5 @@
 // MIT License - Copyright (c) 2022 Albert Chang
 // https://gist.github.com/mxalbert1996/33a360fcab2105a31e5355af98216f5a
-// Migrated from Modifier.composed to Modifier.Node
-
 package eu.hxreborn.discoveradsfilter.ui.util
 
 import android.view.ViewConfiguration

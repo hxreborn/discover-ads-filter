@@ -26,8 +26,6 @@ object CardBlob {
         return url.substring(start, end).removePrefix("www.").takeIf { it.isNotEmpty() }
     }
 
-    // Elements annotates each card field with a literal label followed by the value as a
-    // length-delimited protobuf field.
     private fun stringAfter(
         blob: ByteArray,
         marker: ByteArray,

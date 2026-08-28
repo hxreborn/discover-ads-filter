@@ -15,11 +15,9 @@ object SettingsPrefs {
 
     val newsRules = nullableStringPref("news_rules")
 
-    // The hook process writes this via MetricsProvider.
     val adsHidden = longPref("ads_hidden", 0L)
     val lastRemoteWrite = longPref("_last_remote_write", 0L)
 
-    // The app writes this cache. The hook process reads it.
     val fingerprintCurrent = nullableStringPref("fp_v4_current")
     val fingerprintCurrentVersion = longPref("fp_v4_current_version", 0L)
     val fingerprintCurrentModuleVersion = intPref("fp_v4_current_module_version", 0)

@@ -40,7 +40,6 @@ object AutoRecovery {
                     .onFailure { Log.w(TAG, "force-close failed pkg=$pkg err=${it.message}") }
             }
 
-            // Skip force-stop on failure since restarting hits the same cache miss and re-signals.
             is ResolvedTargets.Missing -> {
                 Log.w(TAG, "recovery scan failed pkg=$pkg v=$versionCode reason=${resolved.reason}")
             }

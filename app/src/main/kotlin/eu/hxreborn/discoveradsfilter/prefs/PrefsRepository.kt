@@ -118,7 +118,6 @@ class PrefsRepository(
             SettingsPrefs.all.forEach { spec ->
                 if (spec.copyIfChanged(local, remote, this)) changed = true
             }
-            // Sync versioned fingerprint keys that aren't in the typed all list.
             local.all.keys
                 .filter { it.startsWith(SettingsPrefs.KEY_FINGERPRINT_PREFIX) }
                 .forEach { key ->
