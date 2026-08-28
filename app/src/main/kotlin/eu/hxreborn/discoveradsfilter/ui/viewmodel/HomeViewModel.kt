@@ -158,6 +158,7 @@ class HomeViewModel(
             },
             onVerify = ::verify,
             onClearCacheOnly = ::clearCacheOnly,
+            onRestartGoogleApp = ::restartGoogleApp,
             onResetAdsCounter = ::resetAdsCounter,
         )
 
@@ -172,6 +173,19 @@ class HomeViewModel(
             }
         }
         viewModelScope.launch { observeScanCache() }
+    }
+
+    private fun restartGoogleApp() {
+        viewModelScope.launch(ioDispatcher) {
+            val stopped =
+                RootShell.forceStop(DiscoverAdsFilterModule.AGSA_PKG).getOrElse {
+                    Log.w(TAG, "force stop failed", it)
+                    null
+                } != null
+            _messages.tryEmit(
+                if (stopped) R.string.restart_agsa_done else R.string.restart_agsa_failed,
+            )
+        }
     }
 
     private suspend fun observeScanCache() {

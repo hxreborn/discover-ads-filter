@@ -27,6 +27,7 @@ data class HomeActions(
     val onLauncherIconHiddenChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,
+    val onRestartGoogleApp: () -> Unit,
     val onResetAdsCounter: () -> Unit,
 )
 

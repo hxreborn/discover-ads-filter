@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PhonelinkErase
+import androidx.compose.material.icons.outlined.PhonelinkSetup
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.ShortText
 import androidx.compose.material.icons.rounded.Info
@@ -55,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -90,9 +92,10 @@ fun DashboardScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    LaunchedEffect(Unit) {
+    val resources = LocalResources.current
+    LaunchedEffect(resources) {
         viewModel.messages.collect { resId ->
-            Toast.makeText(context.applicationContext, context.getString(resId), Toast.LENGTH_LONG).show()
+            Toast.makeText(context.applicationContext, resources.getString(resId), Toast.LENGTH_LONG).show()
         }
     }
     DashboardScreenContent(
@@ -114,6 +117,7 @@ internal fun DashboardScreenContent(
     val ready = state as? HomeUiState.Ready
     var showClearCacheDialog by rememberSaveable { mutableStateOf(false) }
     var showResetCounterDialog by rememberSaveable { mutableStateOf(false) }
+    var showRestartAgsaDialog by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
 
@@ -153,6 +157,7 @@ internal fun DashboardScreenContent(
                         surface = surface,
                         onClearCacheClick = { showClearCacheDialog = true },
                         onResetCounterClick = { showResetCounterDialog = true },
+                        onRestartAgsaClick = { showRestartAgsaDialog = true },
                     )
                 } else {
                     dashboardLoadingCard(surface = surface)
@@ -180,6 +185,16 @@ internal fun DashboardScreenContent(
             },
         )
     }
+
+    if (showRestartAgsaDialog) {
+        RestartAgsaDialog(
+            onDismiss = { showRestartAgsaDialog = false },
+            onConfirm = {
+                showRestartAgsaDialog = false
+                actions.onRestartGoogleApp()
+            },
+        )
+    }
 }
 
 private fun LazyListScope.dashboardReadyItems(
@@ -189,6 +204,7 @@ private fun LazyListScope.dashboardReadyItems(
     surface: Color,
     onClearCacheClick: () -> Unit,
     onResetCounterClick: () -> Unit,
+    onRestartAgsaClick: () -> Unit,
 ) {
     item(key = "status", contentType = "StatusCard") {
         StatusCard(state = ready.verify)
@@ -202,7 +218,7 @@ private fun LazyListScope.dashboardReadyItems(
     val scanning = ready.verify.phase == VerifyPhase.Running
     preference(
         key = "diagnostics",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 0), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 0), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.Map, contentDescription = null)
         },
@@ -230,7 +246,7 @@ private fun LazyListScope.dashboardReadyItems(
 
     preference(
         key = "clear_cache",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 1), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.DeleteSweep, contentDescription = null)
         },
@@ -247,13 +263,34 @@ private fun LazyListScope.dashboardReadyItems(
         onClick = onClearCacheClick,
     )
 
-    item(key = "spacer_clear_recovery", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+    item(key = "spacer_clear_restart", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+    preference(
+        key = "restart_agsa",
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 2), surface = surface),
+        icon = {
+            Icon(imageVector = Icons.Outlined.PhonelinkSetup, contentDescription = null)
+        },
+        title = {
+            Text(
+                stringResource(R.string.pref_restart_agsa),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        },
+        summary = {
+            Text(stringResource(R.string.pref_restart_agsa_summary))
+        },
+        enabled = !scanning,
+        onClick = onRestartAgsaClick,
+    )
+
+    item(key = "spacer_restart_recovery", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
 
     item(key = "auto_recovery", contentType = "SwitchPreference") {
         SwitchPreference(
             value = ready.autoRecoveryOnUpdate,
             onValueChange = actions.onAutoRecoveryChange,
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 2), surface = surface),
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 3), surface = surface),
             icon = {
                 Icon(imageVector = Icons.Outlined.Autorenew, contentDescription = null)
             },
@@ -491,6 +528,28 @@ private fun ClearCacheDialog(
 }
 
 @Composable
+private fun RestartAgsaDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.restart_agsa_dialog_title)) },
+        text = { Text(stringResource(R.string.restart_agsa_dialog_body)) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(stringResource(R.string.restart_agsa_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        },
+    )
+}
+
+@Composable
 private fun ResetCounterDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
@@ -527,6 +586,7 @@ private val NoOpActions =
         onLauncherIconHiddenChange = {},
         onVerify = {},
         onClearCacheOnly = {},
+        onRestartGoogleApp = {},
         onResetAdsCounter = {},
     )
 

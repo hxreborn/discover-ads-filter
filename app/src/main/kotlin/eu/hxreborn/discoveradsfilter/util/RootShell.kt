@@ -15,11 +15,23 @@ object RootShell {
 
     fun forceStop(pkg: String): Result<List<String>> =
         runCatching {
-            val result = Shell.cmd("am force-stop $pkg").exec()
+            var result = Shell.cmd("am force-stop $pkg").exec()
+            if (!result.isSuccess) {
+                dropCachedShell()
+                result = Shell.cmd("am force-stop $pkg").exec()
+            }
             if (!result.isSuccess) error("su exit=${result.code} out=${result.out}")
             result.out
         }
 
-    // Triggers the grant prompt while foregrounded, so a later background force-stop succeeds.
-    fun probe(): Result<Boolean> = runCatching { Shell.getShell().isRoot }
+    fun probe(): Result<Boolean> =
+        runCatching {
+            if (Shell.getShell().isRoot) return@runCatching true
+            dropCachedShell()
+            Shell.getShell().isRoot
+        }
+
+    private fun dropCachedShell() {
+        runCatching { Shell.getCachedShell()?.close() }
+    }
 }

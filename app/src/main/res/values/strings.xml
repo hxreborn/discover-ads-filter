@@ -35,6 +35,13 @@
     <string name="pref_clear_cache_summary">Remove saved scan results for this Google app build</string>
     <string name="pref_reset_counter">Reset ad counter</string>
     <string name="pref_reset_counter_summary">Set the blocked ads count back to zero</string>
+    <string name="pref_restart_agsa">Close Google app</string>
+    <string name="pref_restart_agsa_summary">Closes it so the filter reloads. Needs root</string>
+    <string name="restart_agsa_done">Google app closed</string>
+    <string name="restart_agsa_failed">No root access</string>
+    <string name="restart_agsa_dialog_title">Close Google app?</string>
+    <string name="restart_agsa_dialog_body">You lose anything open in it.</string>
+    <string name="restart_agsa_dialog_confirm">Close</string>
     <string name="pref_auto_recovery_title">Auto-resolve after updates</string>
     <string name="pref_auto_recovery_summary">Resolve symbols and force close the Google app when it updates. Needs root</string>
     <string name="auto_recovery_needs_root">Needs root access to turn on</string>
