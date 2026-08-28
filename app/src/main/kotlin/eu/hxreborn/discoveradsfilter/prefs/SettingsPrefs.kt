@@ -16,6 +16,7 @@ object SettingsPrefs {
     val newsRules = nullableStringPref("news_rules")
 
     val adsHidden = longPref("ads_hidden", 0L)
+    val newsHidden = longPref("news_hidden", 0L)
     val lastRemoteWrite = longPref("_last_remote_write", 0L)
 
     val fingerprintCurrent = nullableStringPref("fp_v4_current")

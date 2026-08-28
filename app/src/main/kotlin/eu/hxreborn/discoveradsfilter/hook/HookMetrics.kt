@@ -9,13 +9,19 @@ object HookMetrics {
     @Volatile
     private var appContext: Context? = null
 
-    fun addAdsHidden(count: Int) {
-        if (count <= 0) return
+    fun addHidden(
+        ads: Int,
+        news: Int,
+    ) {
+        if (ads <= 0 && news <= 0) return
         val ctx = context() ?: return
         MetricsClient.call(
             ctx,
             MetricsProvider.METHOD_INCREMENT,
-            Bundle().apply { putInt(MetricsProvider.KEY_COUNT, count) },
+            Bundle().apply {
+                if (ads > 0) putInt(MetricsProvider.KEY_COUNT, ads)
+                if (news > 0) putInt(MetricsProvider.KEY_NEWS_COUNT, news)
+            },
         )
     }
 

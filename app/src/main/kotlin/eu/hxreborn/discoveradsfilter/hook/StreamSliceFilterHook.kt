@@ -25,6 +25,7 @@ object StreamSliceFilterHook {
 
     private val decisionCache = ConcurrentHashMap<String, Boolean>()
     private val countedAdKeys = ConcurrentHashMap.newKeySet<String>()
+    private val countedNewsKeys = ConcurrentHashMap.newKeySet<String>()
     private val newsDecisions = ConcurrentHashMap<String, Boolean>()
 
     private val contentIdFieldCache = ConcurrentHashMap<Class<*>, Field>()
@@ -97,6 +98,7 @@ object StreamSliceFilterHook {
 
     private fun buildFilteredList(items: List<*>): List<Any?>? {
         var newAds = 0
+        var newNews = 0
         val filtered = ArrayList<Any?>(items.size)
         for (item in items) {
             val key = item?.let(::stableItemKey)
@@ -107,11 +109,14 @@ object StreamSliceFilterHook {
                 }
                 continue
             }
-            if (item != null && key != null && hiddenByRules(item, key)) continue
+            if (item != null && key != null && hiddenByRules(item, key)) {
+                if (countedNewsKeys.add(key)) newNews++
+                continue
+            }
             filtered += item
         }
         if (filtered.size == items.size) return null
-        if (newAds > 0) HookMetrics.addAdsHidden(newAds)
+        HookMetrics.addHidden(ads = newAds, news = newNews)
         Logger.debug { "filtered ${items.size} items to ${filtered.size}" }
         return filtered
     }

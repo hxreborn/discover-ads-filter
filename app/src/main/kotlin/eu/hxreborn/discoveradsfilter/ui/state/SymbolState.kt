@@ -109,6 +109,7 @@ fun VerifyUiState.toDiagnosticsReport(
         appendLine("Module $moduleStatus")
         appendLine("Scanned with module version $scanModuleVersion")
         appendLine("Ads hidden $adsHidden")
+        appendLine("Clickbait hidden $newsHidden")
         when (val result = lastResult) {
             is VerifyResult.Success -> {
                 appendLine("Scan ok for Google app ${result.versionCode}")

@@ -16,6 +16,7 @@ class MetricsProvider : ContentProvider() {
         const val AUTHORITY = "eu.hxreborn.discoveradsfilter.metrics"
         const val METHOD_INCREMENT = "increment_ads"
         const val KEY_COUNT = "count"
+        const val KEY_NEWS_COUNT = "news_count"
         const val METHOD_REQUEST_RECOVERY = "request_recovery"
         const val KEY_VERSION = "version"
         const val KEY_FIRST = "first"
@@ -35,11 +36,16 @@ class MetricsProvider : ContentProvider() {
         if (callingPackage != DiscoverAdsFilterModule.AGSA_PKG) return null
         when (method) {
             METHOD_INCREMENT -> {
-                val delta = extras?.getInt(KEY_COUNT, 0) ?: 0
-                if (delta > 0) {
+                val adsDelta = extras?.getInt(KEY_COUNT, 0) ?: 0
+                val newsDelta = extras?.getInt(KEY_NEWS_COUNT, 0) ?: 0
+                if (adsDelta > 0 || newsDelta > 0) {
                     synchronized(lock) {
-                        val updated = SettingsPrefs.adsHidden.read(prefs) + delta
-                        prefs.edit(commit = true) { SettingsPrefs.adsHidden.write(this, updated) }
+                        val ads = SettingsPrefs.adsHidden.read(prefs) + adsDelta
+                        val news = SettingsPrefs.newsHidden.read(prefs) + newsDelta
+                        prefs.edit(commit = true) {
+                            if (adsDelta > 0) SettingsPrefs.adsHidden.write(this, ads)
+                            if (newsDelta > 0) SettingsPrefs.newsHidden.write(this, news)
+                        }
                     }
                 }
             }

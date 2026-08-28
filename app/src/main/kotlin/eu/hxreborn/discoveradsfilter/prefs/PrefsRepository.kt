@@ -12,6 +12,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onStart
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener as OnChangeListener
 
+data class Counters(
+    val adsHidden: Long,
+    val newsHidden: Long,
+)
+
 class PrefsRepository(
     private val local: SharedPreferences,
     private val remoteProvider: () -> SharedPreferences?,
@@ -73,15 +78,22 @@ class PrefsRepository(
         return CachedScan(version, resolved, moduleVersion)
     }
 
-    fun readAdsHidden(): Long = SettingsPrefs.adsHidden.read(local)
+    fun readCounters(): Counters =
+        Counters(
+            adsHidden = SettingsPrefs.adsHidden.read(local),
+            newsHidden = SettingsPrefs.newsHidden.read(local),
+        )
 
-    fun adsHiddenFlow(): Flow<Long> =
+    fun countersFlow(): Flow<Counters> =
         callbackFlow {
-            trySend(readAdsHidden())
+            trySend(readCounters())
             val listener =
                 SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-                    if (key == null || key == SettingsPrefs.adsHidden.key) {
-                        trySend(readAdsHidden())
+                    if (key == null ||
+                        key == SettingsPrefs.adsHidden.key ||
+                        key == SettingsPrefs.newsHidden.key
+                    ) {
+                        trySend(readCounters())
                     }
                 }
             local.registerOnSharedPreferenceChangeListener(listener)
@@ -102,7 +114,10 @@ class PrefsRepository(
         }
 
     fun resetAdsCounter() {
-        edit { SettingsPrefs.adsHidden.write(this, 0L) }
+        edit {
+            SettingsPrefs.adsHidden.write(this, 0L)
+            SettingsPrefs.newsHidden.write(this, 0L)
+        }
     }
 
     fun clearScanCache() {
