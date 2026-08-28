@@ -54,6 +54,9 @@ class HomeViewModel(
 
     private val verboseFlow = MutableStateFlow(false)
     private val autoRecoveryFlow = MutableStateFlow(false)
+    private val shareOriginalLinkFlow = MutableStateFlow(false)
+    private val shareStripSourceLineFlow = MutableStateFlow(false)
+    private val shareCustomLineFlow = MutableStateFlow<String?>(null)
     private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
@@ -80,8 +83,14 @@ class HomeViewModel(
         }
 
     private val togglesFlow =
-        combine(verboseFlow, autoRecoveryFlow) { verbose, autoRecovery ->
-            verbose to autoRecovery
+        combine(
+            verboseFlow,
+            autoRecoveryFlow,
+            shareOriginalLinkFlow,
+            shareStripSourceLineFlow,
+            shareCustomLineFlow,
+        ) { verbose, autoRecovery, shareOriginalLink, shareStripSourceLine, shareCustomLine ->
+            Toggles(verbose, autoRecovery, shareOriginalLink, shareStripSourceLine, shareCustomLine)
         }
 
     val uiState: StateFlow<HomeUiState> =
@@ -90,13 +99,16 @@ class HomeViewModel(
             launcherIconHiddenFlow,
             verifyWithStatusFlow,
             adsHiddenFlow,
-        ) { (verbose, autoRecovery), launcherIconHidden, verify, adsHidden ->
+        ) { toggles, launcherIconHidden, verify, adsHidden ->
             if (verify == null) {
                 HomeUiState.Loading
             } else {
                 HomeUiState.Ready(
-                    verbose = verbose,
-                    autoRecoveryOnUpdate = autoRecovery,
+                    verbose = toggles.verbose,
+                    autoRecoveryOnUpdate = toggles.autoRecovery,
+                    shareOriginalLink = toggles.shareOriginalLink,
+                    shareStripSourceLine = toggles.shareStripSourceLine,
+                    shareCustomLine = toggles.shareCustomLine,
                     isLauncherIconHidden = launcherIconHidden,
                     verify = verify.copy(adsHidden = adsHidden),
                 )
@@ -127,6 +139,18 @@ class HomeViewModel(
                         }
                     }
                 }
+            },
+            onShareOriginalLinkChange = { value ->
+                repo.save(SettingsPrefs.shareOriginalLink, value)
+                shareOriginalLinkFlow.value = value
+            },
+            onShareStripSourceLineChange = { value ->
+                repo.save(SettingsPrefs.shareStripSourceLine, value)
+                shareStripSourceLineFlow.value = value
+            },
+            onShareCustomLineChange = { value ->
+                repo.save(SettingsPrefs.shareCustomLine, value)
+                shareCustomLineFlow.value = value
             },
             onLauncherIconHiddenChange = { hidden ->
                 setLauncherIconVisible(app, !hidden)
@@ -181,6 +205,9 @@ class HomeViewModel(
     private suspend fun initialize() {
         verboseFlow.value = repo.read(SettingsPrefs.verbose)
         autoRecoveryFlow.value = repo.read(SettingsPrefs.autoRecoveryOnUpdate)
+        shareOriginalLinkFlow.value = repo.read(SettingsPrefs.shareOriginalLink)
+        shareStripSourceLineFlow.value = repo.read(SettingsPrefs.shareStripSourceLine)
+        shareCustomLineFlow.value = repo.read(SettingsPrefs.shareCustomLine)
 
         val lastScan = repo.readLastScan()
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
@@ -358,3 +385,11 @@ class HomeViewModel(
             }
     }
 }
+
+private data class Toggles(
+    val verbose: Boolean,
+    val autoRecovery: Boolean,
+    val shareOriginalLink: Boolean,
+    val shareStripSourceLine: Boolean,
+    val shareCustomLine: String?,
+)

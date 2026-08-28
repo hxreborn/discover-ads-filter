@@ -15,14 +15,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PhonelinkErase
 import androidx.compose.material.icons.outlined.RestartAlt
+import androidx.compose.material.icons.outlined.ShortText
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +36,7 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -72,6 +77,7 @@ import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.SwitchPreference
+import me.zhanghai.compose.preference.TextFieldPreference
 import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
 
@@ -264,6 +270,92 @@ private fun LazyListScope.dashboardReadyItems(
     }
 
     preferenceCategory(
+        key = "cat_sharing",
+        title = { Text(stringResource(R.string.pref_category_sharing)) },
+    )
+
+    item(key = "share_original_link", contentType = "SwitchPreference") {
+        SwitchPreference(
+            value = ready.shareOriginalLink,
+            onValueChange = actions.onShareOriginalLinkChange,
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 0), surface = surface),
+            icon = {
+                Icon(imageVector = Icons.Outlined.Link, contentDescription = null)
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.pref_share_original_link_title),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            },
+            summary = {
+                Text(stringResource(R.string.pref_share_original_link_summary))
+            },
+        )
+    }
+
+    item(key = "spacer_share_strip", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+    item(key = "share_strip_source", contentType = "SwitchPreference") {
+        SwitchPreference(
+            value = ready.shareStripSourceLine,
+            onValueChange = actions.onShareStripSourceLineChange,
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
+            enabled = ready.shareOriginalLink,
+            icon = {
+                Icon(imageVector = Icons.Outlined.ShortText, contentDescription = null)
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.pref_share_strip_source_title),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            },
+            summary = {
+                Text(stringResource(R.string.pref_share_strip_source_summary))
+            },
+        )
+    }
+
+    item(key = "spacer_strip_custom", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+    item(key = "share_custom_line", contentType = "TextFieldPreference") {
+        TextFieldPreference(
+            value = ready.shareCustomLine,
+            onValueChange = actions.onShareCustomLineChange,
+            textToValue = { text -> text.trim().takeIf { it.isNotEmpty() } },
+            valueToText = { it.orEmpty() },
+            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 2), surface = surface),
+            enabled = ready.shareOriginalLink && !ready.shareStripSourceLine,
+            icon = {
+                Icon(imageVector = Icons.Outlined.EditNote, contentDescription = null)
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.pref_share_custom_line_title),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            },
+            summary = {
+                Text(
+                    ready.shareCustomLine
+                        ?: stringResource(R.string.pref_share_custom_line_summary),
+                )
+            },
+            textField = { value, onValueChange, onOk ->
+                OutlinedTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.pref_share_custom_line_hint)) },
+                    keyboardActions = KeyboardActions { onOk() },
+                    singleLine = true,
+                )
+            },
+        )
+    }
+
+    preferenceCategory(
         key = "cat_metrics",
         title = { Text(stringResource(R.string.pref_category_metrics)) },
     )
@@ -429,6 +521,9 @@ private val NoOpActions =
     HomeActions(
         onVerboseChange = {},
         onAutoRecoveryChange = {},
+        onShareOriginalLinkChange = {},
+        onShareStripSourceLineChange = {},
+        onShareCustomLineChange = {},
         onLauncherIconHiddenChange = {},
         onVerify = {},
         onClearCacheOnly = {},

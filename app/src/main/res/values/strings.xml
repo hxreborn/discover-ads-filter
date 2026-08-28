@@ -39,8 +39,17 @@
     <string name="pref_auto_recovery_summary">Resolve symbols and force close the Google app when it updates. Needs root</string>
     <string name="auto_recovery_needs_root">Needs root access to turn on</string>
 
+    <string name="pref_share_original_link_title">Replace share.google links</string>
+    <string name="pref_share_original_link_summary">Uses the article\'s own link</string>
+    <string name="pref_share_strip_source_title">Link only</string>
+    <string name="pref_share_strip_source_summary">Drop the publisher name above the link</string>
+    <string name="pref_share_custom_line_title">Text before the link</string>
+    <string name="pref_share_custom_line_summary">Not set</string>
+    <string name="pref_share_custom_line_hint">Look what I found in Discover:</string>
+
     <!-- Category headers -->
     <string name="pref_category_target_resolution">Target resolution</string>
+    <string name="pref_category_sharing">Sharing</string>
     <string name="pref_category_metrics">Metrics</string>
     <string name="pref_category_app">App</string>
 
