@@ -13,6 +13,8 @@ object SettingsPrefs {
 
     val shareCustomLine = nullableStringPref("share_custom_line")
 
+    val newsRules = nullableStringPref("news_rules")
+
     // The hook process writes this via MetricsProvider.
     val adsHidden = longPref("ads_hidden", 0L)
     val lastRemoteWrite = longPref("_last_remote_write", 0L)
@@ -30,6 +32,7 @@ object SettingsPrefs {
             shareOriginalLink,
             shareStripSourceLine,
             shareCustomLine,
+            newsRules,
             fingerprintCurrent,
             fingerprintCurrentVersion,
             fingerprintCurrentModuleVersion,

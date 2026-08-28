@@ -3,32 +3,42 @@ package eu.hxreborn.discoveradsfilter.hook
 import android.content.SharedPreferences
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import eu.hxreborn.discoveradsfilter.filter.CardText
+import eu.hxreborn.discoveradsfilter.filter.NewsFilter
 import eu.hxreborn.discoveradsfilter.module
 import eu.hxreborn.discoveradsfilter.util.Logger
+import eu.hxreborn.discoveradsfilter.util.ObjectStrings
 import io.github.libxposed.api.XposedInterface
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 object StreamSliceFilterHook {
     private const val CONTENT_ID_FIELD = "f122746b"
+    private const val CARD_NAME_DEPTH = 4
+    private const val CARD_NAME_NODES = 300
+    private const val MAX_NEWS_DECISIONS = 2000
 
     private val adClusterTokens = setOf("feedads")
 
     private val decisionCache = ConcurrentHashMap<String, Boolean>()
     private val countedAdKeys = ConcurrentHashMap.newKeySet<String>()
+    private val newsDecisions = ConcurrentHashMap<String, Boolean>()
 
     private val contentIdFieldCache = ConcurrentHashMap<Class<*>, Field>()
     private val noContentIdClasses = ConcurrentHashMap.newKeySet<Class<*>>()
     private val stringFieldsCache = ConcurrentHashMap<Class<*>, List<Field>>()
     private val nonSliceClasses = ConcurrentHashMap.newKeySet<Class<*>>()
 
-    @Volatile
-    private var lastFingerprint: Long = Long.MIN_VALUE
+    private class Snapshot(
+        val fingerprint: Long,
+        val list: List<Any?>?,
+    )
 
     @Volatile
-    private var lastFilteredSnapshot: List<Any?>? = null
+    private var snapshot: Snapshot? = null
 
     fun install(
         loader: ClassLoader,
@@ -56,22 +66,31 @@ object StreamSliceFilterHook {
         return true
     }
 
+    private val keysDumped = AtomicBoolean(false)
+
     @Volatile
-    private var keysDumped = false
+    private var warnedUnreadableCard = false
 
     internal fun resetKeyDump() {
-        keysDumped = false
+        keysDumped.set(false)
+    }
+
+    internal fun resetFilterState() {
+        newsDecisions.clear()
+        FeedContentStore.reset()
+        snapshot = null
     }
 
     private fun dumpKeysOnce(items: List<*>) {
-        if (keysDumped) return
-        keysDumped = true
+        if (!keysDumped.compareAndSet(false, true)) return
         Logger.debug {
             items
                 .mapIndexed { i, item ->
                     val cls = item?.javaClass?.simpleName ?: "null"
                     val key = item?.let(::stableItemKey) ?: "<no-key>"
-                    "  [$i] $cls → $key"
+                    val card = item?.let(::cardTextFor)
+                    "  [$i] $cls → $key\n" +
+                        "        source=${card?.source} title=${card?.headline}"
                 }.joinToString("\n", prefix = "item key dump (${items.size} items):\n")
         }
     }
@@ -86,12 +105,14 @@ object StreamSliceFilterHook {
                     newAds++
                     Logger.debug { "blocked ad key=$key" }
                 }
-            } else {
-                filtered += item
+                continue
             }
+            if (item != null && key != null && hiddenByRules(item, key)) continue
+            filtered += item
         }
         if (filtered.size == items.size) return null
         if (newAds > 0) HookMetrics.addAdsHidden(newAds)
+        Logger.debug { "filtered ${items.size} items to ${filtered.size}" }
         return filtered
     }
 
@@ -102,15 +123,47 @@ object StreamSliceFilterHook {
             if (items.isEmpty()) return result
 
             val fp = fastFingerprint(items)
-            if (fp == lastFingerprint) return lastFilteredSnapshot ?: result
+            snapshot?.takeIf { it.fingerprint == fp }?.let { return it.list ?: result }
 
             dumpKeysOnce(items)
-            lastFingerprint = fp
 
             val filtered = buildFilteredList(items)
-            lastFilteredSnapshot = filtered
+            snapshot = Snapshot(fp, filtered)
             return filtered ?: result
         }
+    }
+
+    private fun cardTextFor(item: Any): CardText? {
+        val names =
+            ObjectStrings.collect(
+                listOf(item),
+                CARD_NAME_DEPTH,
+                CARD_NAME_NODES,
+                FeedContentStore.CARD_PREFIX,
+            )
+        val card = names.firstNotNullOfOrNull(FeedContentStore::cardText)
+        if (card == null && names.isNotEmpty() && !warnedUnreadableCard) {
+            warnedUnreadableCard = true
+            Logger.log(Log.WARN, "no readable card text for $names, news rules cannot match it")
+        }
+        return card
+    }
+
+    private fun hiddenByRules(
+        item: Any,
+        key: String,
+    ): Boolean {
+        val rules = newsRules
+        if (rules.isEmpty()) return false
+        newsDecisions[key]?.let { return it }
+        val card = runCatching { cardTextFor(item) }.getOrNull() ?: return false
+        val hidden = NewsFilter.shouldHide(rules, card)
+        if (hidden) {
+            Logger.debug { "hidden news source=${card.source} title=${card.headline}" }
+        }
+        if (newsDecisions.size > MAX_NEWS_DECISIONS) newsDecisions.clear()
+        newsDecisions[key] = hidden
+        return hidden
     }
 
     private fun isAdItem(key: String): Boolean {

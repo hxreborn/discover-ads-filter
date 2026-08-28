@@ -1,4 +1,5 @@
 [versions]
+junit = "4.13.2"
 agp = "9.3.1"
 kotlin = "2.4.10"
 kotlinxCoroutines = "1.11.0"
@@ -19,6 +20,7 @@ aboutlibraries = "15.0.4"
 ktlint = "1.8.0"
 
 [libraries]
+junit = { module = "junit:junit", version.ref = "junit" }
 libxposed-api = { module = "io.github.libxposed:api", version.ref = "libxposedApi" }
 libxposed-service = { module = "io.github.libxposed:service", version.ref = "libxposedService" }
 dexkit = { module = "org.luckypray:dexkit", version.ref = "dexkit" }

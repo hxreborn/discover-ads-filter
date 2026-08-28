@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import eu.hxreborn.discoveradsfilter.discovery.DexKitCache
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import eu.hxreborn.discoveradsfilter.hook.FeedContentStore
 import eu.hxreborn.discoveradsfilter.hook.HookRecovery
 import eu.hxreborn.discoveradsfilter.hook.HookToast
 import eu.hxreborn.discoveradsfilter.hook.ShareLinkHook
@@ -78,6 +79,8 @@ private class BootstrapHooker(
                 ctx.packageManager
                     .getPackageInfo(DiscoverAdsFilterModule.AGSA_PKG, 0)
                     .longVersionCode
+
+            FeedContentStore.init(ctx.filesDir)
 
             val targets = DexKitCache.load(versionCode, BuildConfig.VERSION_CODE, prefs)
 

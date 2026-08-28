@@ -147,6 +147,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.junit)
 }
 
 val ktlintCheck by tasks.registering(JavaExec::class) {
