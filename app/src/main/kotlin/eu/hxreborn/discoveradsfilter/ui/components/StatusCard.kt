@@ -161,10 +161,6 @@ private fun StatusCardBody(state: VerifyUiState) {
         }
 
         else -> {
-            Text(
-                text = targetLine(state),
-                style = MaterialTheme.typography.bodyMedium,
-            )
             if (state.phase == VerifyPhase.Running && state.lastResult == null) {
                 Text(
                     text = stringResource(R.string.hero_scanning_detail),
@@ -199,24 +195,6 @@ private fun StatusCardBody(state: VerifyUiState) {
         }
     }
 }
-
-@Composable
-private fun targetLine(state: VerifyUiState): String {
-    val name = state.installedAgsaVersionName
-    val code = state.installedAgsaVersion
-    return when {
-        name != null -> stringResource(R.string.hero_target_agsa, "v${shortAgsaVersion(name)}")
-        code != null -> stringResource(R.string.hero_target_agsa, "v$code")
-        else -> stringResource(R.string.hero_target_missing)
-    }
-}
-
-private fun shortAgsaVersion(name: String): String =
-    name
-        .split(".")
-        .takeWhile { segment -> segment.all(Char::isDigit) }
-        .joinToString(".")
-        .ifEmpty { name }
 
 private data class StatusVisual(
     val icon: ImageVector,
