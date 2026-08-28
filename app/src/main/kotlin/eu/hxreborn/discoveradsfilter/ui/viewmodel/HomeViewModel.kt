@@ -335,12 +335,7 @@ class HomeViewModel(
         shareOriginalLinkFlow.value = repo.read(SettingsPrefs.shareOriginalLink)
         shareStripSourceLineFlow.value = repo.read(SettingsPrefs.shareStripSourceLine)
         shareCustomLineFlow.value = repo.read(SettingsPrefs.shareCustomLine)
-        val storedRules = repo.read(SettingsPrefs.newsRules)
-        if (storedRules == null) {
-            persistNewsRules(NewsRules.defaults())
-        } else {
-            newsRulesFlow.value = NewsRules.decode(storedRules)
-        }
+        newsRulesFlow.value = NewsRules.decode(repo.read(SettingsPrefs.newsRules))
 
         val lastScan = repo.readLastScan()
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }
