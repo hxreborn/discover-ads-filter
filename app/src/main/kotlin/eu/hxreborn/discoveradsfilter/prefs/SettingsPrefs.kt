@@ -5,6 +5,8 @@ object SettingsPrefs {
 
     val verbose = boolPref("verbose", false)
 
+    val filterAds = boolPref("filter_ads", true)
+
     val autoRecoveryOnUpdate = boolPref("auto_recovery_on_update", false)
 
     val shareOriginalLink = boolPref("share_original_link", false)
@@ -27,6 +29,7 @@ object SettingsPrefs {
     val all: List<PrefSpec<*>> =
         listOf(
             verbose,
+            filterAds,
             autoRecoveryOnUpdate,
             shareOriginalLink,
             shareStripSourceLine,

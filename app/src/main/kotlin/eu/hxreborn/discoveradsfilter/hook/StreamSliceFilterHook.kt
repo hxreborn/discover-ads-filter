@@ -102,7 +102,7 @@ object StreamSliceFilterHook {
         val filtered = ArrayList<Any?>(items.size)
         for (item in items) {
             val key = item?.let(::stableItemKey)
-            if (key != null && isAdItem(key)) {
+            if (key != null && filterAds && isAdItem(key)) {
                 if (countedAdKeys.add(key)) {
                     newAds++
                     Logger.debug { "blocked ad key=$key" }

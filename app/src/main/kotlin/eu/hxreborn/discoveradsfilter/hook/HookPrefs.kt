@@ -12,6 +12,9 @@ import eu.hxreborn.discoveradsfilter.util.Logger
 internal var verbose: Boolean = false
 
 @Volatile
+internal var filterAds: Boolean = true
+
+@Volatile
 internal var shareOriginalLink: Boolean = false
 
 @Volatile
@@ -27,6 +30,7 @@ private var prefListener: SharedPreferences.OnSharedPreferenceChangeListener? = 
 
 internal fun loadHookPrefs(prefs: SharedPreferences) {
     verbose = SettingsPrefs.verbose.read(prefs)
+    filterAds = SettingsPrefs.filterAds.read(prefs)
     shareOriginalLink = SettingsPrefs.shareOriginalLink.read(prefs)
     shareStripSourceLine = SettingsPrefs.shareStripSourceLine.read(prefs)
     shareCustomLine = SettingsPrefs.shareCustomLine.read(prefs).orEmpty()
@@ -42,6 +46,11 @@ internal fun loadHookPrefs(prefs: SharedPreferences) {
                     SettingsPrefs.verbose.key -> {
                         verbose = SettingsPrefs.verbose.read(src)
                         if (verbose) StreamSliceFilterHook.resetKeyDump()
+                    }
+
+                    SettingsPrefs.filterAds.key -> {
+                        filterAds = SettingsPrefs.filterAds.read(src)
+                        StreamSliceFilterHook.resetFilterState()
                     }
 
                     SettingsPrefs.shareOriginalLink.key -> {
