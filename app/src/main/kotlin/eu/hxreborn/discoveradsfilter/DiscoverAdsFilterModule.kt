@@ -56,6 +56,9 @@ class DiscoverAdsFilterModule : XposedModule() {
     }
 }
 
+private const val TOAST_RESCAN = "Removing ads, please wait"
+private const val TOAST_VERIFY = "Google app updated. Open Discover Ads Filter and tap Verify"
+
 private class BootstrapHooker(
     private val loader: ClassLoader,
     private val prefs: SharedPreferences,
@@ -105,14 +108,17 @@ private class BootstrapHooker(
                     }
                 Logger.log(Log.WARN, fields.joinToString(" "))
 
-                if (versionCode > 0L && SettingsPrefs.autoRecoveryOnUpdate.read(prefs)) {
-                    Logger.log(
-                        Log.INFO,
-                        "update detected pkg=${DiscoverAdsFilterModule.AGSA_PKG} " +
-                            "v=$versionCode requesting rescan",
-                    )
+                if (versionCode > 0L) {
+                    val autoRecovery = SettingsPrefs.autoRecoveryOnUpdate.read(prefs)
+                    if (autoRecovery) {
+                        Logger.log(
+                            Log.INFO,
+                            "update detected pkg=${DiscoverAdsFilterModule.AGSA_PKG} " +
+                                "v=$versionCode requesting rescan",
+                        )
+                    }
                     if (HookRecovery.request(ctx, versionCode)) {
-                        HookToast.show(ctx, "Removing ads, please wait")
+                        HookToast.show(ctx, if (autoRecovery) TOAST_RESCAN else TOAST_VERIFY)
                     }
                 }
             }

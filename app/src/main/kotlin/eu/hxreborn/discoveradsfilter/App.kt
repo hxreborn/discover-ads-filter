@@ -29,6 +29,7 @@ class App :
     private val recoveryLock = Any()
     private var recoveryInFlight = false
     private var lastRecoveryVersion = 0L
+    private var lastNoticeVersion = 0L
 
     override fun onCreate() {
         super.onCreate()
@@ -65,8 +66,12 @@ class App :
     fun onRecoveryRequested(agsaVersionCode: Long): Boolean {
         if (!::prefsRepository.isInitialized) return false
         if (!prefsRepository.read(SettingsPrefs.autoRecoveryOnUpdate)) {
-            Log.d(TAG, "recovery ignored (disabled) v=$agsaVersionCode")
-            return false
+            synchronized(recoveryLock) {
+                if (agsaVersionCode == 0L || agsaVersionCode == lastNoticeVersion) return false
+                lastNoticeVersion = agsaVersionCode
+            }
+            Log.d(TAG, "recovery disabled, first stale notice v=$agsaVersionCode")
+            return true
         }
         synchronized(recoveryLock) {
             if (recoveryInFlight) {
