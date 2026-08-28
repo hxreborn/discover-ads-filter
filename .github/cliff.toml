@@ -60,6 +60,7 @@ commit_preprocessors = [
   { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "" },
 ]
 commit_parsers = [
+  { message = '\(polish\)', skip = true },
   { message = "^feat", group = "<!-- 00 -->Features" },
   { message = "^[fF]ix", group = "<!-- 01 -->Bug Fixes" },
   { message = "^perf", group = "<!-- 02 -->Performance Improvements" },
