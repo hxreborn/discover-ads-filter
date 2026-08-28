@@ -59,6 +59,10 @@ object StreamSliceFilterHook {
     @Volatile
     private var keysDumped = false
 
+    internal fun resetKeyDump() {
+        keysDumped = false
+    }
+
     private fun dumpKeysOnce(items: List<*>) {
         if (keysDumped) return
         keysDumped = true

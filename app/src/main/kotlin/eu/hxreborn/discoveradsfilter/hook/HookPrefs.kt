@@ -34,6 +34,7 @@ internal fun loadHookPrefs(prefs: SharedPreferences) {
 
                     SettingsPrefs.verbose.key -> {
                         verbose = SettingsPrefs.verbose.read(src)
+                        if (verbose) StreamSliceFilterHook.resetKeyDump()
                     }
 
                     SettingsPrefs.shareOriginalLink.key -> {
