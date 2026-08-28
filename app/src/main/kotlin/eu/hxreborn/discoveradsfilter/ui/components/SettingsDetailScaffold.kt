@@ -24,6 +24,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -79,13 +82,16 @@ internal fun SettingsDetailTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    val expanded by remember(scrollBehavior) {
+        derivedStateOf { scrollBehavior.state.collapsedFraction < 0.5f }
+    }
     LargeTopAppBar(
         title = {
             Text(
                 title,
                 maxLines = 2,
                 style =
-                    if (scrollBehavior.state.collapsedFraction < 0.5f) {
+                    if (expanded) {
                         MaterialTheme.typography.headlineLarge
                     } else {
                         MaterialTheme.typography.titleLarge
