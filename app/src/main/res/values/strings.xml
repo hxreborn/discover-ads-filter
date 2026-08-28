@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Discover Ads Filter</string>
-    <string name="app_description">Filters sponsored cards from the Google Discover feed.</string>
+    <string name="app_name">Discover Feed Filter</string>
+    <string name="app_description">Removes ads, sponsored cards and clickbait from Google Discover.</string>
 
     <string name="button_scan">Scan app</string>
     <string name="button_rescan">Rescan app</string>

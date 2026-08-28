@@ -1,1 +1,1 @@
-Xposed module that hides sponsored cards in Google Discover feed
+Hides ads, sponsored cards and clickbait in Google Discover

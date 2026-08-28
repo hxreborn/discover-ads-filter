@@ -1,5 +1,13 @@
-Removes sponsored cards from the Pixel Launcher Discover feed by hooking the Google app. Uses DexKit at install time to resolve obfuscated symbols against the installed Google app build, then registers a single LSPosed hook that drops feed items whose cluster type is feedads.
+Discover Feed Filter cleans up Google Discover, the news feed on the Pixel Launcher -1 screen and inside the Google app.
 
-Prerequisites: the Google app (com.google.android.googlequicksearchbox), and a rooted device (KernelSU, APatch or Magisk) running an Xposed framework manager such as LSPosed. The module is non-functional without both.
+What it removes:
+
+- Sponsored cards and ads, dropped before they reach the feed
+- Clickbait, with your own filters. Hide stories by headline or source, plain text or regex, starting from the built-in clickbait presets
+- Google's share.google redirect links. Shared articles use their real link instead
+
+The dashboard counts the ads and clickbait articles it has hidden. After a Google app update, open the app and rescan, or turn on auto-repair to handle it automatically with root.
+
+Prerequisites: the Google app (com.google.android.googlequicksearchbox), and a rooted device (KernelSU, APatch or Magisk) running an Xposed framework manager such as LSPosed or Vector. The module does nothing without both.
 
 Also dislike ads in the Google Play Store? Try the sister module playstore-adblock: https://github.com/hxreborn/playstore-adblock

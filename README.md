@@ -3,11 +3,11 @@
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/banner_dark.png">
-    <img src="assets/banner_light.png" alt="Discover Ads Filter">
+    <img src="assets/banner_light.png" alt="Discover Feed Filter">
   </picture>
 </h1>
 
-<p>An Xposed module that hides sponsored cards and ads from the Google Discover feed in the Pixel Launcher -1 screen and inside the Google app itself.</p>
+<p>An Xposed module that removes ads, sponsored cards and clickbait from the Google Discover feed, in the Pixel Launcher -1 screen and inside the Google app itself. Hide stories by headline or source with your own filters, and share articles with their real link instead of Google's redirect.</p>
 
 
 ![AGSA 17.14+](https://img.shields.io/badge/AGSA-17.14%2B-4285F4?style=flat-square&logo=google&logoColor=white)
@@ -19,7 +19,7 @@
 ## Requirements
 
 - Android 11+
-- LSPosed manager with libxposed API 101 support
+- An Xposed manager with libxposed API 101 support, such as [LSPosed](https://github.com/LSPosed/LSPosed) or [Vector](https://github.com/JingMatrix/Vector)
 
 ## Installation
 
@@ -29,7 +29,7 @@
     <a href="https://f-droid.org/es/packages/eu.hxreborn.discoveradsfilter/"><img src=".github/assets/badge_fdroid.png" height="60" alt="Get it on F-Droid" /></a>
 
 2. Enable the module in LSPosed and scope it to `com.google.android.googlequicksearchbox`.
-3. Open the Discover Ads Filter app and tap Scan to resolve hook targets.
+3. Open the Discover Feed Filter app and tap Scan to resolve hook targets.
 4. Force-stop Google App and relaunch.
 
 ## How It Works
