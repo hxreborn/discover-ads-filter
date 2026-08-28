@@ -2,6 +2,11 @@
 
 package eu.hxreborn.discoveradsfilter.ui.screen
 
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,11 +39,13 @@ import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FilterAltOff
 import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.PlaylistAdd
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Title
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -51,7 +58,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -69,6 +75,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -89,6 +96,18 @@ import eu.hxreborn.discoveradsfilter.ui.util.preferenceCard
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import java.util.UUID
 
+private const val EXPORT_MIME = "application/json"
+private const val EXPORT_FILE_NAME = "discover-news-filters.json"
+
+private fun launchPicker(
+    context: Context,
+    launch: () -> Unit,
+) {
+    runCatching(launch).onFailure {
+        Toast.makeText(context, R.string.news_rules_no_picker, Toast.LENGTH_LONG).show()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NewsRulesScreen(
@@ -96,12 +115,24 @@ fun NewsRulesScreen(
     onSave: (NewsRule) -> Unit,
     onDelete: (String) -> Unit,
     onLoadPresets: () -> Unit,
+    onImport: (Uri) -> Unit,
+    onExport: (Uri) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmPresets by rememberSaveable { mutableStateOf(false) }
+    var menuOpen by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
+    val importLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let(onImport)
+        }
+    val exportLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument(EXPORT_MIME),
+        ) { uri -> uri?.let(onExport) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
 
@@ -148,10 +179,33 @@ fun NewsRulesScreen(
                 onBack = onBack,
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = { confirmPresets = true }) {
+                    IconButton(onClick = { menuOpen = true }) {
                         Icon(
-                            imageVector = Icons.Outlined.PlaylistAdd,
-                            contentDescription = stringResource(R.string.news_rules_load_presets),
+                            imageVector = Icons.Outlined.MoreVert,
+                            contentDescription = stringResource(R.string.news_rules_more),
+                        )
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.news_rules_load_presets)) },
+                            onClick = {
+                                menuOpen = false
+                                confirmPresets = true
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.news_rules_import)) },
+                            onClick = {
+                                menuOpen = false
+                                launchPicker(context) { importLauncher.launch(arrayOf("*/*")) }
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.news_rules_export)) },
+                            onClick = {
+                                menuOpen = false
+                                launchPicker(context) { exportLauncher.launch(EXPORT_FILE_NAME) }
+                            },
                         )
                     }
                 },
@@ -547,6 +601,8 @@ private fun NewsRulesScreenPreview() {
             onSave = {},
             onDelete = {},
             onLoadPresets = {},
+            onImport = {},
+            onExport = {},
             onBack = {},
         )
     }

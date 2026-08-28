@@ -159,6 +159,15 @@ object NewsRules {
         label = label,
     )
 
+    fun merge(
+        existing: List<NewsRule>,
+        incoming: List<NewsRule>,
+    ): List<NewsRule> {
+        val byId = existing.associateByTo(LinkedHashMap()) { it.id }
+        incoming.forEach { byId[it.id] = it }
+        return byId.values.toList()
+    }
+
     fun encode(rules: List<NewsRule>): String = json.encodeToString(serializer, rules)
 
     fun decode(raw: String?): List<NewsRule> {

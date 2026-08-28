@@ -193,4 +193,33 @@ class NewsFilterTest {
         assertEquals(emptyList<NewsRule>(), NewsRules.decode(null))
         assertEquals(emptyList<NewsRule>(), NewsRules.decode(""))
     }
+
+    @Test
+    fun `merge keeps existing rules and lets imported ones win by id`() {
+        val existing =
+            listOf(
+                NewsRule(id = "a", pattern = "old", label = "mine"),
+                NewsRule(id = "b", pattern = "keep"),
+            )
+        val imported =
+            listOf(
+                NewsRule(id = "a", pattern = "new", label = "theirs"),
+                NewsRule(id = "c", pattern = "fresh"),
+            )
+
+        val merged = NewsRules.merge(existing, imported)
+
+        assertEquals(listOf("a", "b", "c"), merged.map { it.id })
+        assertEquals("new", merged.first { it.id == "a" }.pattern)
+        assertEquals("keep", merged.first { it.id == "b" }.pattern)
+    }
+
+    @Test
+    fun `exported rules survive a decode round trip`() {
+        val rules = NewsRules.defaults()
+
+        val restored = NewsRules.decode(NewsRules.encode(rules))
+
+        assertEquals(rules, restored)
+    }
 }

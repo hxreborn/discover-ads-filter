@@ -1,5 +1,6 @@
 package eu.hxreborn.discoveradsfilter.ui.state
 
+import android.net.Uri
 import androidx.compose.runtime.Immutable
 import eu.hxreborn.discoveradsfilter.filter.NewsRule
 
@@ -29,6 +30,8 @@ data class HomeActions(
     val onNewsRuleSaved: (NewsRule) -> Unit,
     val onNewsRuleDeleted: (String) -> Unit,
     val onLoadPresets: () -> Unit,
+    val onImportRules: (Uri) -> Unit,
+    val onExportRules: (Uri) -> Unit,
     val onLauncherIconHiddenChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,

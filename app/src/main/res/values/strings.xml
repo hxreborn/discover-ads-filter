@@ -61,6 +61,14 @@
     <string name="news_rules_empty_title">No filters yet</string>
     <string name="news_rule_add">Add filter</string>
     <string name="news_rules_load_presets">Load presets</string>
+    <string name="news_rules_more">More</string>
+    <string name="news_rules_import">Import</string>
+    <string name="news_rules_export">Export</string>
+    <string name="news_rules_imported">Filters imported</string>
+    <string name="news_rules_import_failed">No filters in that file</string>
+    <string name="news_rules_exported">Filters exported</string>
+    <string name="news_rules_export_failed">Could not write that file</string>
+    <string name="news_rules_no_picker">No file picker on this device</string>
     <string name="news_rules_presets_dialog_title">Load presets?</string>
     <string name="news_rules_presets_dialog_confirm">Load</string>
     <string name="news_rule_edit">Edit filter</string>

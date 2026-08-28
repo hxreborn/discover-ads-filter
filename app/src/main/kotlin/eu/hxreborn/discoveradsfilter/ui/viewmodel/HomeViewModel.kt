@@ -1,6 +1,7 @@
 package eu.hxreborn.discoveradsfilter.ui.viewmodel
 
 import android.app.Application
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -160,6 +161,8 @@ class HomeViewModel(
             onNewsRuleSaved = ::saveNewsRule,
             onNewsRuleDeleted = ::deleteNewsRule,
             onLoadPresets = ::loadPresets,
+            onImportRules = ::importRules,
+            onExportRules = ::exportRules,
             onLauncherIconHiddenChange = { hidden ->
                 setLauncherIconVisible(app, !hidden)
                 launcherIconHiddenFlow.value = hidden
@@ -202,6 +205,39 @@ class HomeViewModel(
         val existing = newsRulesFlow.value
         val known = existing.mapTo(HashSet()) { it.id }
         persistNewsRules(existing + NewsRules.defaults().filterNot { it.id in known })
+    }
+
+    private fun importRules(uri: Uri) {
+        viewModelScope.launch(ioDispatcher) {
+            val raw =
+                runCatching {
+                    app.contentResolver
+                        .openInputStream(uri)
+                        ?.bufferedReader()
+                        ?.use { it.readText() }
+                }.getOrNull()
+            val imported = NewsRules.decode(raw)
+            if (imported.isEmpty()) {
+                _messages.tryEmit(R.string.news_rules_import_failed)
+                return@launch
+            }
+            persistNewsRules(NewsRules.merge(newsRulesFlow.value, imported))
+            _messages.tryEmit(R.string.news_rules_imported)
+        }
+    }
+
+    private fun exportRules(uri: Uri) {
+        viewModelScope.launch(ioDispatcher) {
+            val written =
+                runCatching {
+                    app.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use {
+                        it.write(NewsRules.encode(newsRulesFlow.value))
+                    } ?: error("no output stream")
+                }.isSuccess
+            _messages.tryEmit(
+                if (written) R.string.news_rules_exported else R.string.news_rules_export_failed,
+            )
+        }
     }
 
     private fun persistNewsRules(rules: List<NewsRule>) {
