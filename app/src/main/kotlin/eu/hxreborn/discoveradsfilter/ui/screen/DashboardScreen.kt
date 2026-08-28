@@ -17,17 +17,18 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ShortText
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Autorenew
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.PhonelinkErase
 import androidx.compose.material.icons.outlined.PhonelinkSetup
 import androidx.compose.material.icons.outlined.RestartAlt
-import androidx.compose.material.icons.outlined.ShortText
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -75,6 +76,7 @@ import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
+import eu.hxreborn.discoveradsfilter.ui.util.preferenceCard
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 import me.zhanghai.compose.preference.ProvidePreferenceLocals
@@ -340,7 +342,7 @@ private fun LazyListScope.dashboardReadyItems(
             modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
             enabled = ready.shareOriginalLink,
             icon = {
-                Icon(imageVector = Icons.Outlined.ShortText, contentDescription = null)
+                Icon(imageVector = Icons.AutoMirrored.Outlined.ShortText, contentDescription = null)
             },
             title = {
                 Text(
@@ -391,6 +393,47 @@ private fun LazyListScope.dashboardReadyItems(
             },
         )
     }
+
+    preferenceCategory(
+        key = "cat_feed",
+        title = { Text(stringResource(R.string.pref_category_feed)) },
+    )
+
+    preference(
+        key = "news_rules",
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(1, 0), surface = surface),
+        icon = {
+            Icon(imageVector = Icons.Outlined.FilterAlt, contentDescription = null)
+        },
+        title = {
+            Text(
+                stringResource(R.string.pref_news_rules_title),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        },
+        summary = {
+            Text(
+                if (ready.newsRules.isEmpty()) {
+                    stringResource(R.string.pref_news_rules_summary)
+                } else {
+                    stringResource(
+                        R.string.pref_news_rules_summary_count,
+                        ready.newsRules.count { it.enabled },
+                        ready.newsRules.size,
+                    )
+                },
+            )
+        },
+        widgetContainer = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 16.dp).size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        onClick = { onNavigate(Destination.NewsRules) },
+    )
 
     preferenceCategory(
         key = "cat_metrics",
@@ -571,11 +614,6 @@ private fun ResetCounterDialog(
     )
 }
 
-private fun Modifier.preferenceCard(
-    shape: Shape,
-    surface: Color,
-): Modifier = this.padding(horizontal = Spacing.sm).background(color = surface, shape = shape).clip(shape)
-
 private val NoOpActions =
     HomeActions(
         onVerboseChange = {},
@@ -583,6 +621,8 @@ private val NoOpActions =
         onShareOriginalLinkChange = {},
         onShareStripSourceLineChange = {},
         onShareCustomLineChange = {},
+        onNewsRuleSaved = {},
+        onNewsRuleDeleted = {},
         onLauncherIconHiddenChange = {},
         onVerify = {},
         onClearCacheOnly = {},

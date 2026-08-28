@@ -13,6 +13,8 @@ import eu.hxreborn.discoveradsfilter.DiscoverAdsFilterModule
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.discovery.DexKitResolver
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import eu.hxreborn.discoveradsfilter.filter.NewsRule
+import eu.hxreborn.discoveradsfilter.filter.NewsRules
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
@@ -57,6 +59,7 @@ class HomeViewModel(
     private val shareOriginalLinkFlow = MutableStateFlow(false)
     private val shareStripSourceLineFlow = MutableStateFlow(false)
     private val shareCustomLineFlow = MutableStateFlow<String?>(null)
+    private val newsRulesFlow = MutableStateFlow<List<NewsRule>>(emptyList())
     private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
@@ -99,7 +102,8 @@ class HomeViewModel(
             launcherIconHiddenFlow,
             verifyWithStatusFlow,
             adsHiddenFlow,
-        ) { toggles, launcherIconHidden, verify, adsHidden ->
+            newsRulesFlow,
+        ) { toggles, launcherIconHidden, verify, adsHidden, rules ->
             if (verify == null) {
                 HomeUiState.Loading
             } else {
@@ -109,6 +113,7 @@ class HomeViewModel(
                     shareOriginalLink = toggles.shareOriginalLink,
                     shareStripSourceLine = toggles.shareStripSourceLine,
                     shareCustomLine = toggles.shareCustomLine,
+                    newsRules = rules,
                     isLauncherIconHidden = launcherIconHidden,
                     verify = verify.copy(adsHidden = adsHidden),
                 )
@@ -152,6 +157,8 @@ class HomeViewModel(
                 repo.save(SettingsPrefs.shareCustomLine, value)
                 shareCustomLineFlow.value = value
             },
+            onNewsRuleSaved = ::saveNewsRule,
+            onNewsRuleDeleted = ::deleteNewsRule,
             onLauncherIconHiddenChange = { hidden ->
                 setLauncherIconVisible(app, !hidden)
                 launcherIconHiddenFlow.value = hidden
@@ -173,6 +180,26 @@ class HomeViewModel(
             }
         }
         viewModelScope.launch { observeScanCache() }
+    }
+
+    private fun saveNewsRule(rule: NewsRule) {
+        val existing = newsRulesFlow.value
+        val updated =
+            if (existing.any { it.id == rule.id }) {
+                existing.map { if (it.id == rule.id) rule else it }
+            } else {
+                existing + rule
+            }
+        persistNewsRules(updated)
+    }
+
+    private fun deleteNewsRule(id: String) {
+        persistNewsRules(newsRulesFlow.value.filterNot { it.id == id })
+    }
+
+    private fun persistNewsRules(rules: List<NewsRule>) {
+        newsRulesFlow.value = rules
+        repo.save(SettingsPrefs.newsRules, NewsRules.encode(rules))
     }
 
     private fun restartGoogleApp() {
@@ -222,6 +249,7 @@ class HomeViewModel(
         shareOriginalLinkFlow.value = repo.read(SettingsPrefs.shareOriginalLink)
         shareStripSourceLineFlow.value = repo.read(SettingsPrefs.shareStripSourceLine)
         shareCustomLineFlow.value = repo.read(SettingsPrefs.shareCustomLine)
+        newsRulesFlow.value = NewsRules.decode(repo.read(SettingsPrefs.newsRules))
 
         val lastScan = repo.readLastScan()
         val result = lastScan?.let { VerifyResult.Success(it.versionCode, it.targets) }

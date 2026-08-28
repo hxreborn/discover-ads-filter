@@ -1,7 +1,14 @@
 package eu.hxreborn.discoveradsfilter.ui.util
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 
 private val CornerLarge = 24.dp
 private val CornerSmall = 4.dp
@@ -37,3 +44,8 @@ fun shapeForPosition(
             RoundedCornerShape(CornerSmall)
         }
     }
+
+internal fun Modifier.preferenceCard(
+    shape: Shape,
+    surface: Color,
+): Modifier = this.padding(horizontal = Spacing.sm).background(color = surface, shape = shape).clip(shape)

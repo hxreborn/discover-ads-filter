@@ -53,10 +53,37 @@
     <string name="pref_share_custom_line_title">Text before the link</string>
     <string name="pref_share_custom_line_summary">Not set</string>
     <string name="pref_share_custom_line_hint">Look what I found in Discover:</string>
+    <string name="pref_news_rules_title">News filters</string>
+    <string name="pref_news_rules_summary">Hide stories by source or headline</string>
+    <string name="pref_news_rules_summary_count">%1$d of %2$d filters active</string>
+
+    <!-- News filter rules -->
+    <string name="news_rules_empty_title">No filters yet</string>
+    <string name="news_rule_add">Add filter</string>
+    <string name="news_rule_edit">Edit filter</string>
+    <string name="news_rule_delete">Delete filter</string>
+    <string name="news_rule_delete_dialog_title">Delete filter?</string>
+    <string name="news_rule_delete_dialog_body">Stories it hides will come back.</string>
+    <string name="news_rule_delete_dialog_confirm">Delete</string>
+    <string name="news_rule_pattern_label">Text or pattern</string>
+    <string name="news_rule_pattern_hint">confirmado por la UE</string>
+    <string name="news_rule_invalid">Invalid pattern</string>
+    <string name="news_rule_summary">%1$s \u00b7 %2$s \u00b7 %3$s</string>
+    <string name="news_rule_scope">Match in</string>
+    <string name="news_rule_scope_headline">Headline</string>
+    <string name="news_rule_scope_source">Source</string>
+    <string name="news_rule_scope_any">Either</string>
+    <string name="news_rule_match">Match type</string>
+    <string name="news_rule_match_contains">Contains</string>
+    <string name="news_rule_match_regex">Regex</string>
+    <string name="news_rule_action">Action</string>
+    <string name="news_rule_action_block">Hide</string>
+    <string name="news_rule_action_allow">Keep</string>
 
     <!-- Category headers -->
     <string name="pref_category_target_resolution">Target resolution</string>
     <string name="pref_category_sharing">Sharing</string>
+    <string name="pref_category_feed">Feed</string>
     <string name="pref_category_metrics">Metrics</string>
     <string name="pref_category_app">App</string>
 
@@ -70,6 +97,7 @@
 
     <!-- Navigation -->
     <string name="nav_diagnostics">Resolved targets</string>
+    <string name="nav_news_rules">News filters</string>
     <string name="nav_back">Back</string>
     <string name="nav_info">Info</string>
 

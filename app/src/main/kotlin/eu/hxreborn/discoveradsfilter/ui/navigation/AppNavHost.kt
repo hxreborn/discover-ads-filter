@@ -4,7 +4,9 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -13,6 +15,8 @@ import eu.hxreborn.discoveradsfilter.ui.screen.AboutScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.DashboardScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.DiagnosticsScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.LicensesScreen
+import eu.hxreborn.discoveradsfilter.ui.screen.NewsRulesScreen
+import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 
 @Composable
@@ -48,6 +52,16 @@ fun AppNavHost(
                 entry<Destination.Diagnostics> {
                     DiagnosticsScreen(
                         viewModel = viewModel,
+                        onBack = { backStack.removeLastOrNull() },
+                    )
+                }
+
+                entry<Destination.NewsRules> {
+                    val state by viewModel.uiState.collectAsStateWithLifecycle()
+                    NewsRulesScreen(
+                        rules = (state as? HomeUiState.Ready)?.newsRules.orEmpty(),
+                        onSave = viewModel.actions.onNewsRuleSaved,
+                        onDelete = viewModel.actions.onNewsRuleDeleted,
                         onBack = { backStack.removeLastOrNull() },
                     )
                 }
