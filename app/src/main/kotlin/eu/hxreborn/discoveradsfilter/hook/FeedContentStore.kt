@@ -16,6 +16,7 @@ object FeedContentStore {
 
     private val cache = ConcurrentHashMap<String, CardText>()
     private val misses = ConcurrentHashMap.newKeySet<String>()
+    private val connections = ConcurrentHashMap<String, SQLiteDatabase>()
 
     @Volatile
     private var stores: List<File> = emptyList()
@@ -62,14 +63,16 @@ object FeedContentStore {
         name: String,
     ): ByteArray? =
         runCatching {
-            SQLiteDatabase
-                .openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
-                .use { db ->
-                    db.rawQuery(QUERY, arrayOf(name)).use { cursor ->
-                        if (cursor.moveToFirst()) cursor.getBlob(0) else null
-                    }
-                }
+            openStore(file).rawQuery(QUERY, arrayOf(name)).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getBlob(0) else null
+            }
         }.onFailure {
+            connections.remove(file.path)?.let { db -> runCatching { db.close() } }
             Logger.debug { "feed store read failed: ${it.message}" }
         }.getOrNull()
+
+    private fun openStore(file: File): SQLiteDatabase =
+        connections.computeIfAbsent(file.path) {
+            SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY)
+        }
 }
