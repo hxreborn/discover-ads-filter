@@ -65,6 +65,8 @@
     <string name="news_rule_delete_dialog_title">Delete filter?</string>
     <string name="news_rule_delete_dialog_body">Stories it hides will come back.</string>
     <string name="news_rule_delete_dialog_confirm">Delete</string>
+    <string name="news_rule_name_label">Name (optional)</string>
+    <string name="news_rule_name_hint">Clickbait</string>
     <string name="news_rule_pattern_label">Text or pattern</string>
     <string name="news_rule_pattern_hint">confirmado por la UE</string>
     <string name="news_rule_invalid">Invalid pattern</string>
