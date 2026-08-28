@@ -60,6 +60,9 @@
     <!-- News filter rules -->
     <string name="news_rules_empty_title">No filters yet</string>
     <string name="news_rule_add">Add filter</string>
+    <string name="news_rules_load_presets">Load presets</string>
+    <string name="news_rules_presets_dialog_title">Load presets?</string>
+    <string name="news_rules_presets_dialog_confirm">Load</string>
     <string name="news_rule_edit">Edit filter</string>
     <string name="news_rule_delete">Delete filter</string>
     <string name="news_rule_delete_dialog_title">Delete filter?</string>
@@ -70,7 +73,6 @@
     <string name="news_rule_pattern_label">Text or pattern</string>
     <string name="news_rule_pattern_hint">confirmado por la UE</string>
     <string name="news_rule_invalid">Invalid pattern</string>
-    <string name="news_rule_summary">%1$s \u00b7 %2$s \u00b7 %3$s</string>
     <string name="news_rule_scope">Match in</string>
     <string name="news_rule_scope_headline">Headline</string>
     <string name="news_rule_scope_source">Source</string>

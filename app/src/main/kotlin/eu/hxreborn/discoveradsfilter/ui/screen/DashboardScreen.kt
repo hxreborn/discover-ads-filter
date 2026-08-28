@@ -623,6 +623,7 @@ private val NoOpActions =
         onShareCustomLineChange = {},
         onNewsRuleSaved = {},
         onNewsRuleDeleted = {},
+        onLoadPresets = {},
         onLauncherIconHiddenChange = {},
         onVerify = {},
         onClearCacheOnly = {},

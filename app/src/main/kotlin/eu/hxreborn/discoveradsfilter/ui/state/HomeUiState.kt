@@ -28,6 +28,7 @@ data class HomeActions(
     val onShareCustomLineChange: (String?) -> Unit,
     val onNewsRuleSaved: (NewsRule) -> Unit,
     val onNewsRuleDeleted: (String) -> Unit,
+    val onLoadPresets: () -> Unit,
     val onLauncherIconHiddenChange: (Boolean) -> Unit,
     val onVerify: () -> Unit,
     val onClearCacheOnly: () -> Unit,

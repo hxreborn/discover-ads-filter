@@ -159,6 +159,7 @@ class HomeViewModel(
             },
             onNewsRuleSaved = ::saveNewsRule,
             onNewsRuleDeleted = ::deleteNewsRule,
+            onLoadPresets = ::loadPresets,
             onLauncherIconHiddenChange = { hidden ->
                 setLauncherIconVisible(app, !hidden)
                 launcherIconHiddenFlow.value = hidden
@@ -195,6 +196,12 @@ class HomeViewModel(
 
     private fun deleteNewsRule(id: String) {
         persistNewsRules(newsRulesFlow.value.filterNot { it.id == id })
+    }
+
+    private fun loadPresets() {
+        val existing = newsRulesFlow.value
+        val known = existing.mapTo(HashSet()) { it.id }
+        persistNewsRules(existing + NewsRules.defaults().filterNot { it.id in known })
     }
 
     private fun persistNewsRules(rules: List<NewsRule>) {

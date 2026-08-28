@@ -5,6 +5,8 @@ package eu.hxreborn.discoveradsfilter.ui.screen
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.FilterAltOff
+import androidx.compose.material.icons.outlined.PlaylistAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -40,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,17 +80,19 @@ import eu.hxreborn.discoveradsfilter.ui.util.preferenceCard
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun NewsRulesScreen(
     rules: List<NewsRule>,
     onSave: (NewsRule) -> Unit,
     onDelete: (String) -> Unit,
+    onLoadPresets: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingDelete by rememberSaveable { mutableStateOf<String?>(null) }
+    var confirmPresets by rememberSaveable { mutableStateOf(false) }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val listState = rememberLazyListState()
 
@@ -113,6 +119,18 @@ fun NewsRulesScreen(
         )
     }
 
+    if (confirmPresets) {
+        ConfirmDialog(
+            title = stringResource(R.string.news_rules_presets_dialog_title),
+            confirmLabel = stringResource(R.string.news_rules_presets_dialog_confirm),
+            onDismiss = { confirmPresets = false },
+            onConfirm = {
+                confirmPresets = false
+                onLoadPresets()
+            },
+        )
+    }
+
     Scaffold(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -120,6 +138,14 @@ fun NewsRulesScreen(
                 title = stringResource(R.string.nav_news_rules),
                 onBack = onBack,
                 scrollBehavior = scrollBehavior,
+                actions = {
+                    IconButton(onClick = { confirmPresets = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.PlaylistAdd,
+                            contentDescription = stringResource(R.string.news_rules_load_presets),
+                        )
+                    }
+                },
             )
         },
         floatingActionButton = {
@@ -174,14 +200,46 @@ private fun NewsRuleRow(
                 .clickable(onClickLabel = editLabel, onClick = onEdit),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         supportingContent = {
-            Text(
-                stringResource(
-                    R.string.news_rule_summary,
-                    stringResource(actionLabel(rule.action)),
-                    stringResource(scopeLabel(rule.scope)),
-                    stringResource(matchLabel(rule.match)),
-                ),
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                if (rule.label != null) {
+                    Text(
+                        text = rule.pattern,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily =
+                            if (rule.match == RuleMatch.Regex) {
+                                FontFamily.Monospace
+                            } else {
+                                FontFamily.Default
+                            },
+                    )
+                }
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    modifier = Modifier.padding(top = Spacing.xs),
+                ) {
+                    RuleChip(
+                        text = stringResource(actionLabel(rule.action)),
+                        container =
+                            if (rule.action == RuleAction.Allow) {
+                                MaterialTheme.colorScheme.tertiaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.errorContainer
+                            },
+                        content =
+                            if (rule.action == RuleAction.Allow) {
+                                MaterialTheme.colorScheme.onTertiaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            },
+                    )
+                    RuleChip(text = stringResource(scopeLabel(rule.scope)))
+                    RuleChip(text = stringResource(matchLabel(rule.match)))
+                }
+            }
         },
         trailingContent = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
@@ -200,10 +258,34 @@ private fun NewsRuleRow(
         },
     ) {
         Text(
-            text = rule.pattern,
+            text = rule.label ?: rule.pattern,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
-            fontFamily = if (rule.match == RuleMatch.Regex) FontFamily.Monospace else FontFamily.Default,
+            fontFamily =
+                if (rule.label == null && rule.match == RuleMatch.Regex) {
+                    FontFamily.Monospace
+                } else {
+                    FontFamily.Default
+                },
+        )
+    }
+}
+
+@Composable
+private fun RuleChip(
+    text: String,
+    container: Color = MaterialTheme.colorScheme.surface,
+    content: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+) {
+    Surface(
+        color = container,
+        contentColor = content,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
         )
     }
 }
@@ -215,6 +297,7 @@ private fun NewsRuleDialog(
     onConfirm: (NewsRule) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    var name by rememberSaveable { mutableStateOf(initial.label.orEmpty()) }
     var pattern by rememberSaveable { mutableStateOf(initial.pattern) }
     var action by rememberSaveable { mutableStateOf(initial.action) }
     var scope by rememberSaveable { mutableStateOf(initial.scope) }
@@ -234,6 +317,15 @@ private fun NewsRuleDialog(
         title = { Text(stringResource(if (isNew) R.string.news_rule_add else R.string.news_rule_edit)) },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.news_rule_name_label)) },
+                    placeholder = { Text(stringResource(R.string.news_rule_name_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                )
+                Spacer(Modifier.height(Spacing.sm))
                 OutlinedTextField(
                     value = pattern,
                     onValueChange = { pattern = it },
@@ -277,7 +369,15 @@ private fun NewsRuleDialog(
             TextButton(
                 enabled = valid,
                 onClick = {
-                    onConfirm(initial.copy(pattern = pattern.trim(), action = action, scope = scope, match = match))
+                    onConfirm(
+                        initial.copy(
+                            pattern = pattern.trim(),
+                            action = action,
+                            scope = scope,
+                            match = match,
+                            label = name.trim().takeIf { it.isNotEmpty() },
+                        ),
+                    )
                 },
             ) {
                 Text(stringResource(android.R.string.ok))
@@ -294,13 +394,30 @@ private fun DeleteRuleDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
+    ConfirmDialog(
+        title = stringResource(R.string.news_rule_delete_dialog_title),
+        body = stringResource(R.string.news_rule_delete_dialog_body),
+        confirmLabel = stringResource(R.string.news_rule_delete_dialog_confirm),
+        onDismiss = onDismiss,
+        onConfirm = onConfirm,
+    )
+}
+
+@Composable
+private fun ConfirmDialog(
+    title: String,
+    confirmLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    body: String? = null,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.news_rule_delete_dialog_title)) },
-        text = { Text(stringResource(R.string.news_rule_delete_dialog_body)) },
+        title = { Text(title) },
+        text = body?.let { { Text(it) } },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(stringResource(R.string.news_rule_delete_dialog_confirm))
+                Text(confirmLabel)
             }
         },
         dismissButton = {
@@ -390,6 +507,7 @@ private fun NewsRulesScreenPreview() {
                 ),
             onSave = {},
             onDelete = {},
+            onLoadPresets = {},
             onBack = {},
         )
     }

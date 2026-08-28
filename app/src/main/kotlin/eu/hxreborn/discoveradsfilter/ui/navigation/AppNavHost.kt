@@ -62,6 +62,7 @@ fun AppNavHost(
                         rules = (state as? HomeUiState.Ready)?.newsRules.orEmpty(),
                         onSave = viewModel.actions.onNewsRuleSaved,
                         onDelete = viewModel.actions.onNewsRuleDeleted,
+                        onLoadPresets = viewModel.actions.onLoadPresets,
                         onBack = { backStack.removeLastOrNull() },
                     )
                 }
