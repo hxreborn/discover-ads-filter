@@ -118,6 +118,7 @@ fun DiscoverAdsFilterTheme(
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
         motionScheme = MotionScheme.expressive(),
+        typography = DiscoverAdsFilterTypography,
         content = content,
     )
 }

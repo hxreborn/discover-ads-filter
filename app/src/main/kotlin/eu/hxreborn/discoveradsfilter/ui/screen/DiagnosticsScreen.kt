@@ -34,6 +34,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -137,13 +138,13 @@ internal fun DiagnosticsScreenContent(
         onBack = onBack,
         modifier = modifier,
         actions = {
-            IconButton(onClick = { copyDiagnostics(context, state) }) {
+            IconButton(onClick = { copyDiagnostics(context, state) }, shapes = IconButtonDefaults.shapes()) {
                 Icon(
                     Icons.Outlined.ContentCopy,
                     contentDescription = stringResource(R.string.diag_copy),
                 )
             }
-            IconButton(onClick = { showInfoDialog = true }) {
+            IconButton(onClick = { showInfoDialog = true }, shapes = IconButtonDefaults.shapes()) {
                 Icon(
                     Icons.Outlined.Info,
                     contentDescription = stringResource(R.string.nav_info),

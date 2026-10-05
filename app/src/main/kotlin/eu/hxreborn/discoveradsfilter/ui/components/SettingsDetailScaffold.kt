@@ -15,18 +15,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -74,7 +72,7 @@ internal fun SettingsDetailScaffold(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun SettingsDetailTopBar(
     title: String,
@@ -82,24 +80,10 @@ internal fun SettingsDetailTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    val expanded by remember(scrollBehavior) {
-        derivedStateOf { scrollBehavior.state.collapsedFraction < 0.5f }
-    }
-    LargeTopAppBar(
-        title = {
-            Text(
-                title,
-                maxLines = 2,
-                style =
-                    if (expanded) {
-                        MaterialTheme.typography.headlineLarge
-                    } else {
-                        MaterialTheme.typography.titleLarge
-                    },
-            )
-        },
+    LargeFlexibleTopAppBar(
+        title = { Text(title, maxLines = 2) },
         navigationIcon = {
-            IconButton(onClick = onBack) {
+            IconButton(onClick = onBack, shapes = IconButtonDefaults.shapes()) {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.nav_back),
