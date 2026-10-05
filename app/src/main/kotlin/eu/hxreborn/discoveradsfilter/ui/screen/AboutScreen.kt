@@ -119,9 +119,9 @@ fun AboutScreen(
         Spacer(Modifier.height(Spacing.lg))
         Text(
             text = stringResource(R.string.about_links),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Spacing.md, vertical = Spacing.xs),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = Spacing.labelInset, vertical = Spacing.xs),
         )
         Spacer(Modifier.height(Spacing.xs))
 
@@ -164,7 +164,7 @@ private fun AboutCard(
         enabled = onClick != null,
         modifier = Modifier.fillMaxWidth(),
         shape = shape,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
             modifier = Modifier.padding(Spacing.md),

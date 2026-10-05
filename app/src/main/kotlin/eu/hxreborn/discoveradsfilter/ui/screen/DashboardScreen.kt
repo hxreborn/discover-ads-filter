@@ -2,7 +2,6 @@
 
 package eu.hxreborn.discoveradsfilter.ui.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -41,9 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -70,6 +67,7 @@ import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.TextFieldPreference
 import me.zhanghai.compose.preference.preference
 import me.zhanghai.compose.preference.preferenceCategory
+import me.zhanghai.compose.preference.preferenceTheme
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -108,8 +106,20 @@ internal fun DashboardScreenContent(
             )
         },
     ) { innerPadding ->
-        ProvidePreferenceLocals {
-            val surface = MaterialTheme.colorScheme.surfaceVariant
+        ProvidePreferenceLocals(
+            theme =
+                preferenceTheme(
+                    categoryColor = MaterialTheme.colorScheme.primary,
+                    categoryPadding =
+                        PaddingValues(
+                            start = Spacing.md + Spacing.labelInset,
+                            top = Spacing.lg,
+                            end = Spacing.md + Spacing.labelInset,
+                            bottom = Spacing.sm,
+                        ),
+                ),
+        ) {
+            val surface = MaterialTheme.colorScheme.surfaceContainer
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -387,7 +397,7 @@ private fun LazyListScope.switchRow(
 private fun LazyListScope.dashboardLoadingCard(surface: Color) {
     item(key = "loading", contentType = "loading") {
         Surface(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.sm, vertical = Spacing.sm),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.sm),
             color = surface,
             shape = MaterialTheme.shapes.large,
         ) {

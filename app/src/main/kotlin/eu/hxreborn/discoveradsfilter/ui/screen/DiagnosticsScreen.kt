@@ -374,7 +374,8 @@ private fun MaintenanceSection(
     Text(
         text = stringResource(R.string.diag_category_maintenance),
         style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = Spacing.labelInset),
     )
     Spacer(Modifier.height(Spacing.xs))
     MaintenanceRow(
@@ -424,7 +425,7 @@ private fun MaintenanceRow(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = shape,
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(
             modifier =
@@ -519,8 +520,9 @@ private fun ComboCard(state: VerifyUiState) {
 
     Text(
         text = stringResource(R.string.diag_mapped_combo_title),
-        style = MaterialTheme.typography.titleSmall,
-        color = scheme.onSurfaceVariant,
+        style = MaterialTheme.typography.labelLarge,
+        color = scheme.primary,
+        modifier = Modifier.padding(start = Spacing.labelInset),
     )
     Spacer(Modifier.height(Spacing.sm))
 
@@ -546,7 +548,7 @@ private fun GroupedSurface(
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = shapeForPosition(count, index),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = MaterialTheme.colorScheme.surfaceContainer,
         content = content,
     )
 }
@@ -592,7 +594,8 @@ private fun SymbolSections(sections: List<SymbolSection>) {
                     section.totalCount,
                 ),
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = Spacing.labelInset),
         )
         Spacer(Modifier.height(Spacing.xs))
 

@@ -2,50 +2,29 @@ package eu.hxreborn.discoveradsfilter.ui.util
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.material3.ShapeDefaults
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 
-private val CornerLarge = 24.dp
-private val CornerSmall = 4.dp
+private val Outer = ShapeDefaults.ExtraLarge
+private val Inner = ShapeDefaults.Small
 
 fun shapeForPosition(
     count: Int,
     index: Int,
-): RoundedCornerShape =
+): CornerBasedShape =
     when {
-        count == 1 -> {
-            RoundedCornerShape(CornerLarge)
-        }
-
-        index == 0 -> {
-            RoundedCornerShape(
-                topStart = CornerLarge,
-                topEnd = CornerLarge,
-                bottomEnd = CornerSmall,
-                bottomStart = CornerSmall,
-            )
-        }
-
-        index == count - 1 -> {
-            RoundedCornerShape(
-                topStart = CornerSmall,
-                topEnd = CornerSmall,
-                bottomEnd = CornerLarge,
-                bottomStart = CornerLarge,
-            )
-        }
-
-        else -> {
-            RoundedCornerShape(CornerSmall)
-        }
+        count == 1 -> Outer
+        index == 0 -> Outer.copy(bottomEnd = Inner.bottomEnd, bottomStart = Inner.bottomStart)
+        index == count - 1 -> Outer.copy(topStart = Inner.topStart, topEnd = Inner.topEnd)
+        else -> Inner
     }
 
 internal fun Modifier.preferenceCard(
     shape: Shape,
     surface: Color,
-): Modifier = this.padding(horizontal = Spacing.sm).background(color = surface, shape = shape).clip(shape)
+): Modifier = this.padding(horizontal = Spacing.md).background(color = surface, shape = shape).clip(shape)

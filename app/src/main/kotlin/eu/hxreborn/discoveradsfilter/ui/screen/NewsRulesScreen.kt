@@ -284,7 +284,7 @@ fun NewsRulesScreen(
         },
         contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
     ) { innerPadding ->
-        val surface = MaterialTheme.colorScheme.surfaceVariant
+        val surface = MaterialTheme.colorScheme.surfaceContainer
         LazyColumn(
             state = listState,
             modifier =
