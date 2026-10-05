@@ -14,4 +14,5 @@ object IconSize {
     val xs = 14.dp
     val sm = 16.dp
     val lg = 32.dp
+    val badge = 56.dp
 }
