@@ -37,6 +37,7 @@ Starter filters you can import from News filters, menu, Import:
 
 - [clickbait-en.json](presets/clickbait-en.json), general English clickbait, the same set as the in-app presets but switched on
 - [clickbait-es.json](presets/clickbait-es.json), general Spanish clickbait
+- [clickbait-de.json](presets/clickbait-de.json), general German clickbait, contributed by [@hanschke](https://github.com/hanschke)
 
 Clickbait looks different in every language. If yours is missing, open a PR with a pack and I'll include it.
 

@@ -1,0 +1,128 @@
+[
+  {
+    "id": "pack-de-ai-hype",
+    "label": "KI hat X getötet",
+    "pattern": "(chatgpt|claude|gemini|copilot|openai)\\b.{0,40}\\b(zerstört|tötet|ersetzt|ist tot|am ende)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-declared-dead",
+    "label": "X ist tot",
+    "pattern": "\\b(java|python|seo|e-?mail|passw[öo]rter|passwort|das web|das internet|blogging|google suche|google) ((ist|sind) tot|((ist|sind) )?am ende)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-listicle",
+    "label": "Listen-Artikel (Listicles)",
+    "pattern": "^\\d+ (dinge|gründe|wege|zeichen|anzeichen|fakten|tricks|gewohnheiten|lebensmittel|tipps|fehler)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-experts-say",
+    "label": "Experten sagen",
+    "pattern": "\\b(experten|wissenschaftler|ärzte|forscher|ernährungsberater)\\b.{0,30}\\b(sagen|enthüllen|warnen|einig|geschockt|sprachlos|verblüfft)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-curiosity-gap",
+    "label": "Neugierlücke (Curiosity gap)",
+    "pattern": "(was dann geschah|was dann passierte|der grund wird dich überraschen|und es ist nicht,? was du denkst|niemand ahnte|(du wirst|sie werden) (es )?nicht glauben)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-farewell",
+    "label": "Abschied von X",
+    "pattern": "^(auf wiedersehen|abschied von|sag(t)? tschüss)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-official-claim",
+    "label": "Offiziell bestätigt",
+    "pattern": "\\b(es ist offiziell|offiziell bestätigt|von der (eu|regierung) bestätigt)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-secret-trick",
+    "label": "Geheimer Trick",
+    "pattern": "\\b(geheime[nrs]?|versteckte[nrs]?) (funktion|feature|trick|einstellung|grund|menü)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-doing-it-wrong",
+    "label": "Immer falsch gemacht",
+    "pattern": "\\b(hast du|haben sie).{0,25}(immer )?falsch gemacht\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-urgent-prefix",
+    "label": "Dringlichkeits-Präfixe",
+    "pattern": "^(warnung|achtung|eilmeldung|dringend|alarm)[:!]",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-money-bait",
+    "label": "Geld im Titel",
+    "pattern": "([€] ?\\d{2,}|\\b\\d{2,} ?€|\\b(\\d{2,}|tausende) (euro|dollar)\\b)",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-tabloid",
+    "label": "Boulevard-Drama",
+    "pattern": "\\b(bricht (sein|ihr) schweigen|packt aus|rechnet ab|sorgt für (wirbel|aufsehen)|fans sind sich sicher)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-viral-bait",
+    "label": "Geht viral",
+    "pattern": "\\b(geht viral|bricht das internet|macht sprachlos|das netz lacht|rasten aus|drehen durch)\\b",
+    "action": "Block",
+    "scope": "Headline",
+    "match": "Regex",
+    "enabled": true
+  },
+  {
+    "id": "pack-de-hype-words",
+    "label": "Hype-Wörter",
+    "pattern": "\\b(gamechanger|schockierende wahrheit|dieser (eine )?trick|macht fassungslos|ändert alles)\\b",
+    "action": "Block",
+    "scope": "Any",
+    "match": "Regex",
+    "enabled": true
+  }
+]

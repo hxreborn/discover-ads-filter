@@ -48,4 +48,29 @@ class PresetPacksTest {
             )
         }
     }
+
+    @Test
+    fun `german pack decodes and compiles`() {
+        val rules = pack("clickbait-de.json")
+        assertTrue(rules.isNotEmpty())
+        assertAllUsable(rules)
+    }
+
+    @Test
+    fun `german pack matches common headline shapes`() {
+        val compiled = NewsFilter.compile(pack("clickbait-de.json"))
+        val cards =
+            listOf(
+                CardText("7 Dinge, die Sie nie tun sollten", "chip.de"),
+                CardText("Und es ist nicht, was du denkst", "t-online.de"),
+                CardText("Mit diesem geheimen Trick sparen Sie Strom", "focus.de"),
+                CardText("Für 50 € bekommen Sie das", "bild.de"),
+            )
+        cards.forEach {
+            assertTrue(
+                "expected hidden: ${it.headline}",
+                NewsFilter.shouldHide(compiled, it),
+            )
+        }
+    }
 }
