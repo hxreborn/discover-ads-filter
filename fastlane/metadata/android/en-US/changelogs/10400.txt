@@ -1,0 +1,4 @@
+Material 3 Expressive look with Google Sans Flex type, flexible top bars and roomier cards
+Shaped status badges and wavy scan progress on the dashboard and in Diagnostics
+German clickbait filter pack on GitHub, thanks to @hanschke
+DexKit updated to 2.3.0
