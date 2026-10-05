@@ -7,24 +7,25 @@ import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,7 +39,9 @@ import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.state.ScanStep
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyPhase
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
+import eu.hxreborn.discoveradsfilter.ui.theme.IconSize
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
+import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -50,51 +53,57 @@ internal fun ScanProgressCard(
     showRawValues: Boolean = false,
 ) {
     val running = phase == VerifyPhase.Running
-    val scheme = MaterialTheme.colorScheme
     val completed = progress.size
     val done = !running && completed > 0
     val totalSteps = VerifyUiState.TOTAL_TARGETS
+    val showActive = running && completed < totalSteps
+    val segmentCount = 1 + completed + if (showActive) 1 else 0
 
-    Surface(
+    Column(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
-        color = scheme.surfaceContainerLow,
+        verticalArrangement = Arrangement.spacedBy(Spacing.segmentGap),
     ) {
-        Column(
-            modifier = Modifier.padding(Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md),
-        ) {
+        Segment(count = segmentCount, index = 0) {
             Header(
                 done = done,
+                running = running,
                 completed = completed,
                 totalSteps = totalSteps,
                 durationMs = durationMs,
             )
-
-            Surface(
-                shape = RoundedCornerShape(16.dp),
-                color = scheme.surfaceContainer,
+        }
+        progress.forEachIndexed { index, step ->
+            val state = remember(step) { MutableTransitionState(false).apply { targetState = true } }
+            AnimatedVisibility(
+                visibleState = state,
+                enter = fadeIn() + slideInVertically { it / 2 },
             ) {
-                Column(modifier = Modifier.padding(horizontal = Spacing.md, vertical = 8.dp)) {
-                    progress.forEachIndexed { index, step ->
-                        StepListItem(
-                            step = step,
-                            showRawValues = showRawValues,
-                            isLast = index == progress.lastIndex,
-                            running = running,
-                            completed = completed,
-                            totalSteps = totalSteps,
-                        )
-                    }
-
-                    if (running && completed < totalSteps) {
-                        ActiveStepRow(
-                            label = scanStepLabel(stepIndex = completed),
-                            paddingValues = PaddingValues(vertical = 12.dp),
-                        )
-                    }
+                Segment(count = segmentCount, index = index + 1) {
+                    StepRow(step = step, showRawValue = showRawValues)
                 }
             }
+        }
+        if (showActive) {
+            Segment(count = segmentCount, index = segmentCount - 1) {
+                ActiveStepRow(label = scanStepLabel(stepIndex = completed))
+            }
+        }
+    }
+}
+
+@Composable
+private fun Segment(
+    count: Int,
+    index: Int,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = shapeForPosition(count, index),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Box(modifier = Modifier.padding(Spacing.md)) {
+            content()
         }
     }
 }
@@ -116,66 +125,53 @@ private fun scanStepLabel(stepIndex: Int): String =
 @Composable
 private fun Header(
     done: Boolean,
+    running: Boolean,
     completed: Int,
     totalSteps: Int,
     durationMs: Long,
 ) {
     val scheme = MaterialTheme.colorScheme
-    val surfaceColor = if (done) scheme.secondaryContainer else scheme.primaryContainer
-    val surfaceContentColor = if (done) scheme.onSecondaryContainer else scheme.onPrimaryContainer
     val titleText = if (done) stringResource(R.string.scan_complete) else stringResource(R.string.scan_verifying)
     val subtitleText = if (done) "%.1fs".format(durationMs / 1000f) else stringResource(R.string.scan_progress, completed, totalSteps)
     val subtitleFontFamily = if (done) FontFamily.Monospace else FontFamily.Default
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Surface(shape = CircleShape, color = surfaceColor, contentColor = surfaceContentColor) {
-            Row(modifier = Modifier.padding(10.dp)) {
-                StatusIcon(done)
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (done) {
+                SoftBlobBadge(
+                    size = IconSize.lg,
+                    shape = MaterialShapes.Sunny.toShape(),
+                    containerColor = scheme.primary,
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = scheme.onPrimary,
+                        modifier = Modifier.size(IconSize.sm),
+                    )
+                }
+            } else {
+                LoadingIndicator(modifier = Modifier.size(IconSize.lg))
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(text = titleText, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = subtitleText,
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = subtitleFontFamily),
+                    color = scheme.onSurfaceVariant,
+                )
             }
         }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            Text(text = titleText, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(
-                text = subtitleText,
-                style = MaterialTheme.typography.labelSmall.copy(fontFamily = subtitleFontFamily),
-                color = scheme.onSurfaceVariant,
+        if (running) {
+            LinearWavyProgressIndicator(
+                progress = { completed.toFloat() / totalSteps },
+                modifier = Modifier.fillMaxWidth(),
             )
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun StatusIcon(done: Boolean) {
-    if (done) {
-        Icon(imageVector = Icons.Rounded.CheckCircle, contentDescription = null, modifier = Modifier.size(20.dp))
-    } else {
-        LoadingIndicator(modifier = Modifier.size(20.dp))
-    }
-}
-
-@Composable
-private fun StepListItem(
-    step: ScanStep,
-    showRawValues: Boolean,
-    isLast: Boolean,
-    running: Boolean,
-    completed: Int,
-    totalSteps: Int,
-) {
-    val state = remember(step) { MutableTransitionState(false).apply { targetState = true } }
-    AnimatedVisibility(
-        visibleState = state,
-        enter = fadeIn() + slideInVertically { it / 2 },
-    ) {
-        StepRow(step = step, showRawValue = showRawValues, paddingValues = PaddingValues(vertical = 12.dp))
-    }
-    if (!isLast || (running && completed < totalSteps)) {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
     }
 }
 
@@ -183,11 +179,10 @@ private fun StepListItem(
 private fun StepRow(
     step: ScanStep,
     showRawValue: Boolean,
-    paddingValues: PaddingValues,
 ) {
     val scheme = MaterialTheme.colorScheme
     Row(
-        modifier = Modifier.fillMaxWidth().padding(paddingValues),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
@@ -214,13 +209,10 @@ private fun StepRow(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun ActiveStepRow(
-    label: String,
-    paddingValues: PaddingValues,
-) {
+private fun ActiveStepRow(label: String) {
     val scheme = MaterialTheme.colorScheme
     Row(
-        modifier = Modifier.fillMaxWidth().padding(paddingValues),
+        modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
