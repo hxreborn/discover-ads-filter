@@ -63,7 +63,12 @@ class HomeViewModel(
     private val shareStripSourceLineFlow = MutableStateFlow(false)
     private val shareCustomLineFlow = MutableStateFlow<String?>(null)
     private val newsRulesFlow = MutableStateFlow<List<NewsRule>>(emptyList())
-    private val launcherIconHiddenFlow = MutableStateFlow(false)
+    private val launcherIconHiddenFlow =
+        MutableStateFlow(
+            runCatching { !isLauncherIconVisible(app) }
+                .onFailure { Log.w(TAG, "launcher icon state read failed", it) }
+                .getOrDefault(false),
+        )
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
 
@@ -206,8 +211,6 @@ class HomeViewModel(
     init {
         appInstance.addServiceListener(serviceListener)
         viewModelScope.launch(ioDispatcher) {
-            runCatching { launcherIconHiddenFlow.value = !isLauncherIconVisible(app) }
-                .onFailure { Log.w(TAG, "launcher icon state read failed", it) }
             runCatching { initialize() }.onFailure { t ->
                 Log.e(TAG, "initialization failed", t)
                 verifyFlow.update { it ?: VerifyUiState(phase = VerifyPhase.Idle) }
