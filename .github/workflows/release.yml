@@ -16,6 +16,18 @@ jobs:
       contents: write
 
     steps:
+      - name: Check release secrets
+        env:
+          XPOSED_REPO_PAT: ${{ secrets.XPOSED_REPO_PAT }}
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+        run: |
+          for name in XPOSED_REPO_PAT RELEASE_KEYSTORE; do
+            if [ -z "${!name}" ]; then
+              echo "::error::secret $name is not set"
+              exit 1
+            fi
+          done
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
@@ -86,6 +98,17 @@ jobs:
           body: ${{ steps.changelog.outputs.content || '' }}
           files: |
             app/build/outputs/apk/release/*.apk
+
+      - name: Tag mirror release on a fresh commit
+        env:
+          GH_TOKEN: ${{ secrets.XPOSED_REPO_PAT }}
+          REPO: Xposed-Modules-Repo/eu.hxreborn.discoveradsfilter
+          TAG: ${{ steps.mirror_tag.outputs.mirror_tag }}
+        run: |
+          sha=$(jq -n --arg tag "$TAG" '{message: $tag, tree: "4b825dc642cb6eb9a060e54bf8d69288fbee4904", parents: []}' \
+            | gh api "repos/$REPO/git/commits" --input - --jq .sha)
+          gh api "repos/$REPO/git/refs" -f ref="refs/tags/$TAG" -f sha="$sha" >/dev/null \
+            || gh api -X PATCH "repos/$REPO/git/refs/tags/$TAG" -f sha="$sha" -F force=true >/dev/null
 
       - name: Mirror to Xposed-Modules-Repo
         uses: softprops/action-gh-release@v3

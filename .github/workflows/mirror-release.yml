@@ -68,21 +68,19 @@ jobs:
           echo "Found $apk_count release APK(s)"
           [ "$apk_count" -gt 0 ] || { echo "::error::No release APK found"; exit 1; }
 
-      - name: Tag the mirror head
+      - name: Tag mirror release on a fresh commit
         env:
           GH_TOKEN: ${{ secrets.XPOSED_REPO_PAT }}
-          MIRROR_TAG: ${{ steps.mirror_tag.outputs.mirror_tag }}
+          REPO: Xposed-Modules-Repo/eu.hxreborn.discoveradsfilter
+          TAG: ${{ steps.mirror_tag.outputs.mirror_tag }}
         run: |
-          git clone --depth 1 "https://x-access-token:${GH_TOKEN}@github.com/Xposed-Modules-Repo/eu.hxreborn.discoveradsfilter.git" mirror
-          cd mirror
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git ls-remote --exit-code --tags origin "refs/tags/$MIRROR_TAG" >/dev/null; then
-            echo "Mirror tag $MIRROR_TAG already exists"
+          if gh api "repos/$REPO/git/refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Mirror tag $TAG already exists"
             exit 0
           fi
-          git tag -a "$MIRROR_TAG" -m "$MIRROR_TAG"
-          git push origin "$MIRROR_TAG"
+          sha=$(jq -n --arg tag "$TAG" '{message: $tag, tree: "4b825dc642cb6eb9a060e54bf8d69288fbee4904", parents: []}' \
+            | gh api "repos/$REPO/git/commits" --input - --jq .sha)
+          gh api "repos/$REPO/git/refs" -f ref="refs/tags/$TAG" -f sha="$sha" >/dev/null
 
       - name: Create mirror release
         uses: softprops/action-gh-release@v3
