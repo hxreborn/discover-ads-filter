@@ -42,7 +42,7 @@ class DiscoverAdsFilterModule : XposedModule() {
         val prefs = getRemotePreferences(SettingsPrefs.GROUP)
         loadHookPrefs(prefs)
 
-        runCatching {
+        runCatchingHook {
             val attach =
                 Application::class.java.getDeclaredMethod("attach", Context::class.java)
             attach.isAccessible = true
@@ -73,7 +73,7 @@ private class BootstrapHooker(
         if (installed) return null
         installed = true
 
-        runCatching {
+        runCatchingHook {
             val ctx = chain.args[0] as Context
             val versionCode =
                 ctx.packageManager
@@ -127,14 +127,14 @@ private class BootstrapHooker(
             }
 
             val streamHookInstalled =
-                runCatching {
+                runCatchingHook {
                     StreamSliceFilterHook.install(loader, prefs, targets, proc)
                 }.getOrElse {
                     Logger.log(Log.ERROR, "failed: install StreamSliceFilterHook", it)
                     false
                 }
             val shareHookInstalled =
-                runCatching {
+                runCatchingHook {
                     ShareLinkHook.install(loader, targets, proc)
                 }.getOrElse {
                     Logger.log(Log.ERROR, "failed: install ShareLinkHook", it)
@@ -162,3 +162,12 @@ private class BootstrapHooker(
         return null
     }
 }
+
+private inline fun <T> runCatchingHook(block: () -> T): Result<T> =
+    try {
+        Result.success(block())
+    } catch (e: Exception) {
+        Result.failure(e)
+    } catch (e: LinkageError) {
+        Result.failure(e)
+    }
