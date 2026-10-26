@@ -35,15 +35,15 @@ import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -63,12 +63,17 @@ class HomeViewModel(
     private val shareStripSourceLineFlow = MutableStateFlow(false)
     private val shareCustomLineFlow = MutableStateFlow<String?>(null)
     private val newsRulesFlow = MutableStateFlow<List<NewsRule>>(emptyList())
-    private val launcherIconHiddenFlow = MutableStateFlow(false)
+    private val launcherIconHiddenFlow =
+        MutableStateFlow(
+            runCatching { !isLauncherIconVisible(app) }
+                .onFailure { Log.w(TAG, "launcher icon state read failed", it) }
+                .getOrDefault(false),
+        )
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
 
-    private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    val messages: SharedFlow<String> = _messages.asSharedFlow()
+    private val _messages = Channel<String>(Channel.BUFFERED)
+    val messages: Flow<String> = _messages.receiveAsFlow()
 
     private val serviceListener =
         object : XposedServiceHelper.OnServiceListener {
@@ -167,7 +172,7 @@ class HomeViewModel(
                             Log.w(TAG, "auto-recovery off, root denied")
                             autoRecoveryFlow.value = false
                             repo.save(SettingsPrefs.autoRecoveryOnUpdate, false)
-                            _messages.tryEmit(app.getString(R.string.auto_recovery_needs_root))
+                            _messages.trySend(app.getString(R.string.auto_recovery_needs_root))
                         }
                     }
                 }
@@ -206,8 +211,6 @@ class HomeViewModel(
     init {
         appInstance.addServiceListener(serviceListener)
         viewModelScope.launch(ioDispatcher) {
-            runCatching { launcherIconHiddenFlow.value = !isLauncherIconVisible(app) }
-                .onFailure { Log.w(TAG, "launcher icon state read failed", it) }
             runCatching { initialize() }.onFailure { t ->
                 Log.e(TAG, "initialization failed", t)
                 verifyFlow.update { it ?: VerifyUiState(phase = VerifyPhase.Idle) }
@@ -248,17 +251,17 @@ class HomeViewModel(
                 }.getOrNull()
             val imported = NewsRules.decode(raw)
             if (imported.isEmpty()) {
-                _messages.tryEmit(app.getString(R.string.news_rules_import_failed))
+                _messages.trySend(app.getString(R.string.news_rules_import_failed))
                 return@launch
             }
             val result = NewsRules.merge(newsRulesFlow.value, imported)
             val changed = result.added + result.updated
             if (changed == 0) {
-                _messages.tryEmit(app.getString(R.string.news_rules_import_nothing_new))
+                _messages.trySend(app.getString(R.string.news_rules_import_nothing_new))
                 return@launch
             }
             persistNewsRules(result.rules)
-            _messages.tryEmit(
+            _messages.trySend(
                 app.resources.getQuantityString(R.plurals.news_rules_imported_count, changed, changed),
             )
         }
@@ -272,7 +275,7 @@ class HomeViewModel(
                         it.write(NewsRules.encode(newsRulesFlow.value))
                     } ?: error("no output stream")
                 }.isSuccess
-            _messages.tryEmit(
+            _messages.trySend(
                 app.getString(
                     if (written) R.string.news_rules_exported else R.string.news_rules_export_failed,
                 ),
@@ -292,7 +295,7 @@ class HomeViewModel(
                     Log.w(TAG, "force stop failed", it)
                     null
                 } != null
-            _messages.tryEmit(
+            _messages.trySend(
                 app.getString(
                     if (stopped) R.string.restart_agsa_done else R.string.restart_agsa_failed,
                 ),
