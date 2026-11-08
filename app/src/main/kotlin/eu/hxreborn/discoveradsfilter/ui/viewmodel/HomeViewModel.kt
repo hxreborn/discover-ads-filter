@@ -44,9 +44,12 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 class HomeViewModel(
@@ -67,6 +70,7 @@ class HomeViewModel(
     private val launcherIconHiddenFlow = MutableStateFlow(false)
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
+    private val loadingIndicatorUpdateMutex = Mutex()
 
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val messages: SharedFlow<String> = _messages.asSharedFlow()
@@ -176,11 +180,7 @@ class HomeViewModel(
                     }
                 }
             },
-            onExpressiveLoadingIndicatorChange = { value ->
-                repo.save(SettingsPrefs.expressiveLoadingIndicator, value)
-                expressiveLoadingIndicatorFlow.value = value
-                if (value && repo.readLastScan()?.targets?.refreshProgressMethod == null) verify()
-            },
+            onExpressiveLoadingIndicatorChange = ::setExpressiveLoadingIndicator,
             onShareOriginalLinkChange = { value ->
                 repo.save(SettingsPrefs.shareOriginalLink, value)
                 shareOriginalLinkFlow.value = value
@@ -296,17 +296,38 @@ class HomeViewModel(
 
     private fun restartGoogleApp() {
         viewModelScope.launch(ioDispatcher) {
-            val stopped =
-                RootShell.forceStop(DiscoverAdsFilterModule.AGSA_PKG).getOrElse {
-                    Log.w(TAG, "force stop failed", it)
-                    null
-                } != null
-            _messages.tryEmit(
-                app.getString(
-                    if (stopped) R.string.restart_agsa_done else R.string.restart_agsa_failed,
-                ),
-            )
+            closeGoogleApp()
         }
+    }
+
+    private fun setExpressiveLoadingIndicator(value: Boolean) {
+        if (expressiveLoadingIndicatorFlow.value == value) return
+        expressiveLoadingIndicatorFlow.value = value
+        viewModelScope.launch {
+            loadingIndicatorUpdateMutex.withLock {
+                withContext(ioDispatcher) {
+                    repo.save(SettingsPrefs.expressiveLoadingIndicator, value, commit = true)
+                    if (value && repo.readLastScan()?.targets?.refreshProgressMethod == null) {
+                        if (transitionToManualScan()) runScanAndUpdate()
+                        verifyFlow.first { it?.phase != VerifyPhase.Running }
+                    }
+                    closeGoogleApp()
+                }
+            }
+        }
+    }
+
+    private suspend fun closeGoogleApp() {
+        val stopped =
+            RootShell.forceStop(DiscoverAdsFilterModule.AGSA_PKG).getOrElse {
+                Log.w(TAG, "force stop failed", it)
+                null
+            } != null
+        _messages.tryEmit(
+            app.getString(
+                if (stopped) R.string.restart_agsa_done else R.string.restart_agsa_failed,
+            ),
+        )
     }
 
     private suspend fun observeScanCache() {

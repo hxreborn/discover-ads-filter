@@ -26,12 +26,9 @@ class PrefsRepository(
     fun <T> save(
         spec: PrefSpec<T>,
         value: T,
+        commit: Boolean = false,
     ) {
-        local.edit { spec.write(this, value) }
-        remoteProvider()?.edit {
-            spec.write(this, value)
-            SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
-        }
+        edit(commit = commit) { spec.write(this, value) }
     }
 
     val state: Flow<AppPrefs> =
@@ -59,7 +56,7 @@ class PrefsRepository(
                         resolvedKey,
                     )
             }
-        edit {
+        edit(commit = true) {
             putString(resolvedKey, encoded)
             keysToPrune.forEach { remove(it) }
             SettingsPrefs.fingerprintCurrent.write(this, encoded)
@@ -153,9 +150,12 @@ class PrefsRepository(
             verbose = read(SettingsPrefs.verbose),
         )
 
-    private inline fun edit(crossinline block: SharedPreferences.Editor.() -> Unit) {
-        local.edit { block() }
-        remoteProvider()?.edit {
+    private inline fun edit(
+        commit: Boolean = false,
+        crossinline block: SharedPreferences.Editor.() -> Unit,
+    ) {
+        local.edit(commit = commit) { block() }
+        remoteProvider()?.edit(commit = commit) {
             block()
             SettingsPrefs.lastRemoteWrite.write(this, System.currentTimeMillis())
         }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pref_expressive_loading_indicator_title">M3E loading indicator</string>
-    <string name="pref_expressive_loading_indicator_summary">Use Material 3 Expressive shapes when refreshing the Google app. Restart Google to apply</string>
+    <string name="pref_expressive_loading_indicator_summary">Material 3 Expressive shapes when refreshing. Closes Google to apply</string>
     <string name="app_name">Discover Feed Filter</string>
     <string name="app_description">Removes ads, sponsored cards and clickbait from Google Discover.</string>
 
