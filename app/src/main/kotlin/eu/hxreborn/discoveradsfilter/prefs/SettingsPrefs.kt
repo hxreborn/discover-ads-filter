@@ -7,6 +7,8 @@ object SettingsPrefs {
 
     val filterAds = boolPref("filter_ads", true)
 
+    val expressiveLoadingIndicator = boolPref("expressive_loading_indicator", false)
+
     val autoRecoveryOnUpdate = boolPref("auto_recovery_on_update", false)
 
     val shareOriginalLink = boolPref("share_original_link", false)
@@ -30,6 +32,7 @@ object SettingsPrefs {
         listOf(
             verbose,
             filterAds,
+            expressiveLoadingIndicator,
             autoRecoveryOnUpdate,
             shareOriginalLink,
             shareStripSourceLine,

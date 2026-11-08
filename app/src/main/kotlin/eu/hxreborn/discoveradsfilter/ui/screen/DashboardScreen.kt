@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.PhonelinkErase
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -162,7 +163,7 @@ private fun LazyListScope.dashboardReadyItems(
         key = "filter_ads",
         value = ready.filterAds,
         onValueChange = actions.onFilterAdsChange,
-        shapeCount = 2,
+        shapeCount = 3,
         shapeIndex = 0,
         surface = surface,
         icon = Icons.Outlined.Block,
@@ -174,7 +175,7 @@ private fun LazyListScope.dashboardReadyItems(
 
     preference(
         key = "news_rules",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(2, 1), surface = surface),
+        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
         icon = {
             Icon(imageVector = Icons.Outlined.FilterAlt, contentDescription = null)
         },
@@ -206,6 +207,20 @@ private fun LazyListScope.dashboardReadyItems(
             )
         },
         onClick = { onNavigate(Destination.NewsRules) },
+    )
+
+    item(key = "spacer_rules_indicator", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
+
+    switchRow(
+        key = "expressive_loading_indicator",
+        value = ready.expressiveLoadingIndicator,
+        onValueChange = actions.onExpressiveLoadingIndicatorChange,
+        shapeCount = 3,
+        shapeIndex = 2,
+        surface = surface,
+        icon = Icons.Outlined.Refresh,
+        titleRes = R.string.pref_expressive_loading_indicator_title,
+        summaryRes = R.string.pref_expressive_loading_indicator_summary,
     )
 
     preferenceCategory(
@@ -419,6 +434,7 @@ private val NoOpActions =
     HomeActions(
         onVerboseChange = {},
         onFilterAdsChange = {},
+        onExpressiveLoadingIndicatorChange = {},
         onAutoRecoveryChange = {},
         onShareOriginalLinkChange = {},
         onShareStripSourceLineChange = {},

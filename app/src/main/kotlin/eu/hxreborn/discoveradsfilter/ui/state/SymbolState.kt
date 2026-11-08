@@ -92,6 +92,11 @@ fun VerifyUiState.toSymbolSections(): List<SymbolSection> {
                             SymbolStatus.NotFound
                         },
                 ),
+                SymbolRow(
+                    name = "Refresh indicator",
+                    value = targets?.refreshProgressMethod?.toString(),
+                    status = targets?.refreshProgressMethod?.className.toSymbolStatus(),
+                ),
             ),
         ),
     )

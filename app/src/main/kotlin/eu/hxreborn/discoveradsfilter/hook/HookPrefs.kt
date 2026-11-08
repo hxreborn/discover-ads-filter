@@ -15,6 +15,9 @@ internal var verbose: Boolean = false
 internal var filterAds: Boolean = true
 
 @Volatile
+internal var expressiveLoadingIndicator: Boolean = false
+
+@Volatile
 internal var shareOriginalLink: Boolean = false
 
 @Volatile
@@ -31,6 +34,7 @@ private var prefListener: SharedPreferences.OnSharedPreferenceChangeListener? = 
 internal fun loadHookPrefs(prefs: SharedPreferences) {
     verbose = SettingsPrefs.verbose.read(prefs)
     filterAds = SettingsPrefs.filterAds.read(prefs)
+    expressiveLoadingIndicator = SettingsPrefs.expressiveLoadingIndicator.read(prefs)
     shareOriginalLink = SettingsPrefs.shareOriginalLink.read(prefs)
     shareStripSourceLine = SettingsPrefs.shareStripSourceLine.read(prefs)
     shareCustomLine = SettingsPrefs.shareCustomLine.read(prefs).orEmpty()
@@ -55,6 +59,11 @@ internal fun loadHookPrefs(prefs: SharedPreferences) {
 
                     SettingsPrefs.shareOriginalLink.key -> {
                         shareOriginalLink = SettingsPrefs.shareOriginalLink.read(src)
+                    }
+
+                    SettingsPrefs.expressiveLoadingIndicator.key -> {
+                        expressiveLoadingIndicator =
+                            SettingsPrefs.expressiveLoadingIndicator.read(src)
                     }
 
                     SettingsPrefs.shareStripSourceLine.key -> {

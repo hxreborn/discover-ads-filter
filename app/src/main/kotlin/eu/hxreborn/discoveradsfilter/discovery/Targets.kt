@@ -17,6 +17,7 @@ sealed interface ResolvedTargets {
         val cardProcessorMethods: List<MethodRef> = emptyList(),
         val streamRenderableListMethod: MethodRef? = null,
         val shareIntentMethod: MethodRef? = null,
+        val refreshProgressMethod: MethodRef? = null,
     ) : ResolvedTargets {
         override fun summary(): String =
             buildString {

@@ -11,6 +11,7 @@ sealed interface HomeUiState {
     data class Ready(
         val verbose: Boolean = false,
         val filterAds: Boolean = true,
+        val expressiveLoadingIndicator: Boolean = false,
         val autoRecoveryOnUpdate: Boolean = false,
         val shareOriginalLink: Boolean = false,
         val shareStripSourceLine: Boolean = false,
@@ -25,6 +26,7 @@ sealed interface HomeUiState {
 data class HomeActions(
     val onVerboseChange: (Boolean) -> Unit,
     val onFilterAdsChange: (Boolean) -> Unit,
+    val onExpressiveLoadingIndicatorChange: (Boolean) -> Unit,
     val onAutoRecoveryChange: (Boolean) -> Unit,
     val onShareOriginalLinkChange: (Boolean) -> Unit,
     val onShareStripSourceLineChange: (Boolean) -> Unit,

@@ -9,6 +9,7 @@ import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.hook.FeedContentStore
 import eu.hxreborn.discoveradsfilter.hook.HookRecovery
 import eu.hxreborn.discoveradsfilter.hook.HookToast
+import eu.hxreborn.discoveradsfilter.hook.LoadingIndicatorHook
 import eu.hxreborn.discoveradsfilter.hook.ShareLinkHook
 import eu.hxreborn.discoveradsfilter.hook.StreamSliceFilterHook
 import eu.hxreborn.discoveradsfilter.hook.loadHookPrefs
@@ -42,13 +43,17 @@ class DiscoverAdsFilterModule : XposedModule() {
         val prefs = getRemotePreferences(SettingsPrefs.GROUP)
         loadHookPrefs(prefs)
 
-        runCatching {
+        try {
             val attach =
                 Application::class.java.getDeclaredMethod("attach", Context::class.java)
             attach.isAccessible = true
             deoptimize(attach)
             hook(attach).intercept(BootstrapHooker(param.classLoader, prefs, proc))
-        }.onFailure { Logger.log(Log.ERROR, "failed: bootstrap hook", it) }
+        } catch (e: Exception) {
+            Logger.log(Log.ERROR, "failed: bootstrap hook", e)
+        } catch (e: LinkageError) {
+            Logger.log(Log.ERROR, "failed: bootstrap hook", e)
+        }
     }
 
     companion object {
@@ -73,7 +78,7 @@ private class BootstrapHooker(
         if (installed) return null
         installed = true
 
-        runCatching {
+        try {
             val ctx = chain.args[0] as Context
             val versionCode =
                 ctx.packageManager
@@ -127,30 +132,34 @@ private class BootstrapHooker(
             }
 
             val streamHookInstalled =
-                runCatching {
+                installHook("StreamSliceFilterHook") {
                     StreamSliceFilterHook.install(loader, prefs, targets, proc)
-                }.getOrElse {
-                    Logger.log(Log.ERROR, "failed: install StreamSliceFilterHook", it)
-                    false
                 }
             val shareHookInstalled =
-                runCatching {
+                installHook("ShareLinkHook") {
                     ShareLinkHook.install(loader, targets, proc)
-                }.getOrElse {
-                    Logger.log(Log.ERROR, "failed: install ShareLinkHook", it)
-                    false
                 }
-            val installed = listOf(streamHookInstalled, shareHookInstalled).count { it }
+            val loadingHookInstalled =
+                installHook("LoadingIndicatorHook") {
+                    LoadingIndicatorHook.install(loader, targets, ctx)
+                }
+            val installed =
+                listOf(
+                    streamHookInstalled,
+                    shareHookInstalled,
+                    loadingHookInstalled,
+                ).count { it }
             val failed =
                 buildList {
                     if (!streamHookInstalled) add("StreamSliceFilterHook")
                     if (!shareHookInstalled) add("ShareLinkHook")
+                    if (!loadingHookInstalled) add("LoadingIndicatorHook")
                 }
             val status =
                 if (failed.isEmpty()) {
-                    "$installed/2"
+                    "$installed/3"
                 } else {
-                    "$installed/2 failed:${failed.joinToString(
+                    "$installed/3 failed:${failed.joinToString(
                         ",",
                     )}"
                 }
@@ -158,7 +167,25 @@ private class BootstrapHooker(
                 Log.INFO,
                 "installed proc=$proc agsaV=$versionCode hooks=$status ${targets.summary()}",
             )
-        }.onFailure { Logger.log(Log.ERROR, "failed: deferred install", it) }
+        } catch (e: Exception) {
+            Logger.log(Log.ERROR, "failed: deferred install", e)
+        } catch (e: LinkageError) {
+            Logger.log(Log.ERROR, "failed: deferred install", e)
+        }
         return null
     }
 }
+
+private inline fun installHook(
+    name: String,
+    install: () -> Boolean,
+): Boolean =
+    try {
+        install()
+    } catch (e: Exception) {
+        Logger.log(Log.ERROR, "failed: install $name", e)
+        false
+    } catch (e: LinkageError) {
+        Logger.log(Log.ERROR, "failed: install $name", e)
+        false
+    }

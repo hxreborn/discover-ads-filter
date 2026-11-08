@@ -92,6 +92,9 @@ object DexKitResolver {
             }
         onStep?.invoke("Share intent", shareValue)
 
+        val refreshProgressMethod = runCatching { findRefreshProgressMethod(bridge) }.getOrNull()
+        onStep?.invoke("Refresh indicator", refreshProgressMethod?.toString())
+
         if (processors.isEmpty()) {
             return ResolvedTargets.Missing(
                 "found proto classes and fields but no card-processor methods reading $adMetaField",
@@ -107,6 +110,7 @@ object DexKitResolver {
             cardProcessorMethods = processors,
             streamRenderableListMethod = streamRenderableListMethod,
             shareIntentMethod = shareIntentMethod,
+            refreshProgressMethod = refreshProgressMethod,
         )
     }
 
@@ -350,6 +354,30 @@ object DexKitResolver {
             }.filterNot { it.returnTypeName in NON_PROTO_RETURNS }
             .map(::toMethodRef)
             .singleOrNull()
+
+    private fun findRefreshProgressMethod(bridge: DexKitBridge): MethodRef? {
+        val layout =
+            bridge.getClassData("androidx.swiperefreshlayout.widget.SwipeRefreshLayout")
+                ?: return null
+        val drawable =
+            layout.fields.map { it.type }.singleOrNull {
+                it.superClass?.name == "android.graphics.drawable.Drawable" &&
+                    it.interfaces.any { type ->
+                        type.name == "android.graphics.drawable.Animatable"
+                    }
+            } ?: return null
+        return bridge
+            .findMethod {
+                matcher {
+                    declaredClass(drawable.name)
+                    paramTypes("float")
+                    returnType("void")
+                    usingNumbers(0f)
+                    addInvoke { name("invalidateSelf") }
+                }
+            }.singleOrNull()
+            ?.let(::toMethodRef)
+    }
 
     private val FieldData.isStatic: Boolean
         get() =

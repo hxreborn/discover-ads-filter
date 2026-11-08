@@ -58,6 +58,7 @@ class HomeViewModel(
 
     private val verboseFlow = MutableStateFlow(false)
     private val filterAdsFlow = MutableStateFlow(true)
+    private val expressiveLoadingIndicatorFlow = MutableStateFlow(false)
     private val autoRecoveryFlow = MutableStateFlow(false)
     private val shareOriginalLinkFlow = MutableStateFlow(false)
     private val shareStripSourceLineFlow = MutableStateFlow(false)
@@ -103,10 +104,12 @@ class HomeViewModel(
             filterAdsFlow,
             autoRecoveryFlow,
             shareTogglesFlow,
-        ) { verbose, filterAds, autoRecovery, share ->
+            expressiveLoadingIndicatorFlow,
+        ) { verbose, filterAds, autoRecovery, share, expressiveLoadingIndicator ->
             Toggles(
                 verbose = verbose,
                 filterAds = filterAds,
+                expressiveLoadingIndicator = expressiveLoadingIndicator,
                 autoRecovery = autoRecovery,
                 shareOriginalLink = share.shareOriginalLink,
                 shareStripSourceLine = share.shareStripSourceLine,
@@ -128,6 +131,7 @@ class HomeViewModel(
                 HomeUiState.Ready(
                     verbose = toggles.verbose,
                     filterAds = toggles.filterAds,
+                    expressiveLoadingIndicator = toggles.expressiveLoadingIndicator,
                     autoRecoveryOnUpdate = toggles.autoRecovery,
                     shareOriginalLink = toggles.shareOriginalLink,
                     shareStripSourceLine = toggles.shareStripSourceLine,
@@ -171,6 +175,11 @@ class HomeViewModel(
                         }
                     }
                 }
+            },
+            onExpressiveLoadingIndicatorChange = { value ->
+                repo.save(SettingsPrefs.expressiveLoadingIndicator, value)
+                expressiveLoadingIndicatorFlow.value = value
+                if (value && repo.readLastScan()?.targets?.refreshProgressMethod == null) verify()
             },
             onShareOriginalLinkChange = { value ->
                 repo.save(SettingsPrefs.shareOriginalLink, value)
@@ -331,6 +340,7 @@ class HomeViewModel(
     private suspend fun initialize() {
         verboseFlow.value = repo.read(SettingsPrefs.verbose)
         filterAdsFlow.value = repo.read(SettingsPrefs.filterAds)
+        expressiveLoadingIndicatorFlow.value = repo.read(SettingsPrefs.expressiveLoadingIndicator)
         autoRecoveryFlow.value = repo.read(SettingsPrefs.autoRecoveryOnUpdate)
         shareOriginalLinkFlow.value = repo.read(SettingsPrefs.shareOriginalLink)
         shareStripSourceLineFlow.value = repo.read(SettingsPrefs.shareStripSourceLine)
@@ -517,6 +527,7 @@ class HomeViewModel(
 private data class Toggles(
     val verbose: Boolean,
     val filterAds: Boolean,
+    val expressiveLoadingIndicator: Boolean,
     val autoRecovery: Boolean,
     val shareOriginalLink: Boolean,
     val shareStripSourceLine: Boolean,
