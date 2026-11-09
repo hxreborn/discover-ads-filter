@@ -1,2 +1,3 @@
-Optional Material 3 Expressive loading indicator when the Discover feed refreshes
-Import, export and restart messages now show after the screen rotates
+- Optional Material 3 Expressive loading indicator when the Discover feed refreshes
+- Import, export and restart messages now show after the screen rotates
+- Updated dependencies
