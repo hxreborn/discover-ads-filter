@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="pref_expressive_loading_indicator_title">M3E loading indicator</string>
-    <string name="pref_expressive_loading_indicator_summary">Material 3 Expressive shapes when refreshing. Closes Google to apply</string>
+    <string name="pref_expressive_loading_indicator_summary">Material 3 Expressive shapes when refreshing. Force closes Google app to apply</string>
     <string name="app_name">Discover Feed Filter</string>
     <string name="app_description">Removes ads, sponsored cards and clickbait from Google Discover.</string>
 
@@ -50,8 +50,9 @@
     <string name="pref_restart_agsa">Close Google app</string>
     <string name="pref_restart_agsa_summary">Closes it so the filter reloads</string>
     <string name="pref_restart_agsa_summary_root">Closes it so the filter reloads. Needs root</string>
-    <string name="restart_agsa_done">Google app closed</string>
+    <string name="restart_agsa_done">Google app force closed</string>
     <string name="restart_agsa_failed">No root access</string>
+    <string name="loading_indicator_force_close_failed">No root access. Force close Google app to apply</string>
     <string name="restart_agsa_dialog_title">Close Google app?</string>
     <string name="restart_agsa_dialog_body">You lose anything open in it.</string>
     <string name="restart_agsa_dialog_confirm">Close</string>

@@ -3,6 +3,7 @@ package eu.hxreborn.discoveradsfilter.ui.viewmodel
 import android.app.Application
 import android.net.Uri
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
@@ -314,13 +315,15 @@ class HomeViewModel(
                         if (transitionToManualScan()) runScanAndUpdate()
                         verifyFlow.first { it?.phase != VerifyPhase.Running }
                     }
-                    closeGoogleApp()
+                    closeGoogleApp(failedMessage = R.string.loading_indicator_force_close_failed)
                 }
             }
         }
     }
 
-    private suspend fun closeGoogleApp() {
+    private suspend fun closeGoogleApp(
+        @StringRes failedMessage: Int = R.string.restart_agsa_failed,
+    ) {
         val stopped =
             RootShell.forceStop(DiscoverAdsFilterModule.AGSA_PKG).getOrElse {
                 Log.w(TAG, "force stop failed", it)
@@ -328,7 +331,7 @@ class HomeViewModel(
             } != null
         _messages.trySend(
             app.getString(
-                if (stopped) R.string.restart_agsa_done else R.string.restart_agsa_failed,
+                if (stopped) R.string.restart_agsa_done else failedMessage,
             ),
         )
     }
