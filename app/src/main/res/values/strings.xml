@@ -179,6 +179,17 @@
     <string name="about_report_issue_summary">Open an issue on GitHub</string>
     <string name="about_licenses">Third-party licenses</string>
     <string name="about_licenses_summary">Libraries used by this app and their licenses</string>
+    <string name="about_contributors">Contributors</string>
+    <string name="contributor_owner">Owner</string>
+    <string name="contributor_owner_spoken">owner</string>
+    <plurals name="contributor_lines_added">
+        <item quantity="one">%d line added</item>
+        <item quantity="other">%d lines added</item>
+    </plurals>
+    <plurals name="contributor_lines_removed">
+        <item quantity="one">%d line removed</item>
+        <item quantity="other">%d lines removed</item>
+    </plurals>
 
     <!-- Confirmations -->
     <string name="clear_cache_dialog_title">Clear target cache?</string>

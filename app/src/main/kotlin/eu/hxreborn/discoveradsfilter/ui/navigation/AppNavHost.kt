@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -20,6 +21,7 @@ import eu.hxreborn.discoveradsfilter.ui.screen.DiagnosticsScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.LicensesScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.NewsRulesScreen
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
+import eu.hxreborn.discoveradsfilter.ui.viewmodel.ContributorsViewModel
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 
 @Composable
@@ -28,6 +30,7 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
 ) {
     val backStack = rememberNavBackStack(Destination.Dashboard)
+    val contributorsViewModel: ContributorsViewModel = viewModel(factory = ContributorsViewModel.Factory)
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.messages.collect { message ->
@@ -81,9 +84,11 @@ fun AppNavHost(
                 }
 
                 entry<Destination.About> {
+                    val contributors by contributorsViewModel.contributors.collectAsStateWithLifecycle()
                     AboutScreen(
                         onBack = { backStack.removeLastOrNull() },
                         onNavigateToLicenses = { backStack.add(Destination.Licenses) },
+                        contributors = contributors,
                     )
                 }
 

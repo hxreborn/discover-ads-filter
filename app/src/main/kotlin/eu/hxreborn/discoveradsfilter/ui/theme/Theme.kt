@@ -12,6 +12,8 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 private val LightColorScheme =
@@ -115,10 +117,13 @@ fun DiscoverAdsFilterTheme(
             }
         }
 
+    val extendedColors = remember(colorScheme.primary, darkTheme) { extendedColorsFor(darkTheme, colorScheme.primary) }
+
     MaterialExpressiveTheme(
         colorScheme = colorScheme,
         motionScheme = MotionScheme.expressive(),
         typography = DiscoverAdsFilterTypography,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(LocalExtendedColors provides extendedColors, content = content)
+    }
 }

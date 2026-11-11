@@ -40,8 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
+import eu.hxreborn.discoveradsfilter.ui.components.ContributorRow
 import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
 import eu.hxreborn.discoveradsfilter.ui.components.SoftBlobBadge
+import eu.hxreborn.discoveradsfilter.ui.state.Contributor
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
@@ -60,6 +62,7 @@ fun AboutScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     onNavigateToLicenses: () -> Unit = {},
+    contributors: List<Contributor> = emptyList(),
 ) {
     val context = LocalContext.current
 
@@ -148,6 +151,26 @@ fun AboutScreen(
             shape = shapeForPosition(3, 2),
             onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, GITHUB_ISSUES_URL.toUri())) },
         )
+
+        if (contributors.isNotEmpty()) {
+            Spacer(Modifier.height(Spacing.lg))
+            Text(
+                text = stringResource(R.string.about_contributors),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = Spacing.labelInset, vertical = Spacing.xs),
+            )
+            Spacer(Modifier.height(Spacing.xs))
+            contributors.forEachIndexed { index, contributor ->
+                if (index > 0) Spacer(Modifier.height(Spacing.segmentGap))
+                ContributorRow(
+                    contributor = contributor,
+                    index = index,
+                    shape = shapeForPosition(contributors.size, index),
+                    onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, contributor.url.toUri())) },
+                )
+            }
+        }
     }
 }
 

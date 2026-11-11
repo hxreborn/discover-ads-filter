@@ -31,6 +31,8 @@ android {
         localeFilters += "en"
     }
 
+    sourceSets.getByName("main").assets.directories.add(rootProject.file("contributors").path)
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
