@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import me.zhanghai.compose.preference.ProvidePreferenceTheme
+import me.zhanghai.compose.preference.preferenceTheme
 
 private val LightColorScheme =
     lightColorScheme(
@@ -124,6 +126,10 @@ fun DiscoverAdsFilterTheme(
         motionScheme = MotionScheme.expressive(),
         typography = DiscoverAdsFilterTypography,
     ) {
-        CompositionLocalProvider(LocalExtendedColors provides extendedColors, content = content)
+        CompositionLocalProvider(LocalExtendedColors provides extendedColors) {
+            ProvideReducedMotion {
+                ProvidePreferenceTheme(theme = preferenceTheme(), content = content)
+            }
+        }
     }
 }

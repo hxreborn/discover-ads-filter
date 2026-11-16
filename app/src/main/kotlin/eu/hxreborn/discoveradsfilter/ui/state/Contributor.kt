@@ -27,6 +27,14 @@ data class Contributor(
     val isOwner: Boolean,
 )
 
+@Immutable
+data class AboutInfo(
+    val versionName: String,
+    val versionCode: Long,
+    val icon: ImageBitmap?,
+    val contributors: List<Contributor>,
+)
+
 data class DiffBlocks(
     val added: Int,
     val removed: Int,

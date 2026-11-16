@@ -1,9 +1,9 @@
 package eu.hxreborn.discoveradsfilter.ui.components
 
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,11 +44,14 @@ fun DiffStat(
     val removedText = remember(removed) { MINUS + NumberFormat.getIntegerInstance().format(removed) }
     val numberStyle = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum")
 
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(text = addedText, style = numberStyle, color = MaterialTheme.extendedColors.diffAdded)
-        Spacer(Modifier.width(Spacing.sm))
         Text(text = removedText, style = numberStyle, color = MaterialTheme.colorScheme.error)
-        Spacer(Modifier.width(Spacing.sm))
         DiffBlocksBar(added = added, removed = removed)
     }
 }

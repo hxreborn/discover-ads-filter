@@ -3,6 +3,7 @@ package eu.hxreborn.discoveradsfilter.ui.screen.preview
 import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.discovery.MethodRef
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
+import eu.hxreborn.discoveradsfilter.ui.state.FrameworkInfo
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyResult
 import eu.hxreborn.discoveradsfilter.ui.state.VerifyUiState
@@ -12,6 +13,8 @@ internal object PreviewFixtures {
     private const val AGSA_VERSION_NAME_AT_SCAN = "15.47.32.29"
 
     private const val AGSA_LAST_UPDATE_TIME = 1_710_000_000_000L
+
+    private val previewFramework = FrameworkInfo(name = "LSPosed", version = "2.2.1", apiVersion = 102)
 
     val resolvedTargetsFull: ResolvedTargets.Resolved =
         ResolvedTargets.Resolved(
@@ -58,6 +61,7 @@ internal object PreviewFixtures {
             scanModuleVersion = BuildConfig.VERSION_CODE,
             adsHidden = 1_247L,
             moduleStatus = ModuleStatus.Active,
+            framework = previewFramework,
         )
 
     fun verifyFailureDexKitNoMatches(): VerifyUiState =
@@ -68,6 +72,7 @@ internal object PreviewFixtures {
                     detail = "DexKit found 0 matches for 7 queries",
                 ),
             moduleStatus = ModuleStatus.Active,
+            framework = previewFramework,
             installedAgsaVersion = AGSA_VERSION_CODE_AT_SCAN,
             installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
         )
@@ -75,6 +80,7 @@ internal object PreviewFixtures {
     fun verifyNeedsScan(): VerifyUiState =
         VerifyUiState(
             moduleStatus = ModuleStatus.Active,
+            framework = previewFramework,
             installedAgsaVersion = AGSA_VERSION_CODE_AT_SCAN,
             installedAgsaVersionName = AGSA_VERSION_NAME_AT_SCAN,
         )

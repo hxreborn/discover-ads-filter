@@ -21,7 +21,7 @@ import eu.hxreborn.discoveradsfilter.ui.screen.DiagnosticsScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.LicensesScreen
 import eu.hxreborn.discoveradsfilter.ui.screen.NewsRulesScreen
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
-import eu.hxreborn.discoveradsfilter.ui.viewmodel.ContributorsViewModel
+import eu.hxreborn.discoveradsfilter.ui.viewmodel.AboutViewModel
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
 
 @Composable
@@ -30,7 +30,7 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
 ) {
     val backStack = rememberNavBackStack(Destination.Dashboard)
-    val contributorsViewModel: ContributorsViewModel = viewModel(factory = ContributorsViewModel.Factory)
+    val aboutViewModel: AboutViewModel = viewModel(factory = AboutViewModel.Factory)
     val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.messages.collect { message ->
@@ -84,11 +84,11 @@ fun AppNavHost(
                 }
 
                 entry<Destination.About> {
-                    val contributors by contributorsViewModel.contributors.collectAsStateWithLifecycle()
+                    val about by aboutViewModel.about.collectAsStateWithLifecycle()
                     AboutScreen(
+                        about = about,
                         onBack = { backStack.removeLastOrNull() },
                         onNavigateToLicenses = { backStack.add(Destination.Licenses) },
-                        contributors = contributors,
                     )
                 }
 

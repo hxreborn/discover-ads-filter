@@ -3,15 +3,16 @@ package eu.hxreborn.discoveradsfilter.ui.util
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerBasedShape
-import androidx.compose.material3.ShapeDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
+import eu.hxreborn.discoveradsfilter.ui.theme.Tokens
 
-private val Outer = ShapeDefaults.ExtraLarge
-private val Inner = ShapeDefaults.Small
+private val Outer = RoundedCornerShape(Tokens.OuterRowCorner)
+private val Inner = RoundedCornerShape(Tokens.InnerRowCorner)
 
 fun shapeForPosition(
     count: Int,

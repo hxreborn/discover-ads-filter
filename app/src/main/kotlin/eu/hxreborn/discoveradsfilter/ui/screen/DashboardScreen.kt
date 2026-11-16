@@ -4,28 +4,28 @@ package eu.hxreborn.discoveradsfilter.ui.screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ShortText
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.EditNote
 import androidx.compose.material.icons.outlined.FilterAlt
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.PhonelinkErase
 import androidx.compose.material.icons.outlined.Refresh
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
@@ -41,9 +41,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -53,24 +52,27 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.hxreborn.discoveradsfilter.R
-import eu.hxreborn.discoveradsfilter.ui.components.IconSwitch
+import eu.hxreborn.discoveradsfilter.ui.components.NavigationRow
+import eu.hxreborn.discoveradsfilter.ui.components.SectionHeader
 import eu.hxreborn.discoveradsfilter.ui.components.StatusCard
+import eu.hxreborn.discoveradsfilter.ui.components.SwitchRow
+import eu.hxreborn.discoveradsfilter.ui.components.centeredContentWidth
+import eu.hxreborn.discoveradsfilter.ui.components.listBottomPadding
+import eu.hxreborn.discoveradsfilter.ui.components.rowSurface
 import eu.hxreborn.discoveradsfilter.ui.navigation.Destination
 import eu.hxreborn.discoveradsfilter.ui.screen.preview.PreviewFixtures
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
-import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
-import eu.hxreborn.discoveradsfilter.ui.util.preferenceCard
+import eu.hxreborn.discoveradsfilter.ui.theme.Tokens
 import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
 import eu.hxreborn.discoveradsfilter.ui.viewmodel.HomeViewModel
-import me.zhanghai.compose.preference.ProvidePreferenceLocals
 import me.zhanghai.compose.preference.TextFieldPreference
-import me.zhanghai.compose.preference.preference
-import me.zhanghai.compose.preference.preferenceCategory
-import me.zhanghai.compose.preference.preferenceTheme
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+private const val FEED_ROW_COUNT = 3
+private const val SHARING_ROW_COUNT = 3
+private const val APP_ROW_COUNT = 4
+
 @Composable
 fun DashboardScreen(
     viewModel: HomeViewModel,
@@ -96,10 +98,12 @@ internal fun DashboardScreenContent(
 ) {
     val ready = state as? HomeUiState.Ready
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    val listState = rememberLazyListState()
+    val bottomPadding = listBottomPadding()
+    val direction = LocalLayoutDirection.current
 
     Scaffold(
-        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        contentWindowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal),
         topBar = {
             LargeFlexibleTopAppBar(
                 title = { Text(stringResource(R.string.app_name)) },
@@ -107,86 +111,61 @@ internal fun DashboardScreenContent(
             )
         },
     ) { innerPadding ->
-        ProvidePreferenceLocals(
-            theme =
-                preferenceTheme(
-                    categoryColor = MaterialTheme.colorScheme.primary,
-                    categoryPadding =
-                        PaddingValues(
-                            start = Spacing.md + Spacing.labelInset,
-                            top = Spacing.lg,
-                            end = Spacing.md + Spacing.labelInset,
-                            bottom = Spacing.sm,
-                        ),
+        LazyColumn(
+            modifier = Modifier.centeredContentWidth(),
+            contentPadding =
+                PaddingValues(
+                    start = innerPadding.calculateStartPadding(direction),
+                    top = innerPadding.calculateTopPadding(),
+                    end = innerPadding.calculateEndPadding(direction),
+                    bottom = bottomPadding,
                 ),
         ) {
-            val surface = MaterialTheme.colorScheme.surfaceContainer
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize().padding(innerPadding),
-                contentPadding = PaddingValues(bottom = 32.dp),
-            ) {
-                if (ready != null) {
-                    dashboardReadyItems(
-                        ready = ready,
-                        actions = actions,
-                        onNavigate = onNavigate,
-                        surface = surface,
-                    )
-                } else {
-                    dashboardLoadingCard(surface = surface)
-                }
+            if (ready != null) {
+                dashboardReadyItems(ready = ready, actions = actions, onNavigate = onNavigate)
+            } else {
+                dashboardLoadingCard()
             }
         }
     }
 }
 
+private fun Modifier.groupRow(index: Int): Modifier =
+    padding(horizontal = Tokens.ScreenMargin).padding(top = if (index == 0) 0.dp else Tokens.RowGap)
+
 private fun LazyListScope.dashboardReadyItems(
     ready: HomeUiState.Ready,
     actions: HomeActions,
     onNavigate: (Destination) -> Unit,
-    surface: Color,
 ) {
-    item(key = "status", contentType = "StatusCard") {
+    item(key = "status", contentType = "status") {
         StatusCard(
             state = ready.verify,
             onOpenDiagnostics = { onNavigate(Destination.Diagnostics) },
+            modifier = Modifier.padding(vertical = Tokens.ScreenMargin),
         )
     }
 
-    preferenceCategory(
-        key = "cat_feed",
-        title = { Text(stringResource(R.string.pref_category_feed)) },
-    )
-
-    switchRow(
-        key = "filter_ads",
-        value = ready.filterAds,
-        onValueChange = actions.onFilterAdsChange,
-        shapeCount = 3,
-        shapeIndex = 0,
-        surface = surface,
-        icon = Icons.Outlined.Block,
-        titleRes = R.string.pref_filter_ads_title,
-        summaryRes = R.string.pref_filter_ads_summary,
-    )
-
-    item(key = "spacer_ads_rules", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    preference(
-        key = "news_rules",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 1), surface = surface),
-        icon = {
-            Icon(imageVector = Icons.Outlined.FilterAlt, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(R.string.pref_news_rules_title),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        summary = {
-            Text(
+    item(key = "feed_header", contentType = "header") {
+        SectionHeader(stringResource(R.string.pref_category_feed))
+    }
+    item(key = "filter_ads", contentType = "switch") {
+        SwitchRow(
+            shape = shapeForPosition(FEED_ROW_COUNT, 0),
+            icon = Icons.Outlined.Block,
+            title = stringResource(R.string.pref_filter_ads_title),
+            summary = stringResource(R.string.pref_filter_ads_summary),
+            checked = ready.filterAds,
+            onCheckedChange = actions.onFilterAdsChange,
+            modifier = Modifier.groupRow(0),
+        )
+    }
+    item(key = "news_rules", contentType = "navigation") {
+        NavigationRow(
+            shape = shapeForPosition(FEED_ROW_COUNT, 1),
+            icon = Icons.Outlined.FilterAlt,
+            title = stringResource(R.string.pref_news_rules_title),
+            summary =
                 if (ready.newsRules.isEmpty()) {
                     stringResource(R.string.pref_news_rules_summary)
                 } else {
@@ -196,230 +175,154 @@ private fun LazyListScope.dashboardReadyItems(
                         ready.newsRules.size,
                     )
                 },
-            )
-        },
-        widgetContainer = {
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                contentDescription = null,
-                modifier = Modifier.padding(end = 16.dp).size(20.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        },
-        onClick = { onNavigate(Destination.NewsRules) },
-    )
-
-    item(key = "spacer_rules_indicator", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    switchRow(
-        key = "expressive_loading_indicator",
-        value = ready.expressiveLoadingIndicator,
-        onValueChange = actions.onExpressiveLoadingIndicatorChange,
-        shapeCount = 3,
-        shapeIndex = 2,
-        surface = surface,
-        icon = Icons.Outlined.Refresh,
-        titleRes = R.string.pref_expressive_loading_indicator_title,
-        summaryRes = R.string.pref_expressive_loading_indicator_summary,
-    )
-
-    preferenceCategory(
-        key = "cat_sharing",
-        title = { Text(stringResource(R.string.pref_category_sharing)) },
-    )
-
-    switchRow(
-        key = "share_original_link",
-        value = ready.shareOriginalLink,
-        onValueChange = actions.onShareOriginalLinkChange,
-        shapeCount = 3,
-        shapeIndex = 0,
-        surface = surface,
-        icon = Icons.Outlined.Link,
-        titleRes = R.string.pref_share_original_link_title,
-        summaryRes = R.string.pref_share_original_link_summary,
-    )
-
-    item(key = "spacer_share_strip", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    switchRow(
-        key = "share_strip_source",
-        value = ready.shareStripSourceLine,
-        onValueChange = actions.onShareStripSourceLineChange,
-        shapeCount = 3,
-        shapeIndex = 1,
-        surface = surface,
-        enabled = ready.shareOriginalLink,
-        icon = Icons.AutoMirrored.Outlined.ShortText,
-        titleRes = R.string.pref_share_strip_source_title,
-        summaryRes = R.string.pref_share_strip_source_summary,
-    )
-
-    item(key = "spacer_strip_custom", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    item(key = "share_custom_line", contentType = "TextFieldPreference") {
-        TextFieldPreference(
-            value = ready.shareCustomLine,
-            onValueChange = actions.onShareCustomLineChange,
-            textToValue = { text -> text.trim().takeIf { it.isNotEmpty() } },
-            valueToText = { it.orEmpty() },
-            modifier = Modifier.preferenceCard(shape = shapeForPosition(3, 2), surface = surface),
-            enabled = ready.shareOriginalLink && !ready.shareStripSourceLine,
-            icon = {
-                Icon(imageVector = Icons.Outlined.EditNote, contentDescription = null)
-            },
-            title = {
-                Text(
-                    text = stringResource(R.string.pref_share_custom_line_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            },
-            summary = {
-                Text(
-                    ready.shareCustomLine
-                        ?: stringResource(R.string.pref_share_custom_line_summary),
-                )
-            },
-            textField = { value, onValueChange, onOk ->
-                OutlinedTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(R.string.pref_share_custom_line_hint)) },
-                    keyboardActions = KeyboardActions { onOk() },
-                    singleLine = true,
-                )
-            },
+            onClick = { onNavigate(Destination.NewsRules) },
+            modifier = Modifier.groupRow(1),
+        )
+    }
+    item(key = "expressive_loading_indicator", contentType = "switch") {
+        SwitchRow(
+            shape = shapeForPosition(FEED_ROW_COUNT, 2),
+            icon = Icons.Outlined.Refresh,
+            title = stringResource(R.string.pref_expressive_loading_indicator_title),
+            summary = stringResource(R.string.pref_expressive_loading_indicator_summary),
+            checked = ready.expressiveLoadingIndicator,
+            onCheckedChange = actions.onExpressiveLoadingIndicatorChange,
+            modifier = Modifier.groupRow(2),
         )
     }
 
-    preferenceCategory(
-        key = "cat_app",
-        title = { Text(stringResource(R.string.pref_category_app)) },
-    )
+    item(key = "sharing_header", contentType = "header") {
+        SectionHeader(stringResource(R.string.pref_category_sharing))
+    }
+    item(key = "share_original_link", contentType = "switch") {
+        SwitchRow(
+            shape = shapeForPosition(SHARING_ROW_COUNT, 0),
+            icon = Icons.Outlined.Link,
+            title = stringResource(R.string.pref_share_original_link_title),
+            summary = stringResource(R.string.pref_share_original_link_summary),
+            checked = ready.shareOriginalLink,
+            onCheckedChange = actions.onShareOriginalLinkChange,
+            modifier = Modifier.groupRow(0),
+        )
+    }
+    item(key = "share_strip_source_line", contentType = "switch") {
+        SwitchRow(
+            shape = shapeForPosition(SHARING_ROW_COUNT, 1),
+            icon = Icons.AutoMirrored.Outlined.ShortText,
+            title = stringResource(R.string.pref_share_strip_source_title),
+            summary = stringResource(R.string.pref_share_strip_source_summary),
+            checked = ready.shareStripSourceLine,
+            onCheckedChange = actions.onShareStripSourceLineChange,
+            enabled = ready.shareOriginalLink,
+            modifier = Modifier.groupRow(1),
+        )
+    }
+    item(key = "share_custom_line", contentType = "text_field") {
+        ShareCustomLineRow(
+            ready = ready,
+            actions = actions,
+            modifier = Modifier.groupRow(2),
+        )
+    }
 
-    switchRow(
-        key = "auto_recovery",
-        value = ready.autoRecoveryOnUpdate,
-        onValueChange = actions.onAutoRecoveryChange,
-        shapeCount = 4,
-        shapeIndex = 0,
-        surface = surface,
-        icon = Icons.Outlined.Build,
-        titleRes = R.string.pref_auto_recovery_title,
-        summaryRes =
-            if (ready.autoRecoveryOnUpdate) {
-                R.string.pref_auto_recovery_summary
-            } else {
-                R.string.pref_auto_recovery_summary_root
-            },
-    )
-
-    item(key = "spacer_recovery_hide", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    switchRow(
-        key = "hide_launcher_icon",
-        value = ready.isLauncherIconHidden,
-        onValueChange = actions.onLauncherIconHiddenChange,
-        shapeCount = 4,
-        shapeIndex = 1,
-        surface = surface,
-        icon = Icons.Outlined.PhonelinkErase,
-        titleRes = R.string.pref_hide_launcher_icon_title,
-        summaryRes = R.string.pref_hide_launcher_icon_summary,
-    )
-
-    item(key = "spacer_hide_verbose", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    switchRow(
-        key = "verbose",
-        value = ready.verbose,
-        onValueChange = actions.onVerboseChange,
-        shapeCount = 4,
-        shapeIndex = 2,
-        surface = surface,
-        icon = Icons.Outlined.BugReport,
-        titleRes = R.string.toggle_verbose,
-        summaryRes = R.string.toggle_verbose_summary,
-    )
-
-    item(key = "spacer_verbose_about", contentType = "Spacer") { Spacer(Modifier.height(2.dp)) }
-
-    preference(
-        key = "about",
-        modifier = Modifier.preferenceCard(shape = shapeForPosition(4, 3), surface = surface),
-        icon = {
-            Icon(imageVector = Icons.Rounded.Info, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(R.string.pref_category_about),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
-        summary = { Text(stringResource(R.string.pref_about_summary)) },
-        onClick = { onNavigate(Destination.About) },
-    )
-
-    item(key = "spacer_bottom", contentType = "Spacer") { Spacer(Modifier.height(16.dp)) }
+    item(key = "app_header", contentType = "header") {
+        SectionHeader(stringResource(R.string.pref_category_app))
+    }
+    item(key = "auto_recovery", contentType = "switch") {
+        SwitchRow(
+            shape = shapeForPosition(APP_ROW_COUNT, 0),
+            icon = Icons.Outlined.Build,
+            title = stringResource(R.string.pref_auto_recovery_title),
+            summary =
+                stringResource(
+                    if (ready.autoRecoveryOnUpdate) {
+                        R.string.pref_auto_recovery_summary
+                    } else {
+                        R.string.pref_auto_recovery_summary_root
+                    },
+                ),
+            checked = ready.autoRecoveryOnUpdate,
+            onCheckedChange = actions.onAutoRecoveryChange,
+            modifier = Modifier.groupRow(0),
+        )
+    }
+    item(key = "hide_launcher_icon", contentType = "switch") {
+        SwitchRow(
+            shape = shapeForPosition(APP_ROW_COUNT, 1),
+            icon = Icons.Outlined.PhonelinkErase,
+            title = stringResource(R.string.pref_hide_launcher_icon_title),
+            summary = stringResource(R.string.pref_hide_launcher_icon_summary),
+            checked = ready.isLauncherIconHidden,
+            onCheckedChange = actions.onLauncherIconHiddenChange,
+            modifier = Modifier.groupRow(1),
+        )
+    }
+    item(key = "verbose", contentType = "switch") {
+        SwitchRow(
+            shape = shapeForPosition(APP_ROW_COUNT, 2),
+            icon = Icons.Outlined.BugReport,
+            title = stringResource(R.string.toggle_verbose),
+            summary = stringResource(R.string.toggle_verbose_summary),
+            checked = ready.verbose,
+            onCheckedChange = actions.onVerboseChange,
+            modifier = Modifier.groupRow(2),
+        )
+    }
+    item(key = "about", contentType = "navigation") {
+        NavigationRow(
+            shape = shapeForPosition(APP_ROW_COUNT, 3),
+            icon = Icons.Outlined.Info,
+            title = stringResource(R.string.pref_category_about),
+            summary = stringResource(R.string.pref_about_summary),
+            onClick = { onNavigate(Destination.About) },
+            modifier = Modifier.groupRow(3),
+        )
+    }
 }
 
-private fun LazyListScope.switchRow(
-    key: String,
-    value: Boolean,
-    onValueChange: (Boolean) -> Unit,
-    shapeCount: Int,
-    shapeIndex: Int,
-    surface: Color,
-    icon: ImageVector,
-    titleRes: Int,
-    summaryRes: Int,
-    enabled: Boolean = true,
+@Composable
+private fun ShareCustomLineRow(
+    ready: HomeUiState.Ready,
+    actions: HomeActions,
+    modifier: Modifier = Modifier,
 ) {
-    preference(
-        key = key,
-        modifier =
-            Modifier.preferenceCard(
-                shape = shapeForPosition(shapeCount, shapeIndex),
-                surface = surface,
-            ),
-        enabled = enabled,
-        icon = {
-            Icon(imageVector = icon, contentDescription = null)
-        },
-        title = {
-            Text(
-                stringResource(titleRes),
-                style = MaterialTheme.typography.bodyLarge,
-            )
-        },
+    TextFieldPreference(
+        value = ready.shareCustomLine,
+        onValueChange = actions.onShareCustomLineChange,
+        textToValue = { text -> text.trim().takeIf { it.isNotEmpty() } },
+        valueToText = { it.orEmpty() },
+        modifier = modifier.rowSurface(shapeForPosition(SHARING_ROW_COUNT, 2)),
+        enabled = ready.shareOriginalLink && !ready.shareStripSourceLine,
+        icon = { Icon(imageVector = Icons.Outlined.EditNote, contentDescription = null) },
+        title = { Text(stringResource(R.string.pref_share_custom_line_title)) },
         summary = {
-            Text(stringResource(summaryRes))
+            Text(ready.shareCustomLine ?: stringResource(R.string.pref_share_custom_line_summary))
         },
-        widgetContainer = {
-            IconSwitch(
-                checked = value,
-                onCheckedChange = onValueChange,
-                enabled = enabled,
-                modifier = Modifier.padding(start = Spacing.md, end = Spacing.md),
+        textField = { value, onValueChange, onOk ->
+            OutlinedTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text(stringResource(R.string.pref_share_custom_line_hint)) },
+                keyboardActions = KeyboardActions { onOk() },
+                singleLine = true,
             )
         },
-        onClick = { onValueChange(!value) },
     )
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-private fun LazyListScope.dashboardLoadingCard(surface: Color) {
+private fun LazyListScope.dashboardLoadingCard() {
     item(key = "loading", contentType = "loading") {
         Surface(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.sm),
-            color = surface,
-            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth().padding(Tokens.ScreenMargin),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = shapeForPosition(1, 0),
         ) {
             val loadingDesc = stringResource(R.string.loading)
             Box(
                 modifier =
-                    Modifier.fillMaxWidth().padding(Spacing.lg).semantics {
+                    Modifier.fillMaxWidth().padding(Tokens.RowPadding * 2).semantics {
                         contentDescription = loadingDesc
                     },
                 contentAlignment = Alignment.Center,

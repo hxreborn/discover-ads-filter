@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import eu.hxreborn.discoveradsfilter.R
 import eu.hxreborn.discoveradsfilter.ui.state.Contributor
 import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
+import eu.hxreborn.discoveradsfilter.ui.theme.Tokens
 
 private val AvatarSize = 40.dp
 private val OwnerLabelHeight = 20.dp
@@ -73,19 +75,19 @@ fun ContributorRow(
 
     Surface(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().heightIn(min = Tokens.RowMinHeight),
         shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Row(
-            modifier = Modifier.padding(Spacing.md).clearAndSetSemantics { contentDescription = description },
+            modifier = Modifier.padding(Tokens.RowPadding).clearAndSetSemantics { contentDescription = description },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ContributorAvatar(
                 contributor = contributor,
                 shape = AvatarPolygons[index % AvatarPolygons.size].toShape(),
             )
-            Spacer(Modifier.width(Spacing.md))
+            Spacer(Modifier.width(Tokens.RowPadding))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -103,7 +105,7 @@ fun ContributorRow(
                 Spacer(Modifier.height(Spacing.xs))
                 DiffStat(added = contributor.added, removed = contributor.removed)
             }
-            Spacer(Modifier.width(Spacing.md))
+            Spacer(Modifier.width(Tokens.RowPadding))
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.OpenInNew,
                 contentDescription = null,
@@ -148,7 +150,7 @@ private fun ContributorAvatar(
 @Composable
 private fun OwnerLabel() {
     Surface(
-        modifier = Modifier.height(OwnerLabelHeight),
+        modifier = Modifier.heightIn(min = OwnerLabelHeight),
         shape = CircleShape,
         color = MaterialTheme.colorScheme.secondaryContainer,
     ) {

@@ -19,6 +19,7 @@ import eu.hxreborn.discoveradsfilter.filter.NewsRule
 import eu.hxreborn.discoveradsfilter.filter.NewsRules
 import eu.hxreborn.discoveradsfilter.prefs.Counters
 import eu.hxreborn.discoveradsfilter.prefs.SettingsPrefs
+import eu.hxreborn.discoveradsfilter.ui.state.FrameworkInfo
 import eu.hxreborn.discoveradsfilter.ui.state.HomeActions
 import eu.hxreborn.discoveradsfilter.ui.state.HomeUiState
 import eu.hxreborn.discoveradsfilter.ui.state.ModuleStatus
@@ -76,6 +77,7 @@ class HomeViewModel(
         )
     private val verifyFlow = MutableStateFlow<VerifyUiState?>(null)
     private val moduleStatusFlow = MutableStateFlow(ModuleStatus.Inactive)
+    private val frameworkFlow = MutableStateFlow<FrameworkInfo?>(null)
     private val loadingIndicatorUpdateMutex = Mutex()
 
     private val _messages = Channel<String>(Channel.BUFFERED)
@@ -84,10 +86,13 @@ class HomeViewModel(
     private val serviceListener =
         object : XposedServiceHelper.OnServiceListener {
             override fun onServiceBind(service: XposedService) {
+                frameworkFlow.value =
+                    FrameworkInfo(service.frameworkName, service.frameworkVersion, service.apiVersion)
                 moduleStatusFlow.value = ModuleStatus.Active
             }
 
             override fun onServiceDied(service: XposedService) {
+                frameworkFlow.value = null
                 moduleStatusFlow.value = ModuleStatus.Inactive
             }
         }
@@ -95,8 +100,8 @@ class HomeViewModel(
     private val countersFlow = repo.countersFlow().catch { emit(Counters(0L, 0L)) }
 
     private val verifyWithStatusFlow =
-        combine(verifyFlow, moduleStatusFlow) { verify, status ->
-            verify?.copy(moduleStatus = status)
+        combine(verifyFlow, moduleStatusFlow, frameworkFlow) { verify, status, framework ->
+            verify?.copy(moduleStatus = status, framework = framework)
         }
 
     private val shareTogglesFlow =

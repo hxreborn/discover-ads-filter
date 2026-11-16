@@ -1,213 +1,334 @@
 package eu.hxreborn.discoveradsfilter.ui.screen
 
-import android.content.Intent
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import android.content.ActivityNotFoundException
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Balance
 import androidx.compose.material.icons.outlined.BugReport
+import androidx.compose.material.icons.outlined.Coffee
 import androidx.compose.material.icons.outlined.Gavel
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.NewReleases
+import androidx.compose.material.icons.outlined.Sell
+import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonGroupDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
-import eu.hxreborn.discoveradsfilter.BuildConfig
 import eu.hxreborn.discoveradsfilter.R
+import eu.hxreborn.discoveradsfilter.ui.components.AdaptiveButtonRow
 import eu.hxreborn.discoveradsfilter.ui.components.ContributorRow
-import eu.hxreborn.discoveradsfilter.ui.components.SettingsDetailScaffold
-import eu.hxreborn.discoveradsfilter.ui.components.SoftBlobBadge
-import eu.hxreborn.discoveradsfilter.ui.state.Contributor
-import eu.hxreborn.discoveradsfilter.ui.theme.DiscoverAdsFilterTheme
-import eu.hxreborn.discoveradsfilter.ui.theme.Spacing
-import eu.hxreborn.discoveradsfilter.ui.util.shapeForPosition
+import eu.hxreborn.discoveradsfilter.ui.components.DetailScaffold
+import eu.hxreborn.discoveradsfilter.ui.components.MorphingLogo
+import eu.hxreborn.discoveradsfilter.ui.components.NavigationRow
+import eu.hxreborn.discoveradsfilter.ui.components.RowGroup
+import eu.hxreborn.discoveradsfilter.ui.components.RowTrailing
+import eu.hxreborn.discoveradsfilter.ui.components.SectionHeader
+import eu.hxreborn.discoveradsfilter.ui.components.centeredContentWidth
+import eu.hxreborn.discoveradsfilter.ui.components.rememberLogoPulse
+import eu.hxreborn.discoveradsfilter.ui.state.AboutInfo
+import eu.hxreborn.discoveradsfilter.ui.theme.Tokens
+import me.zhanghai.compose.preference.ProvidePreferenceTheme
+import me.zhanghai.compose.preference.preferenceTheme
 
-private const val GITHUB_URL = "https://github.com/hxreborn/discover-ads-filter"
-private const val GITHUB_ISSUES_URL = "https://github.com/hxreborn/discover-ads-filter/issues"
-private const val BLOB_SPIN_DURATION_MS = 8_000
+private const val REPO = "hxreborn/discover-ads-filter"
+private const val REPO_URL = "https://github.com/$REPO"
+private const val RELEASES_URL = "$REPO_URL/releases"
+private const val ISSUES_URL = "$REPO_URL/issues/new/choose"
+private const val LICENSE_URL = "$REPO_URL/blob/main/LICENSE"
+private const val KOFI_URL = "https://ko-fi.com/hxreborn"
+private const val LICENSE = "GPL-3.0"
+private const val ADAPTIVE_ICON_ZOOM = 1.425f
 
-private val BlobSize: Dp = 128.dp
-private val BlobIconSize: Dp = 72.dp
+private val LogoSize = 96.dp
 
-private val EMPTY_CLICK: () -> Unit = {}
+private fun UriHandler.openOrIgnore(url: String) {
+    try {
+        openUri(url)
+    } catch (_: ActivityNotFoundException) {
+    } catch (_: IllegalArgumentException) {
+    }
+}
 
 @Composable
 fun AboutScreen(
+    about: AboutInfo?,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    onNavigateToLicenses: () -> Unit = {},
-    contributors: List<Contributor> = emptyList(),
+    onNavigateToLicenses: () -> Unit,
 ) {
-    val context = LocalContext.current
-
-    val infiniteTransition = rememberInfiniteTransition(label = "blob_spin")
-    val blobRotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec =
-            infiniteRepeatable(
-                animation = tween(durationMillis = BLOB_SPIN_DURATION_MS, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart,
-            ),
-        label = "blob_rotation",
-    )
-
-    SettingsDetailScaffold(
-        title = stringResource(R.string.pref_category_about),
-        onBack = onBack,
-        modifier = modifier,
-    ) {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(
-                modifier = Modifier.size(BlobSize),
-                contentAlignment = Alignment.Center,
+    val uriHandler = LocalUriHandler.current
+    val open: (String) -> Unit = { uriHandler.openOrIgnore(it) }
+    ProvidePreferenceTheme(theme = preferenceTheme()) {
+        DetailScaffold(
+            title = stringResource(R.string.pref_category_about),
+            onBack = onBack,
+        ) { contentPadding ->
+            Column(
+                modifier =
+                    Modifier
+                        .centeredContentWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(contentPadding),
             ) {
-                SoftBlobBadge(
-                    modifier = Modifier.graphicsLayer { rotationZ = blobRotation },
-                    size = BlobSize,
+                if (about == null) return@Column
+                IdentityCard(
+                    about = about,
+                    onOpenUrl = open,
+                    modifier =
+                        Modifier.padding(
+                            horizontal = Tokens.ScreenMargin,
+                            vertical = Tokens.ScreenMargin,
+                        ),
                 )
-                Image(
-                    painter = painterResource(R.drawable.ic_about_discover),
-                    contentDescription = null,
-                    modifier = Modifier.size(BlobIconSize),
-                )
-            }
-        }
-
-        Spacer(Modifier.height(Spacing.lg))
-        Text(
-            text = stringResource(R.string.app_name),
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-        )
-        Spacer(Modifier.height(Spacing.xs))
-        Text(
-            text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) - ${BuildConfig.BUILD_TYPE} build",
-            modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-        )
-
-        Spacer(Modifier.height(Spacing.lg))
-        Text(
-            text = stringResource(R.string.about_links),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = Spacing.labelInset, vertical = Spacing.xs),
-        )
-        Spacer(Modifier.height(Spacing.xs))
-
-        AboutCard(
-            icon = { Icon(painter = painterResource(R.drawable.ic_github_24), contentDescription = null) },
-            title = stringResource(R.string.about_source_code),
-            subtitle = stringResource(R.string.about_source_code_summary),
-            shape = shapeForPosition(3, 0),
-            onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, GITHUB_URL.toUri())) },
-        )
-        Spacer(Modifier.height(2.dp))
-        AboutCard(
-            icon = { Icon(imageVector = Icons.Outlined.Gavel, contentDescription = null) },
-            title = stringResource(R.string.about_licenses),
-            subtitle = stringResource(R.string.about_licenses_summary),
-            shape = shapeForPosition(3, 1),
-            onClick = onNavigateToLicenses,
-        )
-        Spacer(Modifier.height(2.dp))
-        AboutCard(
-            icon = { Icon(imageVector = Icons.Outlined.BugReport, contentDescription = null) },
-            title = stringResource(R.string.about_report_issue),
-            subtitle = stringResource(R.string.about_report_issue_summary),
-            shape = shapeForPosition(3, 2),
-            onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, GITHUB_ISSUES_URL.toUri())) },
-        )
-
-        if (contributors.isNotEmpty()) {
-            Spacer(Modifier.height(Spacing.lg))
-            Text(
-                text = stringResource(R.string.about_contributors),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = Spacing.labelInset, vertical = Spacing.xs),
-            )
-            Spacer(Modifier.height(Spacing.xs))
-            contributors.forEachIndexed { index, contributor ->
-                if (index > 0) Spacer(Modifier.height(Spacing.segmentGap))
-                ContributorRow(
-                    contributor = contributor,
-                    index = index,
-                    shape = shapeForPosition(contributors.size, index),
-                    onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, contributor.url.toUri())) },
-                )
+                LinkRows(about = about, onOpenUrl = open, onOpenLicenses = onNavigateToLicenses)
+                if (about.contributors.isNotEmpty()) {
+                    SectionHeader(stringResource(R.string.about_contributors))
+                    RowGroup(
+                        rows =
+                            about.contributors.mapIndexed { index, contributor ->
+                                { shape ->
+                                    ContributorRow(
+                                        contributor = contributor,
+                                        index = index,
+                                        shape = shape,
+                                        onClick = { open(contributor.url) },
+                                    )
+                                }
+                            },
+                        modifier = Modifier.padding(bottom = Tokens.ScreenMargin),
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun AboutCard(
-    icon: @Composable () -> Unit,
-    title: String,
-    subtitle: String,
-    shape: Shape,
-    onClick: (() -> Unit)? = null,
+private fun LinkRows(
+    about: AboutInfo,
+    onOpenUrl: (String) -> Unit,
+    onOpenLicenses: () -> Unit,
 ) {
+    RowGroup(
+        rows =
+            listOf(
+                { shape ->
+                    NavigationRow(
+                        shape = shape,
+                        icon = Icons.Outlined.NewReleases,
+                        title = stringResource(R.string.about_whats_new),
+                        summary =
+                            stringResource(
+                                R.string.about_whats_new_summary,
+                                about.versionName,
+                            ),
+                        onClick = { onOpenUrl("$RELEASES_URL/tag/v${about.versionName}") },
+                        trailing = RowTrailing.External,
+                    )
+                },
+                { shape ->
+                    NavigationRow(
+                        shape = shape,
+                        icon = Icons.Outlined.History,
+                        title = stringResource(R.string.about_changelog),
+                        summary = stringResource(R.string.about_changelog_summary),
+                        onClick = { onOpenUrl(RELEASES_URL) },
+                        trailing = RowTrailing.External,
+                    )
+                },
+                { shape ->
+                    NavigationRow(
+                        shape = shape,
+                        icon = ImageVector.vectorResource(R.drawable.ic_github_24),
+                        title = stringResource(R.string.about_source_code),
+                        summary = REPO,
+                        onClick = { onOpenUrl(REPO_URL) },
+                        trailing = RowTrailing.External,
+                    )
+                },
+                { shape ->
+                    NavigationRow(
+                        shape = shape,
+                        icon = Icons.Outlined.BugReport,
+                        title = stringResource(R.string.about_report_issue),
+                        summary = stringResource(R.string.about_report_issue_summary),
+                        onClick = { onOpenUrl(ISSUES_URL) },
+                        trailing = RowTrailing.External,
+                    )
+                },
+                { shape ->
+                    NavigationRow(
+                        shape = shape,
+                        icon = Icons.Outlined.Gavel,
+                        title = stringResource(R.string.about_licenses),
+                        summary = stringResource(R.string.about_licenses_summary),
+                        onClick = onOpenLicenses,
+                    )
+                },
+            ),
+    )
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun IdentityCard(
+    about: AboutInfo,
+    onOpenUrl: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val meta = MaterialTheme.typography.labelMedium.copy(fontFamily = FontFamily.Monospace)
     Surface(
-        onClick = onClick ?: EMPTY_CLICK,
-        enabled = onClick != null,
-        modifier = Modifier.fillMaxWidth(),
-        shape = shape,
-        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(Tokens.HeaderCardCorner),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        modifier = modifier.fillMaxWidth(),
     ) {
-        Row(
-            modifier = Modifier.padding(Spacing.md),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            icon()
-            Spacer(Modifier.width(Spacing.md))
-            Column {
-                Text(title, style = MaterialTheme.typography.bodyLarge)
-                Spacer(Modifier.height(Spacing.xs))
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            val icon = about.icon
+            if (icon != null) {
+                val pulse = rememberLogoPulse()
+                MorphingLogo(
+                    pulse = pulse,
+                    modifier =
+                        Modifier
+                            .size(LogoSize)
+                            .pointerInput(pulse) { detectTapGestures { pulse.tap() } },
+                ) {
+                    Image(
+                        bitmap = icon,
+                        contentDescription = null,
+                        modifier =
+                            Modifier.fillMaxSize().graphicsLayer {
+                                scaleX = ADAPTIVE_ICON_ZOOM
+                                scaleY = ADAPTIVE_ICON_ZOOM
+                            },
+                    )
+                }
             }
+            Text(
+                stringResource(R.string.app_name),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Text(
+                stringResource(R.string.app_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                AssistChip(
+                    onClick = { onOpenUrl(RELEASES_URL) },
+                    label = { Text("v${about.versionName} (${about.versionCode})", style = meta) },
+                    leadingIcon = {
+                        Icon(Icons.Outlined.Sell, null, Modifier.size(AssistChipDefaults.IconSize))
+                    },
+                )
+                AssistChip(
+                    onClick = { onOpenUrl(LICENSE_URL) },
+                    label = { Text(LICENSE, style = meta) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Outlined.Balance,
+                            null,
+                            Modifier.size(AssistChipDefaults.IconSize),
+                        )
+                    },
+                )
+            }
+            SupportButtons(onOpenUrl = onOpenUrl, modifier = Modifier.padding(top = 4.dp))
         }
     }
 }
 
-@Preview(name = "About", showSystemUi = true)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun AboutScreenPreview() {
-    DiscoverAdsFilterTheme(dynamicColor = false) {
-        AboutScreen(onBack = {})
+private fun SupportButtons(
+    onOpenUrl: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val labels =
+        listOf(
+            stringResource(R.string.about_star_on_github),
+            stringResource(R.string.about_buy_coffee),
+        )
+    AdaptiveButtonRow(items = labels, modifier = modifier) { index, label, stacked, itemModifier ->
+        val buttonModifier = itemModifier.heightIn(min = 52.dp)
+        if (index == 0) {
+            Button(
+                onClick = { onOpenUrl(REPO_URL) },
+                shapes =
+                    if (stacked) {
+                        ButtonDefaults.shapes()
+                    } else {
+                        ButtonDefaults.shapes(
+                            ButtonGroupDefaults.connectedLeadingButtonShape,
+                            ButtonGroupDefaults.connectedLeadingButtonPressShape,
+                        )
+                    },
+                modifier = buttonModifier,
+            ) {
+                Icon(Icons.Outlined.StarOutline, null, Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(label, maxLines = 1)
+            }
+        } else {
+            FilledTonalButton(
+                onClick = { onOpenUrl(KOFI_URL) },
+                shapes =
+                    if (stacked) {
+                        ButtonDefaults.shapes()
+                    } else {
+                        ButtonDefaults.shapes(
+                            ButtonGroupDefaults.connectedTrailingButtonShape,
+                            ButtonGroupDefaults.connectedTrailingButtonPressShape,
+                        )
+                    },
+                modifier = buttonModifier,
+            ) {
+                Icon(Icons.Outlined.Coffee, null, Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                Text(label, maxLines = 1)
+            }
+        }
     }
 }

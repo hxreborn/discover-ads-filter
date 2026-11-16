@@ -14,6 +14,7 @@ data class VerifyUiState(
     val adsHidden: Long = 0,
     val newsHidden: Long = 0,
     val moduleStatus: ModuleStatus = ModuleStatus.Inactive,
+    val framework: FrameworkInfo? = null,
     val scanOrigin: ScanOrigin? = null,
     val scanProgress: List<ScanStep> = emptyList(),
     val scanDurationMs: Long = 0,
@@ -22,6 +23,16 @@ data class VerifyUiState(
     companion object {
         const val TOTAL_TARGETS = 7
     }
+}
+
+@Immutable
+data class FrameworkInfo(
+    val name: String,
+    val version: String,
+    val apiVersion: Int,
+) {
+    val versionName: String
+        get() = version.trim().substringBefore(' ')
 }
 
 enum class VerifyPhase { Idle, Running }
