@@ -17,6 +17,9 @@ sealed interface ResolvedTargets {
         val cardProcessorMethods: List<MethodRef> = emptyList(),
         val streamRenderableListMethod: MethodRef? = null,
         val shareIntentMethod: MethodRef? = null,
+        val customTabShareMethod: MethodRef? = null,
+        val customTabShortLinkFieldName: String? = null,
+        val customTabShareCallers: List<MethodRef> = emptyList(),
         val refreshProgressMethod: MethodRef? = null,
     ) : ResolvedTargets {
         override fun summary(): String =
@@ -35,6 +38,11 @@ sealed interface ResolvedTargets {
                 append(
                     "share=${
                         shareIntentMethod?.className?.substringAfterLast('.') ?: "–"
+                    }, ",
+                )
+                append(
+                    "tabShare=${
+                        customTabShareMethod?.className?.substringAfterLast('.') ?: "–"
                     })",
                 )
             }

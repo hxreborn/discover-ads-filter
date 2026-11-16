@@ -13,6 +13,7 @@ object DexKitResolver {
     private const val MAX_CARD_PROCESSOR_METHODS = 120
     private const val CLINIT = "<clinit>"
     private const val TYPE_STRING = "java.lang.String"
+    private const val CUSTOM_TAB_SHARE_LINK_SOURCE = "share-sdl-aga-3p"
     private val RUNTIME_PACKAGES = listOf("java.", "kotlin.", "android.")
     private val NON_PROTO_RETURNS = setOf("void", "java.lang.Object")
 
@@ -92,6 +93,20 @@ object DexKitResolver {
             }
         onStep?.invoke("Share intent", shareValue)
 
+        val customTabShare = findCustomTabShareMethod(bridge)
+        val customTabShortLinkField = customTabShare?.let(::findShortLinkSwitchField)
+        val customTabShareMethod = customTabShare?.takeIf { customTabShortLinkField != null }
+        val customTabShareCallers =
+            customTabShareMethod?.let { findCallers(bridge, it) }.orEmpty()
+        onStep?.invoke(
+            "Web page share",
+            customTabShareMethod?.let {
+                "${it.declaredClassName.substringAfterLast(
+                    '.',
+                )}.${it.name}() $customTabShortLinkField"
+            },
+        )
+
         val refreshProgressMethod = runCatching { findRefreshProgressMethod(bridge) }.getOrNull()
         onStep?.invoke("Refresh indicator", refreshProgressMethod?.toString())
 
@@ -110,6 +125,9 @@ object DexKitResolver {
             cardProcessorMethods = processors,
             streamRenderableListMethod = streamRenderableListMethod,
             shareIntentMethod = shareIntentMethod,
+            customTabShareMethod = customTabShareMethod?.let(::toMethodRef),
+            customTabShortLinkFieldName = customTabShortLinkField,
+            customTabShareCallers = customTabShareCallers,
             refreshProgressMethod = refreshProgressMethod,
         )
     }
@@ -354,6 +372,40 @@ object DexKitResolver {
             }.filterNot { it.returnTypeName in NON_PROTO_RETURNS }
             .map(::toMethodRef)
             .singleOrNull()
+
+    private fun findCustomTabShareMethod(bridge: DexKitBridge): MethodData? =
+        runCatching {
+            bridge.findMethod {
+                matcher {
+                    usingStrings(CUSTOM_TAB_SHARE_LINK_SOURCE)
+                    paramTypes("android.net.Uri", TYPE_STRING, "android.content.IntentSender")
+                    returnType("void")
+                }
+            }
+        }.getOrDefault(emptyList())
+            .singleOrNull()
+
+    private fun findCallers(
+        bridge: DexKitBridge,
+        callee: MethodData,
+    ): List<MethodRef> =
+        runCatching {
+            bridge.findMethod {
+                matcher {
+                    addInvoke { descriptor = callee.descriptor }
+                }
+            }
+        }.getOrDefault(emptyList())
+            .map(::toMethodRef)
+
+    private fun findShortLinkSwitchField(method: MethodData): String? =
+        method.usingFields
+            .firstOrNull {
+                it.usingType.isRead() &&
+                    it.field.declaredClassName == method.declaredClassName &&
+                    it.field.typeName == "boolean"
+            }?.field
+            ?.name
 
     private fun findRefreshProgressMethod(bridge: DexKitBridge): MethodRef? {
         val layout =

@@ -1,18 +1,22 @@
 package eu.hxreborn.discoveradsfilter.hook
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import eu.hxreborn.discoveradsfilter.discovery.MethodRef
 import eu.hxreborn.discoveradsfilter.discovery.ResolvedTargets
 import eu.hxreborn.discoveradsfilter.module
 import eu.hxreborn.discoveradsfilter.util.Logger
 import io.github.libxposed.api.XposedInterface
+import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.Collections
 import java.util.IdentityHashMap
 
 object ShareLinkHook {
     private const val WRAPPER_HOST = "share.google/"
+    private const val WRAPPER_DOMAIN = "share.google"
     private const val MAX_NODES = 600
     private const val MAX_DEPTH = 5
 
@@ -26,7 +30,18 @@ object ShareLinkHook {
         targets: ResolvedTargets,
         processName: String,
     ): Boolean {
-        val ref = (targets as? ResolvedTargets.Resolved)?.shareIntentMethod
+        val resolved = targets as? ResolvedTargets.Resolved
+        val feedShareHooked = installFeedShare(loader, resolved, processName)
+        val webPageShareHooked = installWebPageShare(loader, resolved, processName)
+        return feedShareHooked || webPageShareHooked
+    }
+
+    private fun installFeedShare(
+        loader: ClassLoader,
+        targets: ResolvedTargets.Resolved?,
+        processName: String,
+    ): Boolean {
+        val ref = targets?.shareIntentMethod
         if (ref == null) {
             Logger.log(
                 Log.WARN,
@@ -35,8 +50,10 @@ object ShareLinkHook {
             return false
         }
         val builder =
-            runCatching { ref.resolve(loader) }.getOrElse {
-                Logger.log(Log.WARN, "failed to rehydrate $ref: ${it.message}")
+            try {
+                ref.resolve(loader)
+            } catch (e: ReflectiveOperationException) {
+                Logger.log(Log.WARN, "failed to rehydrate $ref: ${e.message}")
                 return false
             }
         val chooser =
@@ -51,6 +68,100 @@ object ShareLinkHook {
         module.hook(chooser).intercept(ChooserHooker)
         Logger.log(Log.INFO, "hooked $ref proc=$processName")
         return true
+    }
+
+    private fun installWebPageShare(
+        loader: ClassLoader,
+        targets: ResolvedTargets.Resolved?,
+        processName: String,
+    ): Boolean {
+        val ref = targets?.customTabShareMethod
+        val fieldName = targets?.customTabShortLinkFieldName
+        if (ref == null || fieldName == null) {
+            Logger.log(
+                Log.WARN,
+                "no web page share method in cache proc=$processName, share links unchanged",
+            )
+            return false
+        }
+        val (share, shortLinkSwitch) =
+            try {
+                val method = ref.resolve(loader)
+                val field =
+                    method.declaringClass.getDeclaredField(fieldName).also {
+                        it.isAccessible = true
+                    }
+                method to field
+            } catch (e: ReflectiveOperationException) {
+                Logger.log(Log.WARN, "failed to rehydrate $ref $fieldName: ${e.message}")
+                return false
+            }
+        val activityField =
+            share.declaringClass.declaredFields
+                .singleOrNull { Activity::class.java.isAssignableFrom(it.type) }
+                ?.also { it.isAccessible = true }
+        if (activityField == null) {
+            Logger.log(Log.WARN, "no activity field on ${share.declaringClass.name}")
+            return false
+        }
+        module.deoptimize(share)
+        val callers = targets.customTabShareCallers.count { deoptimizeCaller(loader, it) }
+        module.hook(share).intercept(WebPageShareHooker(shortLinkSwitch, activityField))
+        Logger.log(
+            Log.INFO,
+            "hooked $ref switch=$fieldName callers=$callers proc=$processName",
+        )
+        return true
+    }
+
+    private fun deoptimizeCaller(
+        loader: ClassLoader,
+        ref: MethodRef,
+    ): Boolean =
+        try {
+            module.deoptimize(ref.resolve(loader))
+        } catch (e: ReflectiveOperationException) {
+            Logger.log(Log.WARN, "failed to rehydrate caller $ref: ${e.message}")
+            false
+        }
+
+    private class WebPageShareHooker(
+        private val shortLinkSwitch: Field,
+        private val activityField: Field,
+    ) : XposedInterface.Hooker {
+        override fun intercept(chain: XposedInterface.Chain): Any? {
+            if (!shareOriginalLink) return chain.proceed()
+            val share = chain.thisObject ?: return chain.proceed()
+            val pageUrl = (activityField.get(share) as? Activity)?.intent?.data
+            val args = webPageShareArgs(chain.args, pageUrl)
+            if (!shortLinkSwitch.getBoolean(share)) return chain.proceed(args)
+            shortLinkSwitch.setBoolean(share, false)
+            try {
+                return chain.proceed(args)
+            } finally {
+                shortLinkSwitch.setBoolean(share, true)
+            }
+        }
+    }
+
+    private fun webPageShareArgs(
+        args: List<Any?>,
+        pageUrl: Uri?,
+    ): Array<Any?> {
+        val out = args.toTypedArray()
+        val shared = out[0] as? Uri
+        if (shared?.host == WRAPPER_DOMAIN && pageUrl != null) {
+            out[0] = pageUrl
+            Logger.debug { "web page share $shared -> $pageUrl" }
+        }
+        val custom = shareCustomLine.trim()
+        out[1] =
+            when {
+                shareStripSourceLine -> null
+                custom.isNotEmpty() -> custom
+                else -> out[1]
+            }
+        return out
     }
 
     private object ShareBuilderHooker : XposedInterface.Hooker {
