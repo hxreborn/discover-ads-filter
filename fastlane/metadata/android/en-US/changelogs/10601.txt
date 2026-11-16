@@ -1,0 +1,1 @@
+- Sharing from the Google app's built-in web viewer now uses the page's own link instead of share.google
