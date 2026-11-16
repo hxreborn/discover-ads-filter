@@ -1,0 +1,3 @@
+- New look for the home and About screens, matching GPlay Adblock
+- About shows the version, license, project links and contributors
+- The status card names the Xposed framework and its API version
