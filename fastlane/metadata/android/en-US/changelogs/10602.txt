@@ -1,2 +1,2 @@
-- Updated DexKit to 2.3.1 to fix crashes while reading some DEX files
-- Updated other app dependencies
+- Updated DexKit to 2.3.1 with fixes for crashes during Google app scans
+- Updated Compose, Material 3, Lifecycle, Navigation, and Kotlin serialization
